@@ -10,47 +10,17 @@ from flora_tools.node import Node
 class Bootloader:
     def __init__(self, port):
         try:
-            try:
-                self.node = Node(port, test=False)
-                if self.node:
-                    self.node.ser.write(b"system bootloader\r\n")
-                    self.node.close()
-                    time.sleep(0.2)
-            except ValueError:
-                print("Failed to interface with potential flora CLI at {}".format(port.device))
-                pass
+            self.node = Node(port, test=False)
+            if self.node:
+                self.node.ser.write(b"system bootloader\r\n")
+                self.node.close()
+                time.sleep(0.2)
 
             self.port = port
 
-            #ser = serial.Serial(port=port.device, baudrate=115200, parity=serial.PARITY_EVEN,
-            #                    stopbits=serial.STOPBITS_ONE, timeout=0.5)
-
-            # ser.setRTS(False) # Boot0 Pin set
-            # time.sleep(0.1)
-            # ser.setDTR(True) # Reset low active set
-            # time.sleep(0.1)
-            # ser.setDTR(False) # Reset release
-            # time.sleep(0.1)
-            #
-            # ser.write(b"\x7f")
-            # time.sleep(0.2)
-            # ack = ser.read()
-            # if ack == b"\x79":
-            #     print("Enabled UART bootloader on {}".format(port.device))
-            #
-            # ser.write(b"\x00\xff")
-            # time.sleep(0.1)
-            # ack = ser.read()
-            # if ack == b"\x79":
-            #     print("Verified UART bootloader on {}".format(port.device))
-            #     ser.close()
-            #     self.port = port
-            # else:
-            #     ser.close()
-            #     raise ValueError("Port {} is NOT a flora bootloader.".format(port.device))
         except serial.SerialException as e:
             print(e)
-            raise ValueError("Port {} is NOT a flora bootloader.".format(port.device))
+            raise ValueError("Port {} is NOT a valid COM Port.".format(port.device))
 
     @staticmethod
     def get_bootloader(port):

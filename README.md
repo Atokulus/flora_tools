@@ -1,37 +1,60 @@
 # Installation Guide
 
-Install Python 3, aswell as the `numpy`, `pyvisa` and `pyserial` library
+Install Python3.6+ and pip 10.0+. If your are using Ubuntu 18.04, these are already installed. Then you can install the pip package `flora-tools`
 
 ```sh
-pip install numpy && \
-pip install pyvisa && \
-pip install pyserial && \
+python -m pip install flora-tools
+```
+
+If you run into problems, try `python3`, as there are still many old distributions around.
+
+### Development ### 
+
+Do not install the python package from PyPi, but rather clone this repository and run
+
+```sh
+python -m pip install -e .
+```
+
+inside the top folder (where `setup.py` is located). You can edit the source files and the module will reflect the changes automatically.
+
+The python package is generated and uploaded according to (https://packaging.python.org/tutorials/packaging-projects/)
+
+
+## Patch Atollic TrueStudio Eclipse Project Files
+As there are no external include paths and symbols configured in a freshly generated Atollic TrueStudio project, the project's XML files have to be patched.
+
+Just run
+
+```sh
+	python -m flora-tools patch_eclipse path/to/flora_repository
 ```
 
 
-## Mass programming DevKits (STM32L476RG) and Comboards (STM32L443CC) with built-in ROM UART-Bootloader
+## Mass programming DevKits (STM32L476RG) and Comboards (STM32L443CC, STM32L433CC) with built-in ROM UART-Bootloader
 
-Using the `stm32loader` library for Python 3 (by *florisla*), all SX126xDVK1xAS devkits and DPP-Comboard modules can be programmed simultaneously. The library is available as a git submodule inside the `flora_tools` directory, and has been cloned aswell when you cloned the `flora_tools` project.
+Using the `stm32loader` library for Python 3 (originally by *florisla*), all SX126xDVK1xAS devkits and DPP-Comboard modules can be programmed simultaneously. The library is available as a git submodule inside the `flora-tools` python package.
 
 Ensure you have closed all your serial-port connections to your DevKits or ComBoards.
 
-You can now either put the MCU into bootloader mode by pullin BOOT0-pin high (connect with VCC) or use the dedicated FlOS CLI command `system bootloader` to jump
-into the ROM bootloader. The second option is automatically supported by the Python script `programmer.py`. Check that you have compiled and built your Atollic project correctly and have a `.hex` file the `Outputs` folder. Then run:
+You can now either put the MCU into bootloader mode by pullin BOOT0-pin high (connect with VCC), set the J502 & J503 solder bridges on the DPP carrier board, or use the dedicated FlOS CLI command `system bootloader` inside *flora CLI* to jump directly into the ROM bootloader. All variant are supported automatically by the command below.
+
+Check that you have compiled and built your Atollic project correctly and have a `*.hex` or `*.binary` file inside the `Outputs` folder. Then run the following command with the correct path (i.e. where the `platform` and `lib` folder are located).:
 
 ```sh
-	python ./flora_tools/programmer.py
+	python -m flora-tools program_all path/to/flora_repository
+```
+
+## Programming single Device
+```sh
+	python -m flora-tools program path/to/firmware(.hex/.binary) -p COM1
 ```
 
 ## Measurement setup
 
-#### Precise timing measurements
+### Precise timing measurements
 
 ![Setup to measure precise timings](../../../doc/img/measurements-cable_setup.png)
-
-#### FlockLab
-
-To be integrated!
-
 
 ### Measurements over GPIB/LXI/VISA
 For a working PyVISA installation for interfacing with the oscilloscope and power analyzers you need to follow this [guide](https://pyvisa.readthedocs.io/en/stable/getting_nivisa.html). For Windows, you can download the following VISA backend driver: (http://www.ni.com/download/ni-visa-18.0/7597/en/)
@@ -48,4 +71,6 @@ Push the `Utility` button and switch to the `Utility Page` `I/O`. Select `Ethern
 
 Add your Tektronix MSO4104B oscilloscope in NI MAX. You have to note down the VISA Resource Name.
 
+## FlockLab Integration
 
+*To be integrated.*
