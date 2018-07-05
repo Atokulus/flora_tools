@@ -1,3 +1,5 @@
 [submodule "flora_tools/stm32loader"]
 	path = flora_tools/stm32loader
 	url = https://github.com/Atokulus/stm32loader.git
+	fetchRecurseSubmodules = true
+	shallow = true
