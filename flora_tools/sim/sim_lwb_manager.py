@@ -10,7 +10,7 @@ class SimLWBManager:
     def __init__(self, node: 'SimNode'):
         self.node = node
 
-        self.rosunds = []
+        self.rounds = []
         self.gloria_manager = SimGloriaFlood(self.node)
 
     def generate_initial_schedule(self):
