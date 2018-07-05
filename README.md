@@ -54,7 +54,7 @@ Check that you have compiled and built your Atollic project correctly and have a
 
 ### Precise timing measurements
 
-![Setup to measure precise timings](../../../doc/img/measurements-cable_setup.png)
+![Setup to measure precise timings](/doc/img/measurements-cable_setup.png)
 
 ### Measurements over GPIB/LXI/VISA
 For a working PyVISA installation for interfacing with the oscilloscope and power analyzers you need to follow this [guide](https://pyvisa.readthedocs.io/en/stable/getting_nivisa.html). For Windows, you can download the following VISA backend driver: (http://www.ni.com/download/ni-visa-18.0/7597/en/)
