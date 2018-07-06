@@ -24,6 +24,7 @@ class SimGloriaFlood:
         self.is_initial_node = True if init_tx_message is not None else False
         self.power_increase = power_increase
         self.update_timestamp = update_timestamp
+        self.minimum_power_level = init_tx_message.power_level if init_tx_message is not None else 0
 
         slot = flood['layout'][self.slot_index]
 
@@ -98,8 +99,6 @@ class SimGloriaFlood:
                 if self.is_initial_node:
                     self.last_tx_slot_marker = self.potential_message.timestamp
                     self.last_slot_marker = slot['marker']
-                # elif self.update_timestamp:
-                #     self.update_local_timestamp(self.potential_message.timestamp)
 
                 if slot['type'] is 'ack' and self.potential_message.type is 'ack':
                     if self.potential_message.destination is self.node:
@@ -111,7 +110,9 @@ class SimGloriaFlood:
                         self.process_next_slot()
                 else:
                     if not self.is_initial_node:
+                        self.minimum_power_level = np.min([self.potential_message.power_level, self.minimum_power_level])
                         self.tx_message = self.potential_message
+                        self.tx_message.hop_count += 1
                         if self.update_timestamp:
                             self.update_local_timestamp(self.potential_message.timestamp)
 
@@ -141,7 +142,8 @@ class SimGloriaFlood:
                                                   payload=gloria_header_length,
                                                   destination=self.tx_message.source,
                                                   type='ack',
-                                                  power_level=self.tx_message.power_level)
+                                                  power_level=self.tx_message.power_level,
+                                                  modulation=self.tx_message.modulation)
 
                     self.node.mm.tx_message(self.node,
                                             self.flood['modulation'],

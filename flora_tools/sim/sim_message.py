@@ -1,7 +1,7 @@
 from flora_tools.sim.sim_node import SimNode
 
 class SimMessage:
-    def __init__(self, timestamp, tx_node: 'SimNode', source, payload, destination=None, type='data', content=None, power_level=0):
+    def __init__(self, timestamp, tx_node: 'SimNode', source: 'SimNode', payload, modulation, destination=None, type='data', content=None, power_level=0):
         self.timestamp = timestamp
         self.id = None
         self.source = source
@@ -9,6 +9,7 @@ class SimMessage:
         self.type = type
         self.payload = payload
         self.content = content
+        self.modulation = modulation
 
         self.power_level = power_level
 
@@ -22,7 +23,8 @@ class SimMessage:
                              destination=self.destination,
                              type=self.type,
                              content=self.content,
-                             power_level=self.power_level)
+                             power_level=self.power_level,
+                             modulation=self.modulation)
 
         message.hop_count = self.hop_count
         return message

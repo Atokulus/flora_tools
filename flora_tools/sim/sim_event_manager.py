@@ -12,7 +12,8 @@ class SimEventType(Enum):
     TX_DONE = 1
     RX_TIMEOUT = 2
     RX_DONE = 3
-    UPDATE = 4
+    CAD_DONE = 4
+    UPDATE = 5
 
 
 class SimEventManager:

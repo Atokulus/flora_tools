@@ -111,6 +111,7 @@ class SimMessageChannel:
     def calculate_path_loss(self, node_a, node_b):
         return self.network.G[node_a.id, node_b.id]['path_loss']
 
+
     def is_reachable(self, modulation, node_a, node_b, power=22):
         config = RadioConfiguration(modulation)
         math = RadioMath(config)
@@ -120,8 +121,7 @@ class SimMessageChannel:
         else:
             return False
 
-
-    def cad_result(self, timestamp, rx_node: 'SimNode', modulation, band):
+    def cad_process(self, timestamp, rx_node: 'SimNode', modulation, band):
         timestamp = rx_node.transform_local_to_global_timestamp(timestamp)
 
         def mark_reachable_message(item):
@@ -133,35 +133,25 @@ class SimMessageChannel:
         config = RadioConfiguration(modulation, preamble=GloriaMath().preamble_len(modulation))
         math = RadioMath(config)
 
+        cad_start = timestamp - math.get_symbol_time() * (1.5 - 0.5)  # -0.5 as signal had to present for longer time
+        cad_end = timestamp - math.get_symbol_time() * 0.5
 
-
-        tx_start = potential_message.tx_start
-        tx_end = tx_start + potential_message.time
-
-        interfering_set = (self.mm.mq.loc[
+        subset = (self.mm.mq.loc[
             self.mm.mq.modulation == modulation &
-            self.mm.mq.band == band & self.mm.mq.event_type == 'tx' &
-            self.mm.mq.tx_end >= rx_start &
-            self.mm.mq.tx_start <= potential_message.tx_end &
-            (
-                    self.mm.mq.message_id != potential_message.id |
-                    (self.mm.mq.message_id == potential_message.id &
-                     self.mm.mq.tx_start > potential_message.tx_start &
-                     self.mm.mq.tx_start <= potential_message.tx_end)
-            )
-            ]).copy()
+            self.mm.mq.band == band &
+            self.mm.mq.tx_end >= cad_start &
+            self.mm.mq.tx_start <= cad_end
+        ]).copy()
 
-        interfering_set['rx_power'] = interfering_set.applymap(calc_power_message, axis=1)
-        potential_message['rx_power'] = calc_power_message(potential_message)
+        subset['reachable'] = subset.applymap(mark_reachable_message, axis=1)
+        subset = subset.loc[subset.reachable == True]
 
-        interfering_power = 0
-        for i in interfering_set.rx_power:
-            interfering_power += np.pow(10, i / 10)
+        subset['rx_power'] = subset.applymap(calc_power_message, axis=1)
 
-        if np.pow(10, potential_message.rx_power / 10) > (interfering_power + np.pow(10, RADIO_SNR[modulation])):
-            return True
+        if len(subset) > 0:
+            return subset.rx_power.max()
         else:
-            return False
+            return None
 
 
 

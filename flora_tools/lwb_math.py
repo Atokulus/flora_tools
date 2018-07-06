@@ -33,18 +33,18 @@ min_contention_layout = [0, 0, 0, 0, 0]
 
 class LWBMath:
     @staticmethod
-    def calculate_sync_round(modulation, round_offset=0):
+    def calculate_sync_round(modulation, round_offset=0, master):
         color = RadioConfiguration(modulation).color
 
         slots = [
             {'type': 'sync'},
-            {'type': 'contention'},
+            {'type': 'contention', 'contention_for_round': True},
         ]
 
-        return LWBMath.calculate_round(modulation, custom_slots=slots, round_offset=round_offset, slot_schedule=False)
+        return LWBMath.calculate_round(modulation, custom_slots=slots, round_offset=round_offset, slot_schedule=False, master=master)
 
     @staticmethod
-    def calculate_round(modulation, custom_slots=[], round_offset=0, slot_schedule=True):
+    def calculate_round(modulation, custom_slots=[], round_offset=0, slot_schedule=True, master=None):
         color = RadioConfiguration(modulation).color
 
         slots = []
@@ -53,39 +53,69 @@ class LWBMath:
                 {'offset': 0, 'slot': LWBMath.calculate_slot_schedule_slot(modulation),
                  'type': 'slot_schedule',
                  'facecolor': 'darkorchid',
-                 'edgecolor': color})
+                 'edgecolor': color,
+                 'modulation': modulation,
+                 'payload': sync_header_length + max_slots[modulation] * slot_schedule_item_length
+                 'master': master})
         else:
             slots.append(
                 {'offset': 0, 'slot': LWBMath.calculate_sync_slot(modulation),
                  'type': 'sync',
                  'facecolor': 'fuchsia',
-                 'edgecolor': color})
+                 'edgecolor': color,
+                 'modulation': modulation,
+                 'payload': sync_header_length,
+                 'master': master})
 
         for slot in custom_slots:
             if slot['type'] == 'data':
                 slots.append({'offset': slots[-1]['offset'] + slots[-1]['slot']['time'],
                               'slot': LWBMath.calculate_data_slot(modulation, slot['payload']),
-                              'type': 'data', 'facecolor': 'deepskyblue', 'edgecolor': color})
+                              'type': 'data', 'facecolor': 'deepskyblue', 'edgecolor': color,
+                              'payload': slot['payload'],
+                              'modulation': modulation,
+                              'master': slot['master']})
             elif slot['type'] == 'ack':
                 slots.append({'offset': slots[-1]['offset'] + slots[-1]['slot']['time'],
                               'slot': LWBMath.calculate_contention_ack_slot(modulation), 'type': 'ack',
-                              'facecolor': 'mediumaquamarine', 'edgecolor': color})
+                              'facecolor': 'mediumaquamarine', 'edgecolor': color,
+                              'modulation': modulation,
+                              'payload': gloria_header_length,
+                              'master': slot['master']})
             elif slot['type'] == 'contention':
-                slots.append({'offset': slots[-1]['offset'] + slots[-1]['slot']['time'],
-                              'slot': LWBMath.calculate_contention_slot(modulation), 'type': 'contention',
-                              'facecolor': 'lightcoral', 'edgecolor': color})
+                if 'contention_for_round' in slot and slot['contention_for_round'] is True:
+                    slots.append({'offset': slots[-1]['offset'] + slots[-1]['slot']['time'],
+                                  'slot': LWBMath.calculate_contention_slot(modulation), 'type': 'contention',
+                                  'facecolor': 'lightcoral', 'edgecolor': color,
+                                  'modulation': modulation, 'contention_for_round': True,
+                                  'payload': contention_length,
+                                  'master': slot['master']})
+                else:
+                    slots.append({'offset': slots[-1]['offset'] + slots[-1]['slot']['time'],
+                                  'slot': LWBMath.calculate_contention_slot(modulation), 'type': 'contention',
+                                  'facecolor': 'lightcoral', 'edgecolor': color,
+                                  'modulation': modulation, 'contention_for_round': False,
+                                  'payload': contention_length,
+                                  'master': slot['master']})
+
                 if 'acked' in slot and slot['acked'] is True:
                     slots.append({'offset': slots[-1]['offset'] + slots[-1]['slot']['time'],
                                   'slot': LWBMath.calculate_contention_ack_slot(modulation),
                                   'type': 'ack',
-                                  'facecolor': 'mediumaquamarine', 'edgecolor': color})
+                                  'facecolor': 'mediumaquamarine', 'edgecolor': color,
+                                  'modulation': modulation,
+                                  'payload': gloria_header_length,
+                                  'master': master})
 
         slots.append({
             'offset': slots[-1]['offset'] + slots[-1]['slot']['time'],
             'slot': LWBMath.calculate_round_schedule_slot(modulation),
             'type': 'round_schedule',
             'facecolor': 'rebeccapurple',
-            'edgecolor': color
+            'edgecolor': color,
+            'modulation': modulation,
+            'payload': round_schedule_length,
+            'master': master,
         })
         return slots
 

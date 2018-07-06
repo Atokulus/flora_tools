@@ -3,7 +3,7 @@ import pandas as pd
 
 from flora_tools.sim.sim_network import SimNetwork
 from flora_tools.sim.sim_message import SimMessage
-from flora_tools.sim.sim_lwb_manager import SimLWBManager
+from flora_tools.sim.sim_link_manager import SimLinkManager
 from flora_tools.sim.sim_message_manager import SimMessageManager
 from flora_tools.sim.sim_event_manager import  SimEventManager
 
@@ -18,7 +18,7 @@ class SimNode:
         self.role = role
         self.datarate = datarate
 
-        self.lwb_manager = SimLWBManager(self)
+        self.link_manager = SimLinkManager(self)
         self.last_timestamp = None
         self.pipelined_message = None
         self.accumulated_data = 0.0
