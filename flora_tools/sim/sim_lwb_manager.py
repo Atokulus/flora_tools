@@ -31,7 +31,10 @@ class SimLWBManager:
 
     def register_slot(self, slot):
         for round in self.rounds:
-            if round[]
+            if round.modulation
+
+
+
 
 
 
@@ -49,5 +52,13 @@ class SimLWBManager:
             slots = message.content['offsets']
             for slot in slots[1:]:
                 self.register_slot(slot)
+
+    def process_data_slot(self, slot):
+
+    def process_contention_slot(self, slot):
+
+    def process_ack_slot(self, slot):
+
+    def process_round_schedule_slot(self, slot):
 
 
