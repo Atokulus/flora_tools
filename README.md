@@ -69,12 +69,12 @@ You can now either put the MCU into bootloader mode by pullin BOOT0-pin high (co
 Check that you have compiled and built your Atollic project correctly and have a `*.hex` or `*.binary` file inside the `Outputs` folder. Then run the following command with the correct path (i.e. where the `platform` and `lib` folder are located).:
 
 ```sh
-	python -m flora-tools program_all path/to/flora_repository
+python -m flora-tools program_all path/to/flora_repository
 ```
 
 ## Programming single Device
 ```sh
-	python -m flora-tools program path/to/firmware(.hex/.binary) -p COM1
+python -m flora-tools program path/to/firmware(.hex/.binary) -p COM1
 ```
 
 ## Measurement setup
