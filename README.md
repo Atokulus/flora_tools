@@ -4,12 +4,12 @@ The `flora_tools` package provides the tools and means for developing on the new
 
 Module | Description
 ------ | -----------
-`flora_tools`             | contains general resources, such as the static calculation of time-on-air, Gloria & LWB figures, <br />basic interfacing via serial/UART, and interface for the Tektronix oscilloscope to measure the timings precisely
-`flora_tools.experiments` | includes all scripted timing experiments, utilizing e.g. the oscilloscope
-`flora_tools.analysis`    | includes Jupyter notebooks for condensed visual representation.
-`flora_tools.sim`         | includes the simulation server for the protocol layers
-`flora_tools.toolchain`   | includes the logic for programming and maintaining the firmware projects
-`flora_tools.stm32loader` | contains the script which implements the STM32's UART ROM-bootloader protocol
+`flora_tools`             | General resources, such as the static calculation of time-on-air, Gloria & LWB figures, <br />basic interfacing via serial/UART, and interface for the Tektronix oscilloscope to measure the timings precisely
+`flora_tools.experiments` | All scripted experiments, utilizing e.g. the oscilloscope
+`flora_tools.analysis`    | Jupyter notebooks for condensed visual representation.
+`flora_tools.sim`         | The simulation server for the protocol layers
+`flora_tools.toolchain`   | The scripts for flashing and maintaining the firmware projects
+`flora_tools.stm32loader` | The script which implements the STM32's UART ROM-bootloader protocol
 
 # Installation Guide
 
@@ -58,7 +58,7 @@ python -m flora-tools patch_eclipse path/to/flora_repository
 ```
 
 
-## Mass programming DevKits (STM32L476RG) and Comboards (STM32L443CC, STM32L433CC) with built-in ROM UART-Bootloader
+## Mass programming/flashing DevKits (STM32L476RG) and Comboards (STM32L443CC, STM32L433CC) with built-in ROM UART-Bootloader
 
 Using the `stm32loader` library for Python 3 (originally by *florisla*), all SX126xDVK1xAS devkits and DPP-Comboard modules can be programmed simultaneously. The library is available as a git submodule inside the `flora-tools` python package.
 
