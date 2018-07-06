@@ -31,7 +31,7 @@ def patch_eclipse(flora_path):
     comboard_patcher.patch()
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description = 'Executable flora_tools utilities', prog='flora_tools')
     parser.add_argument('command', help='Execute given command', choices=['program', 'program_all', 'patch_eclipse'])
     parser.add_argument('path', help='Set the path to the Flora main repository folder or .hex/.binary file')
@@ -48,3 +48,7 @@ if __name__ == '__main__':
     elif args.command == 'patch_eclipse':
         patch_eclipse(args.path)
 
+
+if __name__ == '__main__':
+    main()
+    
