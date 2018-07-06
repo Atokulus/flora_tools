@@ -1,11 +1,3 @@
-numpy
-pandas
-matplotlib
-jupyter
-pyserial
-pyvisa
-setuptools
-
  # requirements.txt
  #
  # installs dependencies from ./setup.py, and the package itself,
