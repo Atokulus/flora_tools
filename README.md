@@ -1,3 +1,16 @@
+# About `flora_tools`
+
+The `flora_tools` package provides the tools and means for developing on the new PermaSense flora DPP2 Comboards, facilitating the LoRa radio SX1262 from Semtech.
+
+Module | Description
+------ | -----------
+`flora_tools`             | contains general resources, such as the static calculation of time-on-air, Gloria & LWB figures, <br />basic interfacing via serial/UART, and interface for the Tektronix oscilloscope to measure the timings precisely
+`flora_tools.experiments` | includes all scripted timing experiments, utilizing e.g. the oscilloscope
+`flora_tools.analysis`    | includes Jupyter notebooks for condensed visual representation.
+`flora_tools.sim`         | includes the simulation server for the protocol layers
+`flora_tools.toolchain`   | includes the logic for programming and maintaining the firmware projects
+`flora_tools.stm32loader` | contains the script which implements the STM32's UART ROM-bootloader protocol
+
 # Installation Guide
 
 Install Python3.6+ and pip 10.0+. If your are using Ubuntu 18.04, these are already installed. Then you can install the pip package `flora-tools`
@@ -6,7 +19,21 @@ Install Python3.6+ and pip 10.0+. If your are using Ubuntu 18.04, these are alre
 python -m pip install flora-tools
 ```
 
-If you run into problems, try `python3`, as there are still many old distributions around.
+If you run into problems, try `python3 -m pip` or `pip3`, as there are still many old distributions around.
+
+### Run The script ###
+
+Use 
+
+```sh
+python -m flora-tools  # With a dash!
+```
+
+or just
+
+```
+flora_tools  # With an underscore!
+```
 
 ### Development ### 
 
