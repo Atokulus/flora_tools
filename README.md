@@ -27,7 +27,7 @@ As there are no external include paths and symbols configured in a freshly gener
 Just run
 
 ```sh
-	python -m flora-tools patch_eclipse path/to/flora_repository
+python -m flora-tools patch_eclipse path/to/flora_repository
 ```
 
 
