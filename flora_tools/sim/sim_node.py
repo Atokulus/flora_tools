@@ -10,14 +10,13 @@ from flora_tools.sim.sim_lwb_manager import SimLWBManager
 
 
 class SimNode:
-    def __init__(self, network: 'SimNetwork', em: SimEventManager, mm: SimMessageManager, id: int=None, role='sensor', datarate=10):
+    def __init__(self, network: 'SimNetwork', em: SimEventManager, mm: SimMessageManager, id: int=None, role='sensor'):
         self.state = 'init'
         self.network = network
         self.mm = mm
         self.em = em
         self.id = id
         self.role = role
-        self.datarate = datarate
 
         self.link_manager = SimLinkManager(self)
         self.lwb_manager = SimLWBManager(self)

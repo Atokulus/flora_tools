@@ -1,5 +1,6 @@
 from flora_tools.sim.sim_node import SimNode
 from flora_tools.sim.service import Service
+from flora_tools.sim.sim_message import SimMessage
 
 MAX_TTL = 3
 
@@ -14,27 +15,34 @@ class DataStream:
 
         self.ttl = MAX_TTL
 
-    def data_available(self):
-        return self.service.data_available()
+        def get_data(self) -> SimMessage:
+            return self.service.
 
-    def get_data(self):
-        return self.service.get_data()
-
-    def notification_available(self):
-        return s
+        def data_available(self) -> SimMessage:
+            return
 
 
-class DataStreamManager:
+class NotificationStream:
+    def __init__(self, service: Service, priority, period):
+        self.service = service
+        self.priority = priority
+        self.period = period
+
+        self.ttl = MAX_TTL
+
+        @abc.abstractmethod
+        def get_notification(self) -> SimMessage:
+            return self.service.get_notification()
+
+
+class LocalServiceManager:
     def __init__(self, node: 'SimNode'):
         self.node = node
         self.datastreams = []
 
-    def register(self, datastream: DataStream):
+    def register_datastream(self, datastream: DataStream):
         self.datastreams.append(datastream)
 
-    def unregister(self, datastream: DataStream):
-        self.datastreams.remove(datastream)
-
-    def update_datastreams
+    def register_notification(self, ):
 
 

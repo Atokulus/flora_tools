@@ -2,6 +2,7 @@ import abc
 
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_node import SimNode
+from flora_tools.sim.sim_datastream_manager import DataStream
 
 
 class Service:
@@ -10,6 +11,9 @@ class Service:
     def __init__(self, node: 'SimNode', name=None):
         self.node = node
         self.name = name
+
+    def register_datastream(self, datastream: DataStream):
+        self.datastreams.append(datastream)
 
     @abc.abstractmethod
     def get_data(self) -> SimMessage:

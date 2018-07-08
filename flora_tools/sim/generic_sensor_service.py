@@ -4,11 +4,10 @@ from flora_tools.sim.sim_node import SimNode
 
 
 class GenericSensorService(Service):
-    def __init__(self, node: 'SimNode', name, datarate, period, slot_size=255):
+    def __init__(self, node: 'SimNode', name, datarate, slot_size=255):
         self.node = node
         self.name = name
         self.datarate = datarate
-        self.period = period
 
         self.slot_size = slot_size
         self.accumulated_data = 0.0

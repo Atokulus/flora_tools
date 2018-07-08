@@ -22,7 +22,7 @@ class SimLWBSlotManager:
         elif slot['type'] in ['contention', 'ack']:
             self.update_timestamp = False
 
-        SimGloriaFlood(self.node, self.slot, self.finished_flood, init_tx_message=self.message,
+        SimGloriaFlood(self.node, self.slot['slot'], self.finished_flood, init_tx_message=self.message,
                        power_increase=self.power_increase, update_timestamp=self.update_timestamp)
 
     def finished_flood(self, message: 'SimMessage'):
