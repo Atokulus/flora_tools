@@ -5,7 +5,8 @@ from flora_tools.sim.sim_network import SimNetwork
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_link_manager import SimLinkManager
 from flora_tools.sim.sim_message_manager import SimMessageManager
-from flora_tools.sim.sim_event_manager import  SimEventManager
+from flora_tools.sim.sim_event_manager import SimEventManager
+from flora_tools.sim.sim_lwb_manager import SimLWBManager
 
 
 class SimNode:
@@ -19,20 +20,10 @@ class SimNode:
         self.datarate = datarate
 
         self.link_manager = SimLinkManager(self)
-        self.last_timestamp = None
-        self.pipelined_message = None
-        self.accumulated_data = 0.0
-
-        self.current_base = None
+        self.lwb_manager = SimLWBManager(self)
         self.local_timestamp = 0
 
-        if self.role is 'base':
-            self.start_base()
-        elif self.role is 'sensor':
-            self.start_sensor()
-        elif self.role is 'relay':
-            self.start_relay()
-
+        self.lwb_manager.run()
 
     def __str__(self):
         return str(self.id)
@@ -45,17 +36,6 @@ class SimNode:
 
     def start_relay(self):
         pass
-
-    def generate_data(self, timestamp) -> SimMessage:
-        if self.last_timestamp is not None:
-            elapsed = timestamp - self.last_timestamp
-            self.accumulated_data += elapsed * self.datarate
-        else:
-            self.accumulated_data += self.datarate
-        self.last_timestamp = timestamp
-        data = np.min(np.floor(self.accumulated_data), 255)
-        self.accumulated_data -= data
-        return SimMessage(data, self.id, 0, 'data')
 
     def transform_local_to_global_timestamp(self, timestamp):
         timestamp - self.local_timestamp + self.network.current_timestamp

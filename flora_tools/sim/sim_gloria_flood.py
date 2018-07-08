@@ -5,7 +5,7 @@ from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_node import SimNode
 
-max_acks = 1
+MAX_ACKS = 1
 
 
 class SimGloriaFlood:
@@ -200,7 +200,7 @@ class SimGloriaFlood:
         self.slot_index += 2
         if self.is_not_finished() and \
                 self.flood['layout'][self.slot_index]['type'] is 'ack' and \
-                self.ack_counter < max_acks:
+                self.ack_counter < MAX_ACKS:
 
             slot = self.flood['layout'][self.slot_index]
 

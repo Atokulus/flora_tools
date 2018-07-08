@@ -1,7 +1,8 @@
 from flora_tools.sim.sim_node import SimNode
 
+
 class SimMessage:
-    def __init__(self, timestamp, tx_node: 'SimNode', source: 'SimNode', payload, modulation, destination=None, type='data', content=None, power_level=0):
+    def __init__(self, timestamp, source: 'SimNode', payload, modulation, destination=None, type='data', content=None, power_level=0):
         self.timestamp = timestamp
         self.id = None
         self.source = source

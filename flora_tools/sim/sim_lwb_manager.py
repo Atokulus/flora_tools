@@ -7,7 +7,16 @@ from flora_tools.lwb_math import LWBMath
 class SimLWBManager:
     def __init__(self, node: 'SimNode'):
         self.node = node
+
         self.rounds = []
+
+        if self.node.role is 'base':
+            self.base = self.node
+        else:
+            self.base = None
+
+    def run(self):
+        pass
 
     def generate_initial_schedule(self):
         slot_times = LWBMath.calculate_sync_round(lwb_math.modulations[0], self.node.local_timestamp, self.node)
