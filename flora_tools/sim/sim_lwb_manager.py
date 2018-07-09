@@ -1,17 +1,17 @@
+import numpy as np
+
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_lwb_slot_manager import SimLWBSlotManager
-from flora_tools.sim.sim_node import SimNode
+import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.lwb_schedule_manager import LWBScheduleManager
 from flora_tools.sim.sim_event_manager import SimEventType
-import flora_tools.lwb_visualizer as lwb_math
-from flora_tools.lwb_visualizer import LWBVisualizer
 
 
-BACKOFF_TIME = 1/8E6 * 2^29
+BACKOFF_TIME = 1/8E6 * np.exp2(29)
 
 
 class SimLWBManager:
-    def __init__(self, node: 'SimNode'):
+    def __init__(self, node: 'sim_node.SimNode'):
         self.node = node
 
         self.rounds = []
@@ -71,7 +71,7 @@ class SimLWBManager:
 
         self.run()
 
-    def process_data_slot(self, slot, tx_node: SimNode):
+    def process_data_slot(self, slot, tx_node: 'sim_node.SimNode'):
         if tx_node is self.node:
             message = self.node.datastream_manager.get_data(slot['payload'], slot['acked'])
 
@@ -126,7 +126,7 @@ class SimLWBManager:
         self.run()
 
     def process_ack_slot(self, slot):
-        if self.ack_operation & self.:
+        if self.ack_operation:
             message = SimMessage(slot['modulation'], slot['offset'], self.node, slot['payload'],
                                  modulation=slot['modulation'], destination=self.message_to_be_acked.source, type='ack',
                                  content={'id': self.message_to_be_acked.id}, power_level=0)

@@ -1,12 +1,12 @@
 from enum import Enum
 
-from flora_tools.sim.sim_node import SimNode
+import flora_tools.sim.sim_node as sim_node
 
 from flora_tools.gloria_flood import GloriaFlood
 from flora_tools.radio_configuration import RadioConfiguration
-from flora_tools.lwb_round import SLOT_COUNTS, LWBRound
+import flora_tools.lwb_round as lwb_round
 
-MODULATIONS = [2, 4, 7, 9]
+MODULATIONS = [3, 5, 7, 9]
 BANDS = [48, 50]
 POWERS = [22, 10]
 
@@ -19,8 +19,8 @@ round_schedule_length = gloria_header_length + rounds_schedule_buffer_items * 4
 
 slot_schedule_item_length = 3
 
-RETRANSMISSIONS_COUNTS = [1, 1, 1, 2, 2, 2, 2, 2, 2, 2]
-HOP_COUNTS = [2, 2, 2, 3, 3, 3, 3, 3, 3, 3]
+RETRANSMISSIONS_COUNTS = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2]
+HOP_COUNTS = [1, 1, 1, 1, 2, 2, 2, 3, 3, 3]
 
 
 class LWBSlotType(Enum):
@@ -34,7 +34,7 @@ class LWBSlotType(Enum):
 
 
 class LWBSlot:
-    def __init__(self, round: 'LWBRound', slot_offset: float, modulation: int, payload: int, type: LWBSlotType, acked=True, master:'SimNode'=None):
+    def __init__(self, round: 'lwb_round.LWBRound', slot_offset: float, modulation: int, payload: int, type: LWBSlotType, acked=True, master:'sim_node.SimNode'=None):
         self.round = round
         self.slot_offset = slot_offset
         self.modulation = modulation
@@ -54,10 +54,15 @@ class LWBSlot:
         self.flood = GloriaFlood(self, self.gloria_modulation, self.payload,
                                  RETRANSMISSIONS_COUNTS[self.gloria_modulation], HOP_COUNTS[self.gloria_modulation],
                                  acked=self.acked, is_master=(self.master is not None))
+        self.flood.generate()
 
     @property
     def slot_marker(self):
-        self.round.round_marker + self.slot_offset
+        return self.round.round_marker + self.slot_offset
+
+    @property
+    def slot_end_marker(self):
+        return self.round.round_marker + self.slot_offset + self.total_time
 
     @property
     def color(self):
@@ -81,37 +86,37 @@ class LWBSlot:
         return self.flood.total_time
 
     @staticmethod
-    def create_data_slot(round, slot_offset, modulation, payload, master: 'SimNode'):
+    def create_data_slot(round, slot_offset, modulation, payload, master: 'sim_node.SimNode'):
         slot = LWBSlot(round, slot_offset, modulation, payload, LWBSlotType.DATA, acked=True)
         return slot
 
     @staticmethod
-    def create_sync_slot(round, slot_offset, modulation, master: 'SimNode'):
+    def create_sync_slot(round, slot_offset, modulation, master: 'sim_node.SimNode'):
         slot = LWBSlot(round, slot_offset, modulation, sync_header_length, LWBSlotType.SYNC, acked=False)
         return slot
 
     @staticmethod
-    def create_round_schedule_slot(round, slot_offset, modulation, master: 'SimNode'):
+    def create_round_schedule_slot(round, slot_offset, modulation, master: 'sim_node.SimNode'):
         slot = LWBSlot(round, slot_offset, modulation, round_schedule_length, LWBSlotType.ROUND_SCHEDULE, acked=False)
         return slot
 
     @staticmethod
-    def create_slot_schedule_slot(round, slot_offset, modulation, master: 'SimNode'):
-        payload = sync_header_length + SLOT_COUNTS[MODULATIONS[modulation]] * slot_schedule_item_length
+    def create_slot_schedule_slot(round, slot_offset, modulation, master: 'sim_node.SimNode'):
+        payload = sync_header_length + lwb_round.SLOT_COUNTS[MODULATIONS[modulation]] * slot_schedule_item_length
         slot = LWBSlot(round, slot_offset, modulation, payload, LWBSlotType.SLOT_SCHEDULE, acked=False)
         return slot
 
     @staticmethod
-    def create_round_contention_slot(round, slot_offset, modulation, master: 'SimNode'):
+    def create_round_contention_slot(round, slot_offset, modulation, master: 'sim_node.SimNode'):
         slot = LWBSlot(round, slot_offset, modulation, contention_length, LWBSlotType.ROUND_CONTENTION, acked=True)
         return slot
 
     @staticmethod
-    def create_contention_slot(round, slot_offset, modulation, master: 'SimNode'):
+    def create_contention_slot(round, slot_offset, modulation, master: 'sim_node.SimNode'):
         slot = LWBSlot(round, slot_offset, modulation, contention_length, LWBSlotType.CONTENTION, acked=True)
         return slot
 
     @staticmethod
-    def create_ack_slot(round, slot_offset, modulation, master: 'SimNode'):
+    def create_ack_slot(round, slot_offset, modulation, master: 'sim_node.SimNode'):
         slot = LWBSlot(round, slot_offset, modulation, gloria_header_length, LWBSlotType.ACK, acked=True)
         return slot

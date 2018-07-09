@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
 
-from flora_tools.sim.sim_node import SimNode
+import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.sim_message_manager import SimMessageManager
 from flora_tools.sim.sim_event_manager import SimEventManager
 from flora_tools.sim.sim_message_channel import SimMessageChannel
@@ -19,7 +19,7 @@ class SimNetwork:
         self.mc = SimMessageChannel(self)
         self.em = SimEventManager(self)
 
-        self.nodes = [SimNode(self, mm=self.mm, em=self.em, id=i, role='sensor', datarate=10) for i in range(count)]
+        self.nodes = [sim_node.SimNode(self, mm=self.mm, em=self.em, id=i, role='sensor', datarate=10) for i in range(count)]
         self.G = nx.Graph()
         self.G.add_nodes_from(range(count))
 

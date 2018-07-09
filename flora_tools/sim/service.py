@@ -2,7 +2,7 @@ import abc
 
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_node import SimNode
-from flora_tools.sim.sim_datastream_manager import DataStream
+from flora_tools.sim.sim_datastream_manager import DataStream, NotificationStream
 
 
 class Service:
@@ -11,9 +11,6 @@ class Service:
     def __init__(self, node: 'SimNode', name=None):
         self.node = node
         self.name = name
-
-    def register_datastream(self, datastream: DataStream):
-        self.datastreams.append(datastream)
 
     @abc.abstractmethod
     def get_data(self) -> SimMessage:
@@ -29,4 +26,12 @@ class Service:
 
     @abc.abstractmethod
     def notification_available(self) -> SimMessage:
+        return
+
+    @abc.abstractmethod
+    def failed_datastream_callback(self, datastream: DataStream):
+        return
+
+    @abc.abstractmethod
+    def failed_notification_callback(self, notification_stream: NotificationStream):
         return

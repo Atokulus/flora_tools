@@ -1,3 +1,4 @@
+import typing
 from enum import Enum
 
 from flora_tools.radio_configuration import RadioConfiguration
@@ -7,9 +8,9 @@ from flora_tools.lwb_slot import LWBSlotType, LWBSlot, MODULATIONS
 from flora_tools.gloria_flood import GloriaFlood
 
 SLOT_COUNTS = [2, 2, 4, 4, 6, 6, 16, 16, 32, 32]
-max_contention_layout = [2, 4, 4, 8, 8]
-initial_contention_layout = [1, 1, 1, 1, 8]
-min_contention_layout = [0, 0, 0, 0, 0]
+max_contention_layout = [2, 2, 4, 8]
+initial_contention_layout = [1, 1, 1, 8]
+min_contention_layout = [0, 0, 0, 0]
 
 
 class LWBRoundType(Enum):
@@ -45,7 +46,7 @@ class LWBDataSlotItem:
 
 
 class LWBRound:
-    def __init__(self, round_marker, modulation, type: LWBRoundType, master:'SimNode'=None, layout=None):
+    def __init__(self, round_marker, modulation, type: LWBRoundType, master:'SimNode'=None, layout=None, low_power=False):
         self.round_marker = round_marker
         self.modulation = modulation
         self.gloria_modulation = MODULATIONS[self.modulation]
@@ -53,8 +54,9 @@ class LWBRound:
         self.type = type
         self.master = master
         self.layout = layout
+        self.low_power = low_power
 
-        self.slots = []
+        self.slots: typing.List[LWBSlot] = []
 
         self.generate()
 
@@ -62,28 +64,36 @@ class LWBRound:
     def color(self):
         return self.radio_configuration.color
 
+    @property
+    def total_time(self):
+        return self.round_end_marker - self.round_marker
+
+    @property
+    def round_end_marker(self):
+        return self.slots[-1].slot_end_marker
+
     def generate(self):
         slot_offset = 0
 
         item : LWBSlotItem
         for item in self.layout:
-            if item.type is LWBSlotItem.SYNC:
+            if item.type is LWBSlotItemType.SYNC:
                 slot = LWBSlot.create_sync_slot(self, slot_offset, self.modulation, master=item.master)
-            elif item.type is LWBSlotItem.ROUND_SCHEDULE:
+            elif item.type is LWBSlotItemType.ROUND_SCHEDULE:
                 slot = LWBSlot.create_round_schedule_slot(self, slot_offset, self.modulation, master=item.master)
-            elif item.type is LWBSlotItem.SLOT_SCHEDULE:
+            elif item.type is LWBSlotItemType.SLOT_SCHEDULE:
                 slot = LWBSlot.create_slot_schedule_slot(self, slot_offset, self.modulation, master=item.master)
-            elif item.type is LWBSlotItem.CONTENTION:
+            elif item.type is LWBSlotItemType.CONTENTION:
                 slot = LWBSlot.create_contention_slot(self, slot_offset, self.modulation, master=item.master)
                 self.slots.append(slot)
                 slot_offset += slot.total_time
                 slot = LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target)
-            elif item.type is LWBSlotItem.ROUND_CONTENTION:
+            elif item.type is LWBSlotItemType.ROUND_CONTENTION:
                 slot = LWBSlot.create_round_contention_slot(self, slot_offset, self.modulation, master=item.master)
                 self.slots.append(slot)
                 slot_offset += slot.total_time
                 slot = LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target)
-            elif item.type is LWBSlotItem.DATA:
+            elif item.type is LWBSlotItemType.DATA:
                 slot = LWBSlot.create_data_slot(self, slot_offset, self.modulation, payload=item.data_payload, master=item.master)
                 self.slots.append(slot)
                 slot_offset += slot.total_time
@@ -93,55 +103,53 @@ class LWBRound:
             slot_offset += slot.total_time
 
     @staticmethod
-    def create_sync_round(round_marker: float, modulation: int):
+    def create_sync_round(round_marker: float, modulation: int, master:'SimNode'=None):
         layout = []
 
         layout.append(LWBSlotItem(LWBSlotItemType.SYNC))
         layout.append(LWBSlotItem(LWBSlotItemType.ROUND_CONTENTION))
         layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE))
 
-        return LWBRound(round_marker, modulation, type=LWBRoundType.SYNC, layout=layout)
+        return LWBRound(round_marker, modulation, type=LWBRoundType.SYNC, layout=layout, master=master)
 
     @staticmethod
-    def create_data_round(round_marker: float, modulation: int, data_slots):
+    def create_data_round(round_marker: float, modulation: int, data_slots, master:'SimNode'=None):
         layout = []
-        layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE))
+        layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE, master=master))
         item: LWBDataSlotItem
         for item in data_slots:
             layout.append(LWBSlotItem(LWBSlotItemType.DATA, master=item.master, target=item.target, data_payload=item.data_payload))
-        layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE))
+        layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))
 
-        return LWBRound(round_marker, modulation, type=LWBRoundType.DATA, layout=layout)
+        return LWBRound(round_marker, modulation, type=LWBRoundType.DATA, layout=layout, master=master)
 
     @staticmethod
-    def create_contention_round(round_marker: float, modulation: int, contention_count: int):
+    def create_contention_round(round_marker: float, modulation: int, contention_count: int, master:'SimNode'=None):
         layout = []
         layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE))
         for i in range(contention_count):
             layout.append(LWBSlotItem(LWBSlotItemType.CONTENTION))
-        layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE))
+        layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))
 
-        return LWBRound(round_marker, modulation, type=LWBRoundType.CONTENTION, layout=layout)
-
-    @staticmethod
-    def create_notification_round(round_marker: float, modulation: int, notification_count: int):
-        layout = []
-        layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE))
-        for i in range(notification_count):
-            layout.append(LWBSlotItem(LWBSlotItemType.CONTENTION))
-        layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE))
-
-        return LWBRound(round_marker, modulation, type=LWBRoundType.NOTIFICATION, layout=layout)
+        return LWBRound(round_marker, modulation, type=LWBRoundType.CONTENTION, layout=layout, master=master)
 
     @staticmethod
-    def create_lp_notification_round(round_marker: float, modulation: int, notification_count: int):
+    def create_notification_round(round_marker: float, modulation: int, notification_count: int, master:'SimNode'=None):
         layout = []
-        layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE))
+        layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE, master=master))
         for i in range(notification_count):
             layout.append(LWBSlotItem(LWBSlotItemType.CONTENTION))
-        layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE))
+        layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))
 
-        return LWBRound(round_marker, modulation, type=LWBRoundType.LP_NOTIFICATION, layout=layout)
+        return LWBRound(round_marker, modulation, type=LWBRoundType.NOTIFICATION, layout=layout, master=master)
+
+    @staticmethod
+    def create_lp_notification_round(round_marker: float, modulation: int, notification_count: int, master:'SimNode'=None):
+        layout = []
+        for i in range(notification_count):
+            layout.append(LWBSlotItem(LWBSlotItemType.CONTENTION, master=master))
+
+        return LWBRound(round_marker, modulation, type=LWBRoundType.LP_NOTIFICATION, layout=layout, master=master, low_power=True)
 
 
 

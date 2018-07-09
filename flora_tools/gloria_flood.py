@@ -4,7 +4,7 @@ import numpy as np
 
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
-from flora_tools.lwb_slot import LWBSlot
+import flora_tools.lwb_slot as lwb_slot
 
 rx_time_offsets = [
     [0.359425231, 0.080458787],
@@ -57,7 +57,8 @@ class GloriaSlotType(Enum):
 
 
 class GloriaSlot:
-    def __init__(self, flood: 'GloriaFlood', slot_offset: float, type: GloriaSlotType = None, payload=None, power=10E-3):
+    def __init__(self, flood: 'GloriaFlood', slot_offset: float, type: GloriaSlotType = None, payload=None,
+                 power=10E-3):
         self.slot_offset = slot_offset
         self.flood = flood
         self.type = type
@@ -66,6 +67,22 @@ class GloriaSlot:
             self.payload = self.flood.payload
         else:
             self.payload = payload
+
+    @property
+    def color(self):
+        if self.type is GloriaSlotType.TX:
+            return 'r'
+        elif self.type is GloriaSlotType.RX:
+            return 'b'
+        else:
+            return 'g'
+
+    @property
+    def active_marker(self):
+        if self.type in [GloriaSlotType.RX, GloriaSlotType.RX_ACK]:
+            return self.rx_marker
+        else:
+            return self.tx_marker
 
     @property
     def tx_marker(self):
@@ -86,13 +103,13 @@ class GloriaSlot:
     @property
     def total_rx_time(self):
         toa = self.flood.gloria_timings.radio_math.get_message_toa(payload_size=self.payload)
-        toa_offset = self.rx_offset()
+        toa_offset = self.rx_offset
         return toa + toa_offset + rx_time_offsets[self.flood.modulation][0] + rx_time_offsets[self.flood.modulation][
             1] * self.flood.safety_factor
 
     @property
     def rx_offset(self):
-        return self.flood.gloria_timings.radio_math.preamble_time() * preamble_pre_listening
+        return self.flood.gloria_timings.radio_math.get_preamble_time() * preamble_pre_listening
 
     @property
     def total_tx_time(self):
@@ -138,7 +155,8 @@ class GloriaSlot:
 
 
 class GloriaFlood:
-    def __init__(self, lwb_slot: 'LWBSlot', modulation: int, payload: int, retransmission_count: int, hop_count: int,
+    def __init__(self, lwb_slot: 'lwb_slot.LWBSlot', modulation: int, payload: int, retransmission_count: int,
+                 hop_count: int,
                  acked=False, safety_factor=2, is_master=True, power=10E-3):
         self.lwb_slot = lwb_slot
         self.modulation = modulation
@@ -156,11 +174,16 @@ class GloriaFlood:
 
         self.slots = []
 
-        self.generate()
-
     @property
     def flood_marker(self):
         return self.lwb_slot.slot_marker
+
+    @property
+    def slot_count(self):
+        if self.lwb_slot.round.low_power:
+            return 1
+        else:
+            return (2 * self.retransmission_count - 1) + (self.hop_count - 1)
 
     def generate(self):
         temp_slot = GloriaSlot(self, 0, type=GloriaSlotType.TX)
@@ -171,21 +194,20 @@ class GloriaFlood:
                          np.max([self.gloria_timings.tx_setup_time, self.gloria_timings.rx_setup_time]) +
                          8.52937941e-05 + 5.45332554e-08 * self.safety_factor +
                          temp_slot.rx_offset +
-                         temp_slot.payload_get_time +
+                         self.gloria_timings.payload_get_time +
                          self.gloria_timings.sleep_time)
 
-        self.total_time = (2 * self.retransmission_count + (self.hop_count - 1)) * (
-                temp_slot.slot_time +
-                (temp_ack_slot.slot_time if self.acked else 0)
-        ) + self.overhead
+        self.total_time = (self.slot_count * temp_slot.slot_time +
+                           (self.slot_count - 1) * (temp_ack_slot.slot_time if self.acked else 0)
+                           + self.overhead)
 
         offset = (self.gloria_timings.wakeup_time +
                   self.gloria_timings.payload_set_time +
                   np.max([self.gloria_timings.tx_setup_time, self.gloria_timings.rx_setup_time]) +
                   8.52937941e-05 + 5.45332554e-08 * self.safety_factor +
-                  self.tmp_slot.rx_offset)
+                  temp_slot.rx_offset)
 
-        for i in range(2 * self.retransmission_count + (self.hop_count - 1)):
+        for i in range(self.slot_count):
             if (i % 2) ^ self.is_master:
                 slot = GloriaSlot(self, offset, type=GloriaSlotType.TX)
             else:
@@ -193,7 +215,7 @@ class GloriaFlood:
 
             self.slots.append(slot)
 
-            if self.acked:
+            if self.acked and i < self.slot_count - 1:
                 offset += slot.slot_time
                 ack_slot = GloriaSlot(self, offset, GloriaSlotType.RX_ACK, payload=gloria_ack_length, power=self.power)
                 self.slots.append(ack_slot)

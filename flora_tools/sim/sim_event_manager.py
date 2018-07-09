@@ -3,8 +3,8 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-from flora_tools.sim.sim_network import SimNetwork
-from flora_tools.sim.sim_node import SimNode
+import flora_tools.sim.sim_network as sim_network
+import flora_tools.sim.sim_node as sim_node
 from enum import Enum
 
 
@@ -17,7 +17,7 @@ class SimEventType(Enum):
 
 
 class SimEventManager:
-    def __init__(self, network: 'SimNetwork'):
+    def __init__(self, network: 'sim_network.SimNetwork'):
         self.network = network
         self.eq = pd.DataFrame(columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback'])
 
@@ -33,5 +33,5 @@ class SimEventManager:
     def process_event(event):
         event['callback'](event)
 
-    def register_event(self, timestamp: float, node: 'SimNode', type: SimEventType, callback: Callable[[None], None], content=None):
+    def register_event(self, timestamp: float, node: 'sim_node.SimNode', type: SimEventType, callback: Callable[[None], None], content=None):
         self.eq.loc[len(self.eq)] = [node.transform_local_to_global_timestamp(timestamp), timestamp, node, type, content, callback]

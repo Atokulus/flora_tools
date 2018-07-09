@@ -1,5 +1,5 @@
 from flora_tools.sim.sim_node import SimNode
-from flora_tools.lwb_visualizer import modulations
+from flora_tools.lwb_slot import MODULATIONS
 from flora_tools.gloria_flood import GloriaFlood
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
@@ -7,11 +7,10 @@ from flora_tools.sim.sim_event_manager import SimEventType
 
 CAD_SYMBOL_TIMEOUT = [1, 1, 1]
 
-
 class SimChannelScanner:
     def __init__(self, node: 'SimNode', callback):
         self.node = node
-        self.current_modulation = len(modulations) - 1
+        self.current_modulation = len(MODULATIONS) - 1
         self.callback = callback
         self.rx_start = None
         self.potential_message = None

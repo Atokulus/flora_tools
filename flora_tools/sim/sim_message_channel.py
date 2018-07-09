@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from flora_tools.sim.sim_message import SimMessage
-from flora_tools.sim.sim_node import SimNode
+import flora_tools.sim.sim_node as sim_node
 
 from flora_tools.gloria_flood import GloriaFlood
 from flora_tools.radio_configuration import RadioConfiguration
@@ -14,7 +14,7 @@ class SimMessageChannel:
         self.network = network
         self.mm = network.mm
 
-    def get_potential_rx_message(self, modulation, band, rx_node: 'SimNode', rx_start, rx_timeout=None) -> SimMessage:
+    def get_potential_rx_message(self, modulation, band, rx_node: 'sim_node.SimNode', rx_start, rx_timeout=None) -> SimMessage:
 
         rx_start = rx_node.transform_local_to_global_timestamp(rx_start)
 
@@ -121,7 +121,7 @@ class SimMessageChannel:
         else:
             return False
 
-    def cad_process(self, timestamp, rx_node: 'SimNode', modulation, band):
+    def cad_process(self, timestamp, rx_node: 'sim_node.SimNode', modulation, band):
         timestamp = rx_node.transform_local_to_global_timestamp(timestamp)
 
         def mark_reachable_message(item):

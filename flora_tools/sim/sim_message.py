@@ -1,9 +1,9 @@
-from flora_tools.sim.sim_node import SimNode
+import flora_tools.sim.sim_node as sim_node
 import numpy as np
 
 
 class SimMessage:
-    def __init__(self, timestamp, source: 'SimNode', payload, modulation, destination=None, type='data', content=None, power_level=0, id=None):
+    def __init__(self, timestamp, source: 'sim_node.SimNode', payload, modulation, destination=None, type='data', content=None, power_level=0, id=None):
         self.timestamp = timestamp
         self.id = None
         self.source = source

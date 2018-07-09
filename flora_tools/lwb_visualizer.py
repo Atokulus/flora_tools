@@ -2,38 +2,38 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from flora_tools.lwb_round import LWBRound
 from flora_tools.lwb_slot import LWBSlot
+from flora_tools.gloria_flood import GloriaSlot, GloriaSlotType
+
 
 class LWBVisualizer:
     @staticmethod
-    def plot_round(round: 'LWBRound', enable_markers=True, track=0):
-
+    def plot_round(round: 'LWBRound', ax, enable_markers=True, track:int=0):
         boxes = []
-        slot : LWBSlot
+
+        rect = Rectangle((round.round_marker, track), round.total_time, 0.95,
+                         edgecolor=round.color, linewidth=2)
+        boxes.append(rect)
+
+        slot: LWBSlot
         for slot in round.slots:
-            rect = Rectangle((slot.slot_marker, track), slot.total_time, 1, facecolor=LWBSlot.color,
-                             edgecolor=round.color, linewidth=2)
+            rect = Rectangle((slot.slot_marker, track), slot.total_time, 0.95, facecolor=slot.color, linewidth=2)
             boxes.append(rect)
 
-            for glossy_slot in slot.flood.slots:
-                offset = slot['offset'] + glossy_slot['offset']
-                if glossy_slot['type'] is 'tx':
-                    facecolor = 'r'
-                elif glossy_slot['type'] is 'rx':
-                    facecolor = 'b'
-                else:
-                    facecolor = 'g'
-
+            gloria_slot: GloriaSlot
+            for gloria_slot in slot.flood.slots:
                 rect = Rectangle(
-                    (offset, 0),
-                    glossy_slot['time'],
+                    (gloria_slot.active_marker, track),
+                    gloria_slot.active_time,
                     0.5,
-                    facecolor=facecolor
+                    facecolor=gloria_slot.color
                 )
 
                 if enable_markers:
-                    offset = slot['offset'] + glossy_slot['marker']
-                    plt.plot([offset, offset], [0.4, 0.6], c='white', linewidth=1)
+                    plt.plot([gloria_slot.tx_marker, gloria_slot.tx_marker], [0.2+track, 0.7+track], c='white', linewidth=1)
 
                 boxes.append(rect)
+
+        for box in boxes:
+            ax.add_patch(box)
 
         return boxes

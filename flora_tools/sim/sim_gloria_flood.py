@@ -1,15 +1,15 @@
 import numpy as np
 
-from flora_tools.lwb_visualizer import gloria_header_length
+from flora_tools.lwb_slot import gloria_header_length
 from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage
-from flora_tools.sim.sim_node import SimNode
+import flora_tools.sim.sim_node as sim_node
 
 MAX_ACKS = 1
 
 
 class SimGloriaFlood:
-    def __init__(self, node: 'SimNode', flood, finished_callback, init_tx_message: SimMessage = None, power_increase=True, update_timestamp=False):
+    def __init__(self, node: 'sim_node.SimNode', flood, finished_callback, init_tx_message: SimMessage = None, power_increase=True, update_timestamp=False):
         self.node = node
         self.flood = flood
         self.finished_callback = finished_callback
