@@ -1,5 +1,5 @@
 import pandas as pd
-import flora_tools.lwb_math as lwb_math
+import flora_tools.lwb_visualizer as lwb_math
 from flora_tools.sim.sim_node import SimNode
 
 

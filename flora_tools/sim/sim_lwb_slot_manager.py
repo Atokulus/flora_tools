@@ -1,8 +1,8 @@
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_gloria_flood import SimGloriaFlood
 from flora_tools.sim.sim_node import SimNode
-import flora_tools.lwb_math as lwb_math
-from flora_tools.lwb_math import LWBMath
+import flora_tools.lwb_visualizer as lwb_math
+from flora_tools.lwb_visualizer import LWBVisualizer
 
 
 class SimLWBSlotManager:

@@ -40,12 +40,14 @@ flora_tools  # With an underscore!
 Do not install the python package from PyPi, but rather clone this repository and run
 
 ```sh
+git submodule update --init --recursive
 python -m pip install -e .
 ```
 
 inside the top folder (where `setup.py` is located). You can edit the source files and the module will reflect the changes automatically.
 
-The python package is generated and uploaded according to (https://packaging.python.org/tutorials/packaging-projects/)
+The python package is generated and uploaded according to (https://packaging.python.org/tutorials/packaging-projects/).
+Do not forget to clone the git submodules as well.
 
 
 ## Patch Atollic TrueStudio Eclipse Project Files

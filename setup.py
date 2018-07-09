@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='flora_tools',
-    version='0.1.8',
+    version='0.1.9',
     packages=setuptools.find_packages(),
     url='https://github.com/Atokulus/flora_tools.git',
     license='MIT',

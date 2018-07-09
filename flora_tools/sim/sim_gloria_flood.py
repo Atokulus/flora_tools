@@ -1,6 +1,6 @@
 import numpy as np
 
-from flora_tools.lwb_math import gloria_header_length
+from flora_tools.lwb_visualizer import gloria_header_length
 from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_node import SimNode

@@ -4,7 +4,7 @@ import pandas as pd
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_node import SimNode
 
-from flora_tools.gloria_math import GloriaMath
+from flora_tools.gloria_flood import GloriaFlood
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath, RADIO_SNR
 
@@ -25,7 +25,7 @@ class SimMessageChannel:
         def calc_power_message(item):
             return self.network.calculate_path_loss(rx_node, self.network.nodes[item.source])
 
-        config = RadioConfiguration(modulation, preamble=GloriaMath().preamble_len(modulation))
+        config = RadioConfiguration(modulation, preamble=GloriaFlood().preamble_len(modulation))
         math = RadioMath(config)
 
         valid_rx_start = rx_start + math.get_symbol_time() * 0.1
@@ -76,7 +76,7 @@ class SimMessageChannel:
         def calc_power_message(item):
             return self.network.calculate_path_loss(rx_node, self.network.nodes[item.node_id])
 
-        config = RadioConfiguration(modulation, preamble=GloriaMath().preamble_len(modulation))
+        config = RadioConfiguration(modulation, preamble=GloriaFlood().preamble_len(modulation))
         math = RadioMath(config)
         valid_rx_start = rx_start + math.get_symbol_time() * 0.5
 
@@ -130,7 +130,7 @@ class SimMessageChannel:
         def calc_power_message(item):
             return self.network.calculate_path_loss(rx_node, self.network.nodes[item.source])
 
-        config = RadioConfiguration(modulation, preamble=GloriaMath().preamble_len(modulation))
+        config = RadioConfiguration(modulation, preamble=GloriaFlood().preamble_len(modulation))
         math = RadioMath(config)
 
         cad_start = timestamp - math.get_symbol_time() * (1.5 - 0.5)  # -0.5 as signal had to present for longer time

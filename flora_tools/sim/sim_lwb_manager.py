@@ -3,8 +3,8 @@ from flora_tools.sim.sim_lwb_slot_manager import SimLWBSlotManager
 from flora_tools.sim.sim_node import SimNode
 from flora_tools.sim.lwb_schedule_manager import LWBScheduleManager
 from flora_tools.sim.sim_event_manager import SimEventType
-import flora_tools.lwb_math as lwb_math
-from flora_tools.lwb_math import LWBMath
+import flora_tools.lwb_visualizer as lwb_math
+from flora_tools.lwb_visualizer import LWBVisualizer
 
 
 BACKOFF_TIME = 1/8E6 * 2^29

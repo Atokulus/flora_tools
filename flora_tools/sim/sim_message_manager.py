@@ -6,7 +6,7 @@ from flora_tools.radio_math import RadioMath
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_network import SimNetwork
 from flora_tools.sim.sim_node import SimNode
-from flora_tools.lwb_math import powers
+from flora_tools.lwb_visualizer import powers
 
 from copy import copy
 
