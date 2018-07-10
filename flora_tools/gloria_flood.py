@@ -1,8 +1,10 @@
 from enum import Enum
+from typing import List
 
 import numpy as np
 
 import flora_tools.lwb_slot as lwb_slot
+from flora_tools.lwb_slot import BANDS
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
 
@@ -89,6 +91,10 @@ class GloriaSlot:
         return self.flood.flood_marker + self.slot_offset
 
     @property
+    def tx_done_marker(self):
+        return self.tx_marker + self.total_tx_time
+
+    @property
     def rx_marker(self):
         return self.tx_marker - self.rx_offset
 
@@ -98,7 +104,7 @@ class GloriaSlot:
 
     @property
     def rx_end_marker(self):
-        return self.rx_marker + self.flood.gloria_timings.radio_math.get_message_toa(self.payload)
+        return self.rx_marker + self.total_rx_time
 
     @property
     def total_rx_time(self):
@@ -157,7 +163,7 @@ class GloriaSlot:
 class GloriaFlood:
     def __init__(self, lwb_slot: 'lwb_slot.LWBSlot', modulation: int, payload: int, retransmission_count: int,
                  hop_count: int,
-                 acked=False, safety_factor=2, is_master=True, power=10E-3):
+                 acked=False, safety_factor=2, is_master=True, power=10E-3, band: int = BANDS[0]):
         self.lwb_slot = lwb_slot
         self.modulation = modulation
         self.payload = payload
@@ -168,11 +174,12 @@ class GloriaFlood:
         self.is_master = is_master
         self.power = power
         self.gloria_timings = GloriaTimings(modulation=self.modulation)
+        self.band = band
 
         self.total_time = None
         self.overhead = None
 
-        self.slots = []
+        self.slots: List[GloriaSlot] = []
 
     @property
     def flood_marker(self):

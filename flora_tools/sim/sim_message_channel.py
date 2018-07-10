@@ -14,8 +14,9 @@ class SimMessageChannel:
         self.network = network
         self.mm = network.mm
 
-    def receive_message_on_tx_done(self, rx_node: 'sim_node.SimNode', modulation, band, message: SimMessage,
-                                   rx_start: float, tx_start: float) -> SimMessage:
+    def receive_message_on_tx_done_before_rx_timeout(self, rx_node: 'sim_node.SimNode', modulation, band,
+                                                     message: SimMessage,
+                                                     rx_start: float, tx_start: float) -> SimMessage:
         if not self.is_reachable(rx_node, self.network.nodes[message.source.id],
                                  lwb_slot.POWERS[self.message.power_level]):
             return None
@@ -153,9 +154,9 @@ class SimMessageChannel:
             return self.network.is_reachable(rx_node, self.network.nodes[item.source], power=item.power)
 
         def calc_power_message(item):
-            return self.network.calculate_path_loss(rx_node, self.network.nodes[item.source])
+            return self.network.calculate_path_loss(rx_node, self.network.nodes[item.source]) + item['power']
 
-        config = RadioConfiguration(modulation, preamble=GloriaFlood().preamble_len(modulation))
+        config = RadioConfiguration(modulation)
         math = RadioMath(config)
 
         cad_start = timestamp - math.get_symbol_time() * (1.5 - 0.5)  # -0.5 as signal had to present for longer time

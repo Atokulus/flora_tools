@@ -6,7 +6,7 @@ from flora_tools.gloria_flood import GloriaFlood
 from flora_tools.radio_configuration import RadioConfiguration
 
 MODULATIONS = [3, 5, 7, 9]
-BANDS = [48, 50]
+BANDS = [48]
 POWERS = [22, 10]
 
 gloria_header_length = 4

@@ -37,3 +37,8 @@ class SimEventManager:
                        callback: Callable[[None], None], data=None):
         self.eq.loc[len(self.eq)] = [node.transform_local_to_global_timestamp(timestamp), timestamp, node, type, data,
                                      callback]
+
+        return len(self.eq) - 1
+
+    def unregister_event(self, index):
+        self.eq.drop(index, inplace=True)
