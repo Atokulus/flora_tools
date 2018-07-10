@@ -50,9 +50,9 @@ class Target(Enum):
 
 SYMBOLS_XPATH = {
     Target.DEBUG: './/toolChain[@superClass="com.atollic.truestudio.exe.debug.toolchain"]/tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.gcc"]/option[@superClass="com.atollic.truestudio.gcc.symbols.defined"]',
-# DEBUG
+    # DEBUG
     Target.RELEASE: './/toolChain[@superClass="com.atollic.truestudio.exe.release.toolchain"]/tool[@superClass="com.atollic.truestudio.exe.release.toolchain.gcc"]/option[@superClass="com.atollic.truestudio.gcc.symbols.defined"]'
-# RELEASE
+    # RELEASE
 }
 
 

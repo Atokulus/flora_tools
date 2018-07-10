@@ -150,12 +150,12 @@ class RadioMath:
 
             df = pd.DataFrame(SENSITIVITIES)
             sensitivity = df[(df.sf == self.configuration.sf) & (
-                        df.bandwidth == self.configuration.real_bandwidth)].sensitivity.sort_values().iloc[0]
+                    df.bandwidth == self.configuration.real_bandwidth)].sensitivity.sort_values().iloc[0]
             return sensitivity + RF_SWITCH_INSERTION_LOSS
         else:
             df = pd.DataFrame(SENSITIVITIES)
             sensitivity = df[(df.bitrate >= self.configuration.bitrate) & (
-                        df.bandwidth >= self.configuration.real_bandwidth)].sensitivity.sort_values().iloc[0]
+                    df.bandwidth >= self.configuration.real_bandwidth)].sensitivity.sort_values().iloc[0]
             return sensitivity + RF_SWITCH_INSERTION_LOSS
 
     def link_budget(self, power=22):
