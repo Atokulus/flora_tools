@@ -1,15 +1,14 @@
-import numpy as np
-import networkx as nx
 from itertools import combinations
-import matplotlib.pyplot as plt
 
-from flora_tools.radio_configuration import RadioConfiguration
-from flora_tools.radio_math import RadioMath
+import networkx as nx
+import numpy as np
 
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.sim.sim_message_manager import SimMessageManager
+from flora_tools.radio_configuration import RadioConfiguration
+from flora_tools.radio_math import RadioMath
 from flora_tools.sim.sim_event_manager import SimEventManager
 from flora_tools.sim.sim_message_channel import SimMessageChannel
+from flora_tools.sim.sim_message_manager import SimMessageManager
 
 
 class SimNetwork:
@@ -19,7 +18,8 @@ class SimNetwork:
         self.mc = SimMessageChannel(self)
         self.em = SimEventManager(self)
 
-        self.nodes = [sim_node.SimNode(self, mm=self.mm, em=self.em, id=i, role='sensor', datarate=10) for i in range(count)]
+        self.nodes = [sim_node.SimNode(self, mm=self.mm, em=self.em, id=i, role=('sensor' if i is not 0 else 'base'))
+                      for i in range(count)]
         self.G = nx.Graph()
         self.G.add_nodes_from(range(count))
 
@@ -30,6 +30,7 @@ class SimNetwork:
         channels = [tuple([edge[0], edge[1], {'path_loss': path_losses[index]}]) for index, edge in enumerate(edges)]
 
         self.G.add_edges_from(channels)
+
     def draw(self, modulation=None):
         if modulation is not None:
             H = self.G.copy()
@@ -44,8 +45,3 @@ class SimNetwork:
             nx.draw(H, with_labels=True, font_weight='bold')
         else:
             nx.draw(self.G, with_labels=True, font_weight='bold')
-
-
-
-
-

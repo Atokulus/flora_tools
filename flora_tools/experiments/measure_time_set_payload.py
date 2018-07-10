@@ -24,7 +24,8 @@ class MeasureTimeSetPayload(Experiment):
             text = utilities.get_random_text(length=254)
             text_len = (len(text) + 1)
 
-            configuration = RadioConfiguration.get_random_configuration(tx='randomize') # Does not work for FSK (random glitches on BUSY line)
+            configuration = RadioConfiguration.get_random_configuration(
+                tx='randomize')  # Does not work for FSK (random glitches on BUSY line)
             self.bench.devkit_a.cmd(configuration.cmd)
 
             self.bench.scope.init_measurement(window, trigger_rise=True, trigger_channel="NSS", points=points)
@@ -43,17 +44,19 @@ class MeasureTimeSetPayload(Experiment):
                 else:
                     delay = np.nan
 
-                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, text_len, delay]
+                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band,
+                        text_len, delay]
             else:
-                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, text_len, np.nan]
+                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band,
+                        text_len, np.nan]
 
             df.loc[i] = item
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
-        
+
         delay = df.measured
 
         columns = ['delay', 'delay_err']

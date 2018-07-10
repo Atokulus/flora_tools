@@ -1,10 +1,9 @@
 from enum import Enum
 
+import flora_tools.lwb_round as lwb_round
 import flora_tools.sim.sim_node as sim_node
-
 from flora_tools.gloria_flood import GloriaFlood
 from flora_tools.radio_configuration import RadioConfiguration
-import flora_tools.lwb_round as lwb_round
 
 MODULATIONS = [3, 5, 7, 9]
 BANDS = [48, 50]
@@ -34,7 +33,8 @@ class LWBSlotType(Enum):
 
 
 class LWBSlot:
-    def __init__(self, round: 'lwb_round.LWBRound', slot_offset: float, modulation: int, payload: int, type: LWBSlotType, acked=True, master:'sim_node.SimNode'=None):
+    def __init__(self, round: 'lwb_round.LWBRound', slot_offset: float, modulation: int, payload: int,
+                 type: LWBSlotType, acked=True, master: 'sim_node.SimNode' = None):
         self.round = round
         self.slot_offset = slot_offset
         self.modulation = modulation

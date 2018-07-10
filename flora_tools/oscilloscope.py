@@ -1,25 +1,37 @@
 import time
 
-import visa
 import numpy as np
-from struct import unpack
+import visa
 
 OSCILLOSCOPE_RECORDLENGTH_LOOKUP = [20E6, 10E6, 5E6, 1E6, 100E3, 10E3, 1E3]
 
 OSCILLOSCOPE_SCALE_LOOKUP = [
-    [1000,400,200,100,40,20,10,4,2,1,400E-3,200E-3,100E-3,40E-3,20E-3,8E-3,4E-3,2E-3,800E-6,400E-6,200E-6,100E-6,40E-6,20E-6,10E-6,4E-6,2E-6,1E-6,400E-9,200E-9,100E-9,40E-9,20E-9,10E-9,4E-9,2E-9,1E-9,400E-12],  # 20M
-    [1000,400,200,100,40,20,10,4,2,1,400E-3,200E-3,100E-3,40E-3,20E-3,10E-3,4E-3,2E-3,1E-3,400E-6,200E-6,100E-6,40E-6,20E-6,10E-6,4E-6,2E-6,1E-6,400E-9,200E-9,100E-9,40E-9,20E-9,10E-9,4E-9,2E-9,1E-9,400E-12],  # 10M
-    [1000,400,200,100,40,20,10,4,2,1,400E-3,200E-3,100E-3,40E-3,20E-3,10E-3,4E-3,2E-3,1E-3,400E-6,200E-6,100E-6,40E-6,20E-6,10E-6,4E-6,2E-6,1E-6,400E-9,200E-9,100E-9,40E-9,20E-9,10E-9,4E-9,2E-9,1E-9,400E-12],  # 5M
-    [1000,400,200,100,40,20,10,4,2,1,400E-3,200E-3,100E-3,40E-3,20E-3,10E-3,4E-3,2E-3,1E-3,400E-6,200E-6,100E-6,40E-6,20E-6,10E-6,4E-6,2E-6,1E-6,400E-9,200E-9,100E-9,40E-9,20E-9,10E-9,4E-9,2E-9,1E-9,400E-12],  # 1M
-    [1000,400,200,100,40,20,10,4,2,1,400E-3,200E-3,100E-3,40E-3,20E-3,10E-3,4E-3,2E-3,1E-3,400E-6,200E-6,100E-6,40E-6,20E-6,10E-6,4E-6,2E-6,1E-6,400E-9,200E-9,100E-9,40E-9,20E-9,10E-9,4E-9,2E-9,1E-9,400E-12],  # 100k
-    [400,200,100,40,20,10,4,2,1,400E-3,200E-3,100E-3,40E-3,20E-3,10E-3,4E-3,2E-3,1E-3,400E-6,200E-6,100E-6,40E-6,20E-6,10E-6,4E-6,2E-6,1E-6,400E-9,200E-9,100E-9,40E-9,20E-9,10E-9,4E-9,2E-9,1E-9,400E-12],  # 10k
-    [40,20,10,4,2,1,400E-3,200E-3,100E-3,40E-3,20E-3,10E-3,4E-3,2E-3,1E-3,400E-6,200E-6,100E-6,40E-6,20E-6,10E-6,4E-6,2E-6,1E-6,400E-9,200E-9,100E-9,40E-9,20E-9,10E-9,4E-9,2E-9,1E-9,400E-12],  # 1000
+    [1000, 400, 200, 100, 40, 20, 10, 4, 2, 1, 400E-3, 200E-3, 100E-3, 40E-3, 20E-3, 8E-3, 4E-3, 2E-3, 800E-6, 400E-6,
+     200E-6, 100E-6, 40E-6, 20E-6, 10E-6, 4E-6, 2E-6, 1E-6, 400E-9, 200E-9, 100E-9, 40E-9, 20E-9, 10E-9, 4E-9, 2E-9,
+     1E-9, 400E-12],  # 20M
+    [1000, 400, 200, 100, 40, 20, 10, 4, 2, 1, 400E-3, 200E-3, 100E-3, 40E-3, 20E-3, 10E-3, 4E-3, 2E-3, 1E-3, 400E-6,
+     200E-6, 100E-6, 40E-6, 20E-6, 10E-6, 4E-6, 2E-6, 1E-6, 400E-9, 200E-9, 100E-9, 40E-9, 20E-9, 10E-9, 4E-9, 2E-9,
+     1E-9, 400E-12],  # 10M
+    [1000, 400, 200, 100, 40, 20, 10, 4, 2, 1, 400E-3, 200E-3, 100E-3, 40E-3, 20E-3, 10E-3, 4E-3, 2E-3, 1E-3, 400E-6,
+     200E-6, 100E-6, 40E-6, 20E-6, 10E-6, 4E-6, 2E-6, 1E-6, 400E-9, 200E-9, 100E-9, 40E-9, 20E-9, 10E-9, 4E-9, 2E-9,
+     1E-9, 400E-12],  # 5M
+    [1000, 400, 200, 100, 40, 20, 10, 4, 2, 1, 400E-3, 200E-3, 100E-3, 40E-3, 20E-3, 10E-3, 4E-3, 2E-3, 1E-3, 400E-6,
+     200E-6, 100E-6, 40E-6, 20E-6, 10E-6, 4E-6, 2E-6, 1E-6, 400E-9, 200E-9, 100E-9, 40E-9, 20E-9, 10E-9, 4E-9, 2E-9,
+     1E-9, 400E-12],  # 1M
+    [1000, 400, 200, 100, 40, 20, 10, 4, 2, 1, 400E-3, 200E-3, 100E-3, 40E-3, 20E-3, 10E-3, 4E-3, 2E-3, 1E-3, 400E-6,
+     200E-6, 100E-6, 40E-6, 20E-6, 10E-6, 4E-6, 2E-6, 1E-6, 400E-9, 200E-9, 100E-9, 40E-9, 20E-9, 10E-9, 4E-9, 2E-9,
+     1E-9, 400E-12],  # 100k
+    [400, 200, 100, 40, 20, 10, 4, 2, 1, 400E-3, 200E-3, 100E-3, 40E-3, 20E-3, 10E-3, 4E-3, 2E-3, 1E-3, 400E-6, 200E-6,
+     100E-6, 40E-6, 20E-6, 10E-6, 4E-6, 2E-6, 1E-6, 400E-9, 200E-9, 100E-9, 40E-9, 20E-9, 10E-9, 4E-9, 2E-9, 1E-9,
+     400E-12],  # 10k
+    [40, 20, 10, 4, 2, 1, 400E-3, 200E-3, 100E-3, 40E-3, 20E-3, 10E-3, 4E-3, 2E-3, 1E-3, 400E-6, 200E-6, 100E-6, 40E-6,
+     20E-6, 10E-6, 4E-6, 2E-6, 1E-6, 400E-9, 200E-9, 100E-9, 40E-9, 20E-9, 10E-9, 4E-9, 2E-9, 1E-9, 400E-12],  # 1000
 ]
 
 OSCILLOSCOPE_ADDRESS = "TCPIP0::ee-tik-dhcp-103-228.ethz.ch::inst0::INSTR"
 
 SETUP = [
-    #"*IDN?",
+    # "*IDN?",
 
     "ACQUIRE:MODE SAMPLE",
     "HORIZONTAL:RECORDLENGTH 1000",
@@ -52,7 +64,7 @@ SETUP = [
     "TRIGGER:A:LEVEL:CH3 1.65",
 
     "CH4:LABEL 'RF'",
-    "CH4:DESKEW 2.0E-9", # 4.7 (Teflon-) - 5 ns/m (PE-Coax). I.e. 0.4 m -> 2 ns
+    "CH4:DESKEW 2.0E-9",  # 4.7 (Teflon-) - 5 ns/m (PE-Coax). I.e. 0.4 m -> 2 ns
     "CH4:IMPEDANCE FIFTY",
     "CH4:SCALE 0.005",
     "CH4:POSITION -3.0",
@@ -67,7 +79,7 @@ class Oscilloscope:
         self.rm = visa.ResourceManager()
         if OSCILLOSCOPE_ADDRESS in self.rm.list_resources():
             self.inst = self.rm.open_resource(OSCILLOSCOPE_ADDRESS)
-            #self.inst.timeout = 10000
+            # self.inst.timeout = 10000
             self.wait_busy()
             self.inst.write("*CLS")
             for cmd in SETUP:
@@ -84,7 +96,7 @@ class Oscilloscope:
                 start = time.time()
                 while ":BUSY 1" in self.inst.query("BUSY?"):
                     if (time.time() > start + timeout):
-                        return False # Trigger did not work after 5 seconds
+                        return False  # Trigger did not work after 5 seconds
                     time.sleep(0.1)
 
                 return True
@@ -100,7 +112,8 @@ class Oscilloscope:
             else:
                 return False
 
-    def init_measurement(self, window, points=1000, trigger_channel="NSS", trigger_rise=True, start=0, text="", trigger_position=None):
+    def init_measurement(self, window, points=1000, trigger_channel="NSS", trigger_rise=True, start=0, text="",
+                         trigger_position=None):
         self.wait_busy(timeout=None)
 
         if text:
@@ -118,13 +131,13 @@ class Oscilloscope:
             self.inst.write("TRIGGER:A:EDGE:SLOPE FALL")
 
         self.inst.write("HORIZONTAL:SCALE {:8E}".format(window / 10.0))
-        self.inst.write("HORIZONTAL:DELAY:TIME {:8E}".format(trigger_position if trigger_position is not None else (0.4 * window)))
+        self.inst.write(
+            "HORIZONTAL:DELAY:TIME {:8E}".format(trigger_position if trigger_position is not None else (0.4 * window)))
         self.inst.write("HORIZONTAL:RECORDLENGTH {}".format(points))
         self.inst.write("ACQUIRE:STOPAFTER SEQUENCE")
         self.inst.write("ACQUIRE:STATE RUN")
 
-
-    def finish_measurement(self, channels=range(1,5)):
+    def finish_measurement(self, channels=range(1, 5)):
         if not self.wait_busy():
             return None
 
@@ -139,13 +152,13 @@ class Oscilloscope:
             self.inst.write("CURVE?")
             reply = self.inst.read_raw()
             num_length = int(reply[7:8])
-            length = int(reply[8:(8+num_length)])
+            length = int(reply[8:(8 + num_length)])
 
             if int(length / 2) > self.points:
                 self.points = length
                 data = np.empty((0, self.points), dtype=np.int16)
 
-            binary = reply[8+num_length:8+num_length+length]
+            binary = reply[8 + num_length:8 + num_length + length]
             wave = np.fromstring(binary, dtype=np.int16)
             wave = np.int32(wave)
 
@@ -171,7 +184,7 @@ class Oscilloscope:
                     if not fallback_scale:
                         fallback_scale = scale
 
-                    if (scale * 10.0 / (record_len-1)) <= precision:
+                    if (scale * 10.0 / (record_len - 1)) <= precision:
                         return (scale * 10.0, int(record_len), scale * 10.0 / (record_len - 1))
 
                     break
@@ -198,7 +211,3 @@ class Oscilloscope:
     @property
     def sample_period(self):
         return self.window / (self.points - 1)
-
-
-
-

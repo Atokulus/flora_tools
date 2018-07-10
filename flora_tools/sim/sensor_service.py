@@ -2,7 +2,7 @@ from flora_tools.sim.service import Service
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_node import SimNode
 
-from flora_tools.sim.sim_datastream_manager import DataStream, NotificationStream
+from flora_tools.sim.stream import DataStream, NotificationStream
 
 
 class SensorService(Service):
@@ -58,6 +58,3 @@ class SensorService(Service):
 
     def failed_notification_callback(self, notification_stream: NotificationStream):
         notification_stream.retry()
-
-
-

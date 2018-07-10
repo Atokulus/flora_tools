@@ -1,8 +1,8 @@
+import time
+from multiprocessing import Pool
+
 import serial
 import serial.tools.list_ports
-import time
-
-from multiprocessing import Pool
 
 from flora_tools.node import Node
 
@@ -37,7 +37,8 @@ class Bootloader:
 
         if len(ports):
             with Pool(len(ports)) as p:
-                bootloaders = [bootloader for bootloader in p.map(Bootloader.get_bootloader, ports) if bootloader is not None]
+                bootloaders = [bootloader for bootloader in p.map(Bootloader.get_bootloader, ports) if
+                               bootloader is not None]
             if bootloaders:
                 print("Flora bootloaders detected: {}".format([bootloader.port.device for bootloader in bootloaders]))
             else:

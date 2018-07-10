@@ -15,7 +15,7 @@ class MeasureTimeCAD2RxDone(Experiment):
 
         self.bench.scope.set_scale("COAX", 0.2)
 
-        columns = ['time', 'window','precision', 'modulation', 'band', 'cad2rf', 'cad2done']
+        columns = ['time', 'window', 'precision', 'modulation', 'band', 'cad2rf', 'cad2done']
         df = pd.DataFrame(columns=columns)
         df.index.name = 'sample'
 
@@ -41,7 +41,7 @@ class MeasureTimeCAD2RxDone(Experiment):
 
             self.bench.devkit_a.cmd("radio cad rx")
 
-            wave = self.bench.scope.finish_measurement(channels=[1,2,3])
+            wave = self.bench.scope.finish_measurement(channels=[1, 2, 3])
 
             if wave is not None:
                 nss_indices = utilities.get_edges(wave[0])
@@ -62,15 +62,16 @@ class MeasureTimeCAD2RxDone(Experiment):
                 else:
                     cad2rf_time = np.nan
 
-
                 if cad2cadirq_time < 0:
                     cad2cadirq_time = np.nan
                 if cad2rf_time < 0:
                     cad2rf_time = np.nan
 
-                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, cad2rf_time, cad2cadirq_time]
+                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, cad2rf_time,
+                        cad2cadirq_time]
             else:
-                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, np.nan, np.nan]
+                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, np.nan,
+                        np.nan]
 
             df.loc[i] = item
             df.to_csv("{}.csv".format(self.name))
@@ -82,7 +83,8 @@ class MeasureTimeCAD2RxDone(Experiment):
 
             mods = df.modulation.sort_values().unique();
 
-            columns = ['modulation_name', 'sample_count', 'cad_symbol_time', 'cad2rf', 'cad2rf_err', 'cad2done', 'cad2done_err']
+            columns = ['modulation_name', 'sample_count', 'cad_symbol_time', 'cad2rf', 'cad2rf_err', 'cad2done',
+                       'cad2done_err']
             delays = pd.DataFrame(columns=columns)
             delays.index.name = 'modulation'
 
@@ -113,10 +115,12 @@ class MeasureTimeCAD2RxDone(Experiment):
                 plt.ylabel('Probability [‰]')
                 plt.show()
 
-                delays.loc[i] = [config.modulation_name, len(subset), math.get_symbol_time()*4, subset['cad2rf'].mean(), subset['cad2rf'].std(), subset['cad2done'].mean(), subset['cad2done'].std()]
+                delays.loc[i] = [config.modulation_name, len(subset), math.get_symbol_time() * 4,
+                                 subset['cad2rf'].mean(), subset['cad2rf'].std(), subset['cad2done'].mean(),
+                                 subset['cad2done'].std()]
 
             plt.title("setCAD() to Rf delay")
-            rects = plt.bar(mods, delays.loc[:,'cad2rf'], yerr=delays.loc[:,'cad2rf_err'], log=False)
+            rects = plt.bar(mods, delays.loc[:, 'cad2rf'], yerr=delays.loc[:, 'cad2rf_err'], log=False)
             for i, rect in enumerate(rects):
                 rect.set_fc(RadioConfiguration(i).color)
             plt.ylabel('Delay [s]')
@@ -127,8 +131,8 @@ class MeasureTimeCAD2RxDone(Experiment):
             plt.title("setCAD() to CAD_DONE IRQ average delay")
 
             ax = plt.gca()
-            rects = plt.bar(mods-0.2, delays.loc[:, 'cad2done'], width=0.4, log=True)
-            ref_rects = plt.bar(mods+0.2, delays.loc[:, 'cad_symbol_time'], width=0.4, log=True)
+            rects = plt.bar(mods - 0.2, delays.loc[:, 'cad2done'], width=0.4, log=True)
+            ref_rects = plt.bar(mods + 0.2, delays.loc[:, 'cad_symbol_time'], width=0.4, log=True)
             for i, rect in zip(mods, rects):
                 rect.set_fc(RadioConfiguration(i).color)
                 height = rect.get_height()
@@ -179,14 +183,3 @@ class MeasureTimeCAD2RxDone(Experiment):
             plt.show()
 
             return delays
-
-
-
-
-
-
-
-
-
-
-

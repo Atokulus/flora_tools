@@ -1,16 +1,15 @@
-import numpy as np
-import pandas as pd
-
-from flora_tools.sim.sim_network import SimNetwork
-from flora_tools.sim.sim_message import SimMessage
-from flora_tools.sim.sim_link_manager import SimLinkManager
-from flora_tools.sim.sim_message_manager import SimMessageManager
+from flora_tools.sim.sensor_service import SensorService
 from flora_tools.sim.sim_event_manager import SimEventManager
+from flora_tools.sim.sim_link_manager import SimLinkManager
 from flora_tools.sim.sim_lwb_manager import SimLWBManager
+from flora_tools.sim.sim_message_manager import SimMessageManager
+from flora_tools.sim.sim_network import SimNetwork
+from flora_tools.sim.stream import StreamManager
 
 
 class SimNode:
-    def __init__(self, network: 'SimNetwork', em: SimEventManager, mm: SimMessageManager, id: int=None, role='sensor'):
+    def __init__(self, network: 'SimNetwork', em: SimEventManager, mm: SimMessageManager, id: int = None,
+                 role='sensor'):
         self.state = 'init'
         self.network = network
         self.mm = mm
@@ -20,29 +19,18 @@ class SimNode:
 
         self.link_manager = SimLinkManager(self)
         self.lwb_manager = SimLWBManager(self)
+        self.stream_manager = StreamManager(self)
+
         self.local_timestamp = 0
+
+        if self.role is 'sensor':
+            service = SensorService(self, "sensor_data{}".format(self.id), 10)
+            self.stream_manager.register_data(service.datastream)
 
         self.lwb_manager.run()
 
     def __str__(self):
         return str(self.id)
 
-    def start_base(self):
-        pass
-
-    def start_sensor(self):
-        pass
-
-    def start_relay(self):
-        pass
-
     def transform_local_to_global_timestamp(self, timestamp):
         timestamp - self.local_timestamp + self.network.current_timestamp
-
-
-
-
-
-
-
-

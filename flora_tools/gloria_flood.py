@@ -2,9 +2,9 @@ from enum import Enum
 
 import numpy as np
 
+import flora_tools.lwb_slot as lwb_slot
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
-import flora_tools.lwb_slot as lwb_slot
 
 rx_time_offsets = [
     [0.359425231, 0.080458787],

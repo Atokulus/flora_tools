@@ -51,9 +51,9 @@ class MeasureTimeSetCAD(Experiment):
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
-        
+
         delay = df.measured
 
         columns = ['delay', 'delay_err']

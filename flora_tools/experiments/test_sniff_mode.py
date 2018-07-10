@@ -3,7 +3,6 @@ from flora_tools.experiment import *
 
 class TestSniffMode(Experiment):
     def __init__(self):
-
         description = "Tests whether sniff mode directly goes into sleep or first into receive"
 
         Experiment.__init__(self, description)
@@ -16,7 +15,7 @@ class TestSniffMode(Experiment):
         window = 1.0
         sample_period = window / (points - 1)
 
-        configuration = RadioConfiguration(5,48,10)
+        configuration = RadioConfiguration(5, 48, 10)
         self.bench.devkit_a.cmd(configuration.cmd)
         self.bench.devkit_b.cmd(configuration.cmd)
 

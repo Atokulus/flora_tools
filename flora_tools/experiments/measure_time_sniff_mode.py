@@ -21,11 +21,12 @@ class MeasureTimeSniffMode(Experiment):
         sample_period = window / (points - 1)
 
         for i in range(0, self.iterations):
-            configuration = RadioConfiguration.get_random_configuration(tx=False, limit="LoRa") # Does not work for FSK (random glitches on BUSY line)
+            configuration = RadioConfiguration.get_random_configuration(tx=False,
+                                                                        limit="LoRa")  # Does not work for FSK (random glitches on BUSY line)
             self.bench.devkit_a.cmd(configuration.cmd)
 
             rx = np.random.randint(10, 32000)  # 1/2 second (in 15.625us steps)
-            sleep = np.random.randint(10, 32000) # 1/2 second (in 15.625us steps)
+            sleep = np.random.randint(10, 32000)  # 1/2 second (in 15.625us steps)
 
             self.bench.devkit_a.cmd("radio receive {:d} {:d} -s".format(rx, sleep))
             self.bench.devkit_a.delay_cmd_time()
@@ -35,7 +36,7 @@ class MeasureTimeSniffMode(Experiment):
 
             self.bench.devkit_a.cmd("radio execute")
 
-            wave = self.bench.scope.finish_measurement(channels=[1,3])
+            wave = self.bench.scope.finish_measurement(channels=[1, 3])
 
             if wave is not None:
                 nss_indices = utilities.get_edges(wave[0])
@@ -43,16 +44,17 @@ class MeasureTimeSniffMode(Experiment):
                 if (len(nss_indices) > 0 and len(nss_indices) < 10 and len(busy_indices) >= 2):
                     setup_time = (busy_indices[1][0] - nss_indices[0][0]) * self.bench.scope.sample_period
                     if not np.isnan(setup_time) and setup_time > 0:
-                        item = [dt.datetime.now(), window, 1E-7, configuration.modulation, configuration.band, rx, sleep, 'setup', setup_time]
+                        item = [dt.datetime.now(), window, 1E-7, configuration.modulation, configuration.band, rx,
+                                sleep, 'setup', setup_time]
                         row = pd.DataFrame(dict(zip(columns, item)), index=[0])
                         df = df.append(row, ignore_index=True)
                         print(item)
 
                     for j in range(1, len(busy_indices) - 1):
-                        period = (busy_indices[j+1][0] - busy_indices[j][0]) * self.bench.scope.sample_period
+                        period = (busy_indices[j + 1][0] - busy_indices[j][0]) * self.bench.scope.sample_period
                         if not np.isnan(period) and period > 0:
                             item = [dt.datetime.now(), window, 1E-7, configuration.modulation, configuration.band, rx,
-                                sleep, ('rx' if (j % 2) == 1 else 'sleep'), period]
+                                    sleep, ('rx' if (j % 2) == 1 else 'sleep'), period]
                             row = pd.DataFrame(dict(zip(columns, item)), index=[0])
                             df = df.append(row, ignore_index=True)
                             print(item)
@@ -69,11 +71,10 @@ class MeasureTimeSniffMode(Experiment):
             offset = x['measured'] - x['sleep'] * 15.625E-6
             return offset
 
-
         with plt.style.context('bmh'):
             df = df.dropna()
 
-            plt.figure(figsize=[14,5])
+            plt.figure(figsize=[14, 5])
 
             plt.subplot(121)
 
@@ -130,7 +131,7 @@ class MeasureTimeSniffMode(Experiment):
             rx_error = rx.apply(interpolation_error_rx, axis=1)
             sleep_error = sleep.apply(interpolation_error_sleep, axis=1)
 
-            timings.loc[0] = [setup.mean(), setup.std(), rx.offset.mean(), rx_error.std(), sleep.offset.mean(), sleep_error.std()]
-
+            timings.loc[0] = [setup.mean(), setup.std(), rx.offset.mean(), rx_error.std(), sleep.offset.mean(),
+                              sleep_error.std()]
 
             return timings

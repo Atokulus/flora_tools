@@ -1,6 +1,6 @@
-from flora_tools.sim.sim_node import SimNode
 from flora_tools.sim.service import Service
 from flora_tools.sim.sim_message import SimMessage
+from flora_tools.sim.sim_node import SimNode
 
 MAX_TTL = 3
 

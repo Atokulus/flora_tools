@@ -30,13 +30,13 @@ class MeasureTimeSweepTxRx(Experiment):
 
             large_offset = 96000
             offset = np.random.randint(0, 2.5 * int(math.get_preamble_time() * 8E6 + 1))
-            #offset = int(math.get_preamble_time() * 8E6)
+            # offset = int(math.get_preamble_time() * 8E6)
 
             correction_offset = int((
-                2.1 +  # 2.1 us (Wire Sync Delay)
-                126.2 -  # 126.2 us (Tx2Rf Delay)
-                85.2  # 85.2 (Rx2Rf Delay)
-            ) * 8)
+                                            2.1 +  # 2.1 us (Wire Sync Delay)
+                                            126.2 -  # 126.2 us (Tx2Rf Delay)
+                                            85.2  # 85.2 (Rx2Rf Delay)
+                                    ) * 8)
 
             min_window = (large_offset / 8E6 + math.sync_time + offset / 8E6 + 0.005) * 2.0
             min_precision = 1E-7
@@ -54,30 +54,33 @@ class MeasureTimeSweepTxRx(Experiment):
             self.bench.devkit_a.cmd("radio receive -s -v")
             self.bench.devkit_b.cmd("radio send '' -s")
 
-            self.bench.devkit_a.cmd("radio execute -d {:d}".format(large_offset + int(math.get_preamble_time() * 8E6) + correction_offset))
+            self.bench.devkit_a.cmd(
+                "radio execute -d {:d}".format(large_offset + int(math.get_preamble_time() * 8E6) + correction_offset))
             self.bench.devkit_b.cmd("radio execute -c {:d}".format(large_offset + offset))
 
             wave = self.bench.scope.finish_measurement(channels=[2])
 
             if wave is not None:
-                #nss_tx_indices = utilities.get_edges(wave[0])
+                # nss_tx_indices = utilities.get_edges(wave[0])
                 dio1_indices = utilities.get_edges(wave[0])
-                #nss_rx_indices = utilities.get_edges(wave[2])
+                # nss_rx_indices = utilities.get_edges(wave[2])
 
                 if (0 < len(dio1_indices) < 10):
                     valid = True
                 else:
                     valid = False
 
-                item = [dt.datetime.now(), window, self.bench.scope.sample_period, configuration.modulation, configuration.band, configuration.preamble, offset, valid]
+                item = [dt.datetime.now(), window, self.bench.scope.sample_period, configuration.modulation,
+                        configuration.band, configuration.preamble, offset, valid]
             else:
-                item = [dt.datetime.now(), window, self.bench.scope.sample_period, configuration.modulation, configuration.band, configuration.preamble, offset, np.nan]
+                item = [dt.datetime.now(), window, self.bench.scope.sample_period, configuration.modulation,
+                        configuration.band, configuration.preamble, offset, np.nan]
 
             df.loc[i] = item
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
 
         def calculate_color(row):
@@ -86,7 +89,6 @@ class MeasureTimeSweepTxRx(Experiment):
                 return config.color
             else:
                 return '#0F0F0F02'
-
 
         colors = df.apply(calculate_color, axis=1)
 
@@ -98,7 +100,7 @@ class MeasureTimeSweepTxRx(Experiment):
         relative_offsets = df.apply(calculate_relative_offset, axis=1) - 1
 
         fig = plt.figure(figsize=[12, 8])
-        #fig = plt.figure()
+        # fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(df.modulation, df.preamble, relative_offsets, c=colors)
 
@@ -134,7 +136,7 @@ class MeasureTimeSweepTxRx(Experiment):
             plt.title(config2.modulation_name)
 
             plt.plot([2, 14], [offset2_high, offset14_high], 'k-.')
-            plt.plot([2,14], [0,0], 'k:')
+            plt.plot([2, 14], [0, 0], 'k:')
             plt.plot([2, 14], [-offset2_high, -offset14_high], 'k-.')
 
             ax = plt.gca()

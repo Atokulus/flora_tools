@@ -54,11 +54,12 @@ class MeasureTimeTx2Sync(Experiment):
 
             self.bench.devkit_a.delay_cmd_time(text_len)
 
-            self.bench.scope.init_measurement(window, trigger_rise=True, trigger_channel="NSS", points=points, start=start, text=("{}:{}".format(self.name, configuration)))
+            self.bench.scope.init_measurement(window, trigger_rise=True, trigger_channel="NSS", points=points,
+                                              start=start, text=("{}:{}".format(self.name, configuration)))
             self.bench.scope.delay_acquisition_setup_time(window)
             self.bench.devkit_a.cmd("radio execute")
 
-            wave = self.bench.scope.finish_measurement(channels=[1,2])
+            wave = self.bench.scope.finish_measurement(channels=[1, 2])
 
             if wave is not None:
                 nss_min = np.amin(wave[0])
@@ -77,16 +78,19 @@ class MeasureTimeTx2Sync(Experiment):
                 dio1_diff = np.diff(dio1_digital)
                 dio1_indices = np.argwhere(dio1_diff)
                 if len(dio1_indices) > 0 and len(dio1_indices) < 5:
-                    txex2headervalid_time = (dio1_indices[0][0] - txex2headervalid_time) * self.bench.scope.sample_period
+                    txex2headervalid_time = (dio1_indices[0][
+                                                 0] - txex2headervalid_time) * self.bench.scope.sample_period
                 else:
                     txex2headervalid_time = np.nan
 
                 if txex2headervalid_time < 0:
                     txex2headervalid_time = np.nan
 
-                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, configuration.power, text_len, txex2headervalid_time]
+                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band,
+                        configuration.power, text_len, txex2headervalid_time]
             else:
-                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, configuration.power, text_len, np.nan]
+                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band,
+                        configuration.power, text_len, np.nan]
 
             df.loc[i] = item
             df.to_csv("{}.csv".format(self.name))
@@ -106,18 +110,22 @@ class MeasureTimeTx2Sync(Experiment):
             for i in mods:
                 subset = df[df.modulation == i]
 
-                config = RadioConfiguration(i,48,0)
+                config = RadioConfiguration(i, 48, 0)
                 math = RadioMath(config)
 
-                weights = np.ones(len(subset['measured'])) * 1/len(subset['measured']) * 1E3
-                n, bins, patches = plt.hist(subset['measured']*1E3, 100, weights=weights, color=config.color)
+                weights = np.ones(len(subset['measured'])) * 1 / len(subset['measured']) * 1E3
+                n, bins, patches = plt.hist(subset['measured'] * 1E3, 100, weights=weights, color=config.color)
 
-                plt.title('Tx to header/sync IRQ delay for {}\n'.format(config.modulation_name) + '$\mu = ' + str(subset['measured'].mean() * 1E3) + '\ \mathrm{ms},\ \sigma = {' + str(subset['measured'].std() * 1E6) + '}$ µs')
+                plt.title('Tx to header/sync IRQ delay for {}\n'.format(config.modulation_name) + '$\mu = ' + str(
+                    subset['measured'].mean() * 1E3) + '\ \mathrm{ms},\ \sigma = {' + str(
+                    subset['measured'].std() * 1E6) + '}$ µs')
                 plt.xlabel('Delay [ms]')
                 plt.ylabel('Probability [‰]')
                 plt.show()
 
-                delays.loc[i] = [config.modulation_name, len(subset['measured']), math.sync_time, subset['measured'].mean() - math.sync_time, subset['measured'].mean(), subset['measured'].std()]
+                delays.loc[i] = [config.modulation_name, len(subset['measured']), math.sync_time,
+                                 subset['measured'].mean() - math.sync_time, subset['measured'].mean(),
+                                 subset['measured'].std()]
 
             plt.figure(figsize=(14, 5))
 
@@ -175,9 +183,12 @@ class MeasureTimeTx2Sync(Experiment):
             plt.subplot(121)
 
             colors = df.modulation.map(RadioConfiguration.get_color)
+
             def get_relative_error(item):
-                error = (item['measured'] - delays.loc[item['modulation'], 'total']) / delays.loc[item['modulation'], 'total_err']
+                error = (item['measured'] - delays.loc[item['modulation'], 'total']) / delays.loc[
+                    item['modulation'], 'total_err']
                 return error
+
             errors = df.apply(get_relative_error, axis=1)
             plt.scatter(df.power, errors, c=colors)
             plt.title("Tx2Sync vs. Power Configurations")

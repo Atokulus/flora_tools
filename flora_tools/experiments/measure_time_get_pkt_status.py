@@ -23,7 +23,8 @@ class MeasureTimeGetPktStatus(Experiment):
         self.bench.scope.set_scale("COAX", 0.2)
 
         for i in range(0, self.iterations):
-            configuration = RadioConfiguration.get_random_configuration(tx='randomize') # Does not work for FSK (random glitches on BUSY line)
+            configuration = RadioConfiguration.get_random_configuration(
+                tx='randomize')  # Does not work for FSK (random glitches on BUSY line)
             self.bench.devkit_a.cmd("radio standby")
             self.bench.devkit_a.cmd(configuration.cmd)
 
@@ -53,9 +54,9 @@ class MeasureTimeGetPktStatus(Experiment):
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
-        
+
         delay = df.measured
 
         columns = ['delay', 'delay_err']

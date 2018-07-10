@@ -1,10 +1,9 @@
+import os
 import xml.etree.ElementTree
 
-import os
-from xml.dom import minidom
-
-from flora_tools.toolchain.platforms import *
 from flora_tools.toolchain.include_paths import *
+from flora_tools.toolchain.platforms import *
+
 
 class EclipsePatcher:
     def __init__(self, flora_path, platform: Platform):
@@ -56,7 +55,8 @@ class EclipsePatcher:
                         'name': 'lib',
                     })
 
-            project_et = xml.etree.ElementTree.parse(os.path.join(self.flora_path, Platform.get_project_path(self.platform)))
+            project_et = xml.etree.ElementTree.parse(
+                os.path.join(self.flora_path, Platform.get_project_path(self.platform)))
             # xpath = './/linkedResources/link[/name/text()="lib"]' # Not working yet in ElementTree library
             xpath = './/linkedResources/link'
             links = project_et.findall(xpath)
@@ -80,7 +80,8 @@ class EclipsePatcher:
                 if project_et is not None:
                     xml_string = xml.etree.ElementTree.tostring(project_et.getroot(), encoding="unicode")
 
-                    file = open("{}".format(os.path.join(self.flora_path, Platform.get_project_path(self.platform)), 'w'))
+                    file = open(
+                        "{}".format(os.path.join(self.flora_path, Platform.get_project_path(self.platform)), 'w'))
                     file.writelines([
                         '<?xml version = "1.0" encoding = "UTF-8"?>',
                     ])
@@ -110,7 +111,7 @@ class EclipsePatcher:
             file.write(xml_string)
             file.close()
 
-            #self.et.write("{}".format(Platform.get_cproject_path(self.platform)), encoding='UTF-8', xml_declaration=True)
+            # self.et.write("{}".format(Platform.get_cproject_path(self.platform)), encoding='UTF-8', xml_declaration=True)
 
     @property
     def include_path_option_nodes(self):

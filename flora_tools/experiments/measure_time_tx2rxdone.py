@@ -49,7 +49,7 @@ class MeasureTimeTx2RxDone(Experiment):
             self.bench.scope.delay_acquisition_setup_time(window)
             self.bench.devkit_a.cmd("radio execute")
 
-            wave = self.bench.scope.finish_measurement(channels=[1,2])
+            wave = self.bench.scope.finish_measurement(channels=[1, 2])
 
             if wave is not None:
                 nss_indices = utilities.get_edges(wave[0])
@@ -67,7 +67,8 @@ class MeasureTimeTx2RxDone(Experiment):
                 if tx2rxdone_time < 0:
                     tx2rxdone_time = np.nan
 
-                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, configuration.power, text_len, tx2rxdone_time]
+                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band,
+                        configuration.power, text_len, tx2rxdone_time]
             else:
                 item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band,
                         configuration.power, text_len, np.nan]
@@ -114,7 +115,7 @@ class MeasureTimeTx2RxDone(Experiment):
                 payload_estimation = pd.DataFrame(columns=columns)
                 payload_estimation.index.name = 'payload'
                 for j in payloads:
-                    payload_subset = subset[subset.payload == j].loc[:,'tx2rxdone']
+                    payload_subset = subset[subset.payload == j].loc[:, 'tx2rxdone']
                     payload_estimation.loc[j] = [payload_subset.std()]
                 plt.title("Tx2RxDone stdev. vs. Payload Size\n{}".format(config.modulation_name))
                 ax = plt.gca()
@@ -127,10 +128,11 @@ class MeasureTimeTx2RxDone(Experiment):
                 def get_offsets(item):
                     offset = (item['tx2rxdone'] - math.get_message_toa(item['payload']))
                     return offset
+
                 offsets = subset.apply(get_offsets, axis=1)
                 fit_err = (subset.tx2rxdone - fit_fn(subset.payload)).std()
 
-
-                delays.loc[i] = [config.modulation_name, len(subset), offsets.mean(), offsets.std(), fit[0], fit[1], fit_err]
+                delays.loc[i] = [config.modulation_name, len(subset), offsets.mean(), offsets.std(), fit[0], fit[1],
+                                 fit_err]
 
             return delays

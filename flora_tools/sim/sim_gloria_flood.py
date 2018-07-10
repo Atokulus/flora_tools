@@ -1,15 +1,16 @@
 import numpy as np
 
+import flora_tools.sim.sim_node as sim_node
 from flora_tools.lwb_slot import gloria_header_length
 from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage
-import flora_tools.sim.sim_node as sim_node
 
 MAX_ACKS = 1
 
 
 class SimGloriaFlood:
-    def __init__(self, node: 'sim_node.SimNode', flood, finished_callback, init_tx_message: SimMessage = None, power_increase=True, update_timestamp=False):
+    def __init__(self, node: 'sim_node.SimNode', flood, finished_callback, init_tx_message: SimMessage = None,
+                 power_increase=True, update_timestamp=False):
         self.node = node
         self.flood = flood
         self.finished_callback = finished_callback
@@ -35,11 +36,11 @@ class SimGloriaFlood:
             self.tx_message.timestamp = slot['marker']
 
             if self.valid_to_send():
-                self.node.mm.tx_message(self.node,
-                                        self.flood['modulation'],
-                                        self.flood['band'],
-                                        self.tx_message.power_level,
-                                        self.tx_message)
+                self.node.mm.tx(self.node,
+                                self.flood['modulation'],
+                                self.flood['band'],
+                                self.tx_message.power_level,
+                                self.tx_message)
 
                 self.node.em.register_event(slot['marker'] + slot['time'],
                                             self.node, SimEventType.TX_DONE,
@@ -76,11 +77,12 @@ class SimGloriaFlood:
 
         elif event['type'] is SimEventType.RX_TIMEOUT:
             slot = self.flood['layout'][self.slot_index]
-            self.potential_message = self.node.network.mc.get_potential_rx_message(modulation=self.flood['modulation'],
-                                                                                   band=self.flood['band'],
-                                                                                   rx_node=self.node,
-                                                                                   rx_start=slot['rx_marker'],
-                                                                                   rx_timeout=self.node.local_timestamp)
+            self.potential_message = self.node.network.mc.receive_message_on_rx_timeout(
+                modulation=self.flood['modulation'],
+                band=self.flood['band'],
+                rx_node=self.node,
+                rx_start=slot['rx_marker'],
+                rx_timeout=self.node.local_timestamp)
             if self.potential_message is not None:
                 self.node.em.register_event(np.max([self.potential_message.tx_end, slot['rx_end_marker']]),
                                             self.node,
@@ -110,7 +112,8 @@ class SimGloriaFlood:
                         self.process_next_slot()
                 else:
                     if not self.is_initial_node:
-                        self.minimum_power_level = np.min([self.potential_message.power_level, self.minimum_power_level])
+                        self.minimum_power_level = np.min(
+                            [self.potential_message.power_level, self.minimum_power_level])
                         self.tx_message = self.potential_message
                         self.tx_message.hop_count += 1
                         if self.update_timestamp:
@@ -145,11 +148,11 @@ class SimGloriaFlood:
                                                   power_level=self.tx_message.power_level,
                                                   modulation=self.tx_message.modulation)
 
-                    self.node.mm.tx_message(self.node,
-                                            self.flood['modulation'],
-                                            self.flood['band'],
-                                            self.ack_message.power_level,
-                                            self.ack_message)
+                    self.node.mm.tx(self.node,
+                                    self.flood['modulation'],
+                                    self.flood['band'],
+                                    self.ack_message.power_level,
+                                    self.ack_message)
 
                     self.node.em.register_event(slot['marker'] + slot['time'],
                                                 self.node, SimEventType.TX_DONE,
@@ -172,11 +175,11 @@ class SimGloriaFlood:
                     self.last_tx_slot_marker = self.tx_message.timestamp
                     self.last_slot_marker = slot['marker']
 
-                self.node.mm.tx_message(self.node,
-                                        self.flood['modulation'],
-                                        self.flood['band'],
-                                        self.tx_message.power_level,
-                                        self.tx_message)
+                self.node.mm.tx(self.node,
+                                self.flood['modulation'],
+                                self.flood['band'],
+                                self.tx_message.power_level,
+                                self.tx_message)
 
                 self.node.em.register_event(slot['marker'] + slot['time'],
                                             self.node, SimEventType.TX_DONE,
@@ -213,11 +216,11 @@ class SimGloriaFlood:
                 self.last_tx_slot_marker = self.ack_message.timestamp
                 self.last_slot_marker = slot['marker']
 
-            self.node.mm.tx_message(self.node,
-                                    self.flood['modulation'],
-                                    self.flood['band'],
-                                    self.flood['power'],
-                                    slot['rx_marker'])
+            self.node.mm.tx(self.node,
+                            self.flood['modulation'],
+                            self.flood['band'],
+                            self.flood['power'],
+                            slot['rx_marker'])
 
             self.node.em.register_event(slot['marker'] + slot['time'],
                                         self.node, SimEventType.TX_DONE,
@@ -242,7 +245,8 @@ class SimGloriaFlood:
             return False
 
     def get_slot_offset(self, count=1):
-        return self.flood['layout'][self.slot_index - count]['marker'] - self.flood['layout'][self.slot_index-1]['marker']
+        return self.flood['layout'][self.slot_index - count]['marker'] - self.flood['layout'][self.slot_index - 1][
+            'marker']
 
     def update_local_timestamp(self, new_timestamp):
         offset = new_timestamp - self.last_tx_slot_marker
@@ -257,4 +261,3 @@ class SimGloriaFlood:
         self.node.local_timestamp += offset
         self.last_tx_slot_marker = new_timestamp
         self.last_slot_marker = new_timestamp
-

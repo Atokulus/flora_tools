@@ -3,9 +3,9 @@ import sys
 from multiprocessing import Pool
 
 from flora_tools.toolchain.bootloader import Bootloader
-from flora_tools.toolchain.programmer import Programmer
-from flora_tools.toolchain.platforms import Platform
 from flora_tools.toolchain.eclipse_patcher import EclipsePatcher
+from flora_tools.toolchain.platforms import Platform
+from flora_tools.toolchain.programmer import Programmer
 
 
 def program_all_devices(flora_path):
@@ -32,7 +32,7 @@ def patch_eclipse(flora_path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description = 'Executable flora_tools utilities', prog='flora_tools')
+    parser = argparse.ArgumentParser(description='Executable flora_tools utilities', prog='flora_tools')
     parser.add_argument('command', help='Execute given command', choices=['program', 'program_all', 'patch_eclipse'])
     parser.add_argument('path', help='Set the path to the Flora main repository folder or .hex/.binary file')
     parser.add_argument('-p', '--port', help='Set the serial port (e.g. "COM5" or "/sys/dev/ttyUSB0")')
@@ -51,4 +51,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    

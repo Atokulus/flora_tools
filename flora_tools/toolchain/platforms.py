@@ -41,6 +41,7 @@ INCLUDE_XPATH = [
     './/toolChain/tool/option[@superClass="com.atollic.truestudio.gcc.directories.select"]'
 ]
 
+
 @unique
 class Target(Enum):
     DEBUG = 1
@@ -48,9 +49,12 @@ class Target(Enum):
 
 
 SYMBOLS_XPATH = {
-    Target.DEBUG: './/toolChain[@superClass="com.atollic.truestudio.exe.debug.toolchain"]/tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.gcc"]/option[@superClass="com.atollic.truestudio.gcc.symbols.defined"]', # DEBUG
-    Target.RELEASE: './/toolChain[@superClass="com.atollic.truestudio.exe.release.toolchain"]/tool[@superClass="com.atollic.truestudio.exe.release.toolchain.gcc"]/option[@superClass="com.atollic.truestudio.gcc.symbols.defined"]' # RELEASE
+    Target.DEBUG: './/toolChain[@superClass="com.atollic.truestudio.exe.debug.toolchain"]/tool[@superClass="com.atollic.truestudio.exe.debug.toolchain.gcc"]/option[@superClass="com.atollic.truestudio.gcc.symbols.defined"]',
+# DEBUG
+    Target.RELEASE: './/toolChain[@superClass="com.atollic.truestudio.exe.release.toolchain"]/tool[@superClass="com.atollic.truestudio.exe.release.toolchain.gcc"]/option[@superClass="com.atollic.truestudio.gcc.symbols.defined"]'
+# RELEASE
 }
+
 
 @unique
 class Platform(Enum):
@@ -102,6 +106,3 @@ class Platform(Enum):
                 return COMBOARD_SYMBOLS_DEBUG
             elif target is Target.RELEASE:
                 return COMBOARD_SYMBOLS_RELEASE
-
-
-

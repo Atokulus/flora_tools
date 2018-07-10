@@ -2,7 +2,7 @@ import abc
 
 from flora_tools.sim.sim_message import SimMessage
 from flora_tools.sim.sim_node import SimNode
-from flora_tools.sim.sim_datastream_manager import DataStream, NotificationStream
+from flora_tools.sim.stream import DataStream, NotificationStream
 
 
 class Service:

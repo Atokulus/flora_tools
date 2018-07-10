@@ -3,7 +3,6 @@ from flora_tools.experiment import *
 
 class TestSimultWriteSend(Experiment):
     def __init__(self):
-
         description = "Tests whether it is possible to write to buffer while sending/transmitting another message on the same radio." \
                       "The buffer is then sent as a separate message."
 
@@ -17,7 +16,7 @@ class TestSimultWriteSend(Experiment):
         window = 0.5
         sample_period = window / (points - 1)
 
-        configuration = RadioConfiguration(5,48,10)
+        configuration = RadioConfiguration(5, 48, 10)
         configuration_rx = copy(configuration)
         configuration_rx.tx = False
         self.bench.devkit_a.cmd(configuration.cmd)

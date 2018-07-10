@@ -16,8 +16,6 @@ class MeasureTimeSync(Experiment):
         df = pd.DataFrame(columns=columns)
         df.index.name = 'sample'
 
-
-
         self.bench.scope.set_scale("COAX", 0.2)
 
         for i in range(0, self.iterations):
@@ -55,7 +53,7 @@ class MeasureTimeSync(Experiment):
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
 
         plt.scatter(df.offset * 0.125E-6, df.measured)
@@ -73,7 +71,7 @@ class MeasureTimeSync(Experiment):
 
         plt.show()
 
-        #error = df.measured - fit_fn_rx(df.offset * 0.125E-6)
+        # error = df.measured - fit_fn_rx(df.offset * 0.125E-6)
         delay = (df.measured - df.offset * 0.125E-6).mean()
         error = df.measured - delay - df.offset * 0.125E-6
         plt.scatter(df.offset * 0.125E-6, error)

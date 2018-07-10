@@ -1,15 +1,16 @@
-import numpy as np
 import random
 import string
 
+import numpy as np
 
-def get_random_text(length = None, max_length = 254):
+
+def get_random_text(length=None, max_length=254):
     if length is None:
-        length = np.random.randint(-1, max_length+1)
+        length = np.random.randint(-1, max_length + 1)
     if length < 0:
         return None
     else:
-        text = ''.join(random.choices(string.ascii_letters + string.ascii_uppercase + string.digits, k=(length-1)))
+        text = ''.join(random.choices(string.ascii_letters + string.ascii_uppercase + string.digits, k=(length - 1)))
         return text
 
 

@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+
+from flora_tools.gloria_flood import GloriaSlot
 from flora_tools.lwb_round import LWBRound
 from flora_tools.lwb_slot import LWBSlot
-from flora_tools.gloria_flood import GloriaSlot, GloriaSlotType
 
 
 class LWBVisualizer:
     @staticmethod
-    def plot_round(round: 'LWBRound', ax, enable_markers=True, track:int=0):
+    def plot_round(round: 'LWBRound', ax, enable_markers=True, track: int = 0):
         boxes = []
 
         rect = Rectangle((round.round_marker, track), round.total_time, 0.95,
@@ -29,7 +30,8 @@ class LWBVisualizer:
                 )
 
                 if enable_markers:
-                    plt.plot([gloria_slot.tx_marker, gloria_slot.tx_marker], [0.2+track, 0.7+track], c='white', linewidth=1)
+                    plt.plot([gloria_slot.tx_marker, gloria_slot.tx_marker], [0.2 + track, 0.7 + track], c='white',
+                             linewidth=1)
 
                 boxes.append(rect)
 

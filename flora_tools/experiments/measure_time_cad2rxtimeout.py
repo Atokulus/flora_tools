@@ -13,15 +13,15 @@ class MeasureTimeCAD2RxTimeout(Experiment):
 
         Experiment.run(self, bench)
 
-        #self.bench.scope.set_scale("COAX", 0.2)
+        # self.bench.scope.set_scale("COAX", 0.2)
 
-        columns = ['time', 'window','precision', 'modulation', 'band', 'cad2timeout']
+        columns = ['time', 'window', 'precision', 'modulation', 'band', 'cad2timeout']
         df = pd.DataFrame(columns=columns)
         df.index.name = 'sample'
 
         for i in range(0, self.iterations):
             configuration = RadioConfiguration.get_random_configuration(limit="LoRa")
-            #configuration = RadioConfiguration(6, 0, 0)
+            # configuration = RadioConfiguration(6, 0, 0)
             configuration.tx = False
 
             configuration_tx = copy(configuration)
@@ -46,7 +46,7 @@ class MeasureTimeCAD2RxTimeout(Experiment):
 
             self.bench.devkit_a.cmd("radio cad rx")
 
-            wave = self.bench.scope.finish_measurement(channels=[1,2,3])
+            wave = self.bench.scope.finish_measurement(channels=[1, 2, 3])
 
             if wave is not None:
                 nss_indices = utilities.get_edges(wave[0])
@@ -64,7 +64,8 @@ class MeasureTimeCAD2RxTimeout(Experiment):
                 if cad2rxtimeout < 0:
                     cad2rxtimeout = np.nan
 
-                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, cad2rxtimeout]
+                item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band,
+                        cad2rxtimeout]
             else:
                 item = [dt.datetime.now(), window, precision, configuration.modulation, configuration.band, np.nan]
 
@@ -74,14 +75,3 @@ class MeasureTimeCAD2RxTimeout(Experiment):
 
     def analyze(self, df):
         pass
-
-
-
-
-
-
-
-
-
-
-

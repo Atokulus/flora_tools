@@ -26,7 +26,8 @@ class MeasureTimeSetFS(Experiment):
             text = utilities.get_random_text(length=254)
             text_len = (len(text) + 1)
 
-            configuration = RadioConfiguration.get_random_configuration(tx='randomize') # Does not work for FSK (random glitches on BUSY line)
+            configuration = RadioConfiguration.get_random_configuration(
+                tx='randomize')  # Does not work for FSK (random glitches on BUSY line)
             self.bench.devkit_a.cmd("radio standby")
             self.bench.devkit_a.cmd(configuration.cmd)
 
@@ -58,23 +59,26 @@ class MeasureTimeSetFS(Experiment):
                     delay = np.nan
 
                 if configuration.tx:
-                    item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, text_len, configuration.tx, False, delay]
+                    item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band,
+                            text_len, configuration.tx, False, delay]
                 else:
-                    item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, 0, configuration.tx, boost, delay]
+                    item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, 0,
+                            configuration.tx, boost, delay]
             else:
                 if configuration.tx:
-                    item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, text_len, configuration.tx, False, np.nan]
+                    item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band,
+                            text_len, configuration.tx, False, np.nan]
                 else:
-                    item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, 0, configuration.tx, boost, np.nan]
-
+                    item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, 0,
+                            configuration.tx, boost, np.nan]
 
             df.loc[i] = item
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
-        
+
         delay = df.measured
 
         columns = ['delay', 'delay_err']

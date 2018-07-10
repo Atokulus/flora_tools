@@ -54,17 +54,19 @@ class MeasureTimeIRQProcess(Experiment):
                     delay_react = np.nan
                     delay_finish = np.nan
 
-                item = [dt.datetime.now(), window, self.bench.scope.sample_period, configuration.modulation, configuration.band, delay_react, delay_finish]
+                item = [dt.datetime.now(), window, self.bench.scope.sample_period, configuration.modulation,
+                        configuration.band, delay_react, delay_finish]
             else:
-                item = [dt.datetime.now(), window, self.bench.scope.sample_period, configuration.modulation, configuration.band, np.nan, np.nan]
+                item = [dt.datetime.now(), window, self.bench.scope.sample_period, configuration.modulation,
+                        configuration.band, np.nan, np.nan]
 
             df.loc[i] = item
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
-        
+
         delay_react = df.react
         delay_finish = df.finish
 

@@ -1,11 +1,12 @@
-from flora_tools.sim.sim_node import SimNode
-from flora_tools.lwb_slot import MODULATIONS
 from flora_tools.gloria_flood import GloriaFlood
+from flora_tools.lwb_slot import MODULATIONS
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
 from flora_tools.sim.sim_event_manager import SimEventType
+from flora_tools.sim.sim_node import SimNode
 
 CAD_SYMBOL_TIMEOUT = [1, 1, 1]
+
 
 class SimChannelScanner:
     def __init__(self, node: 'SimNode', callback):
@@ -47,11 +48,11 @@ class SimChannelScanner:
                                     self.process_rx_timeout)
 
     def process_rx_timeout(self):
-        self.potential_message = self.node.network.mc.get_potential_rx_message(modulation=self.flood['modulation'],
-                                                                               band=self.flood['band'],
-                                                                               rx_node=self.node,
-                                                                               rx_start=self.rx_start,
-                                                                               rx_timeout=self.node.local_timestamp)
+        self.potential_message = self.node.network.mc.receive_message_on_rx_timeout(modulation=self.flood['modulation'],
+                                                                                    band=self.flood['band'],
+                                                                                    rx_node=self.node,
+                                                                                    rx_start=self.rx_start,
+                                                                                    rx_timeout=self.node.local_timestamp)
 
         if self.potential_message is not None:
             self.node.em.register_event(self.potential_message.tx_end,
@@ -74,7 +75,7 @@ class SimChannelScanner:
         math = RadioMath(config)
 
         self.node.em.register_event(self.node.local_timestamp + GloriaFlood().rx_setup_time + math.get_symbol_time() * (
-                    CAD_SYMBOL_TIMEOUT[self.current_modulation] + 0.5),
+                CAD_SYMBOL_TIMEOUT[self.current_modulation] + 0.5),
                                     self.node,
                                     SimEventType.CAD_DONE,
                                     self.process_lora_cad_done)

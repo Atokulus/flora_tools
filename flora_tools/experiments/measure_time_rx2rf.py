@@ -33,11 +33,12 @@ class MeasureTimeRx2Rf(Experiment):
             self.bench.devkit_a.cmd("radio receive -s")
             self.bench.devkit_a.delay_cmd_time()
 
-            self.bench.scope.init_measurement(window, trigger_rise=True, trigger_channel="NSS", points=points, start=start)
+            self.bench.scope.init_measurement(window, trigger_rise=True, trigger_channel="NSS", points=points,
+                                              start=start)
             self.bench.scope.delay_acquisition_setup_time(window=window)
             self.bench.devkit_a.cmd("radio execute")
 
-            wave = self.bench.scope.finish_measurement(channels=[1,3])
+            wave = self.bench.scope.finish_measurement(channels=[1, 3])
 
             if wave is not None:
                 nss_indices = utilities.get_edges(wave[0])
@@ -87,7 +88,8 @@ class MeasureTimeRx2Rf(Experiment):
             for i in mods:
                 config = RadioConfiguration(i)
                 subset = df[df.modulation == i]
-                mod_delays.loc[i] = [config.modulation_name, len(subset['rx2rf']), subset['rx2rf'].mean(), subset['rx2rf'].std()]
+                mod_delays.loc[i] = [config.modulation_name, len(subset['rx2rf']), subset['rx2rf'].mean(),
+                                     subset['rx2rf'].std()]
 
             bands = df.band.sort_values().unique();
             columns = ['sample_count', 'rx2rf', 'rx2rf_err']
@@ -99,14 +101,3 @@ class MeasureTimeRx2Rf(Experiment):
                 band_delays.loc[i] = [len(subset['rx2rf']), subset['rx2rf'].mean(), subset['rx2rf'].std()]
 
             return mod_delays, band_delays
-
-
-
-
-
-
-
-
-
-
-

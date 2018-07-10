@@ -1,7 +1,6 @@
 import matplotlib
 import numpy as np
 
-
 BAND_FREQUENCIES = [
     863E6 + 1 * 125E3 / 2,
     863E6 + 3 * 125E3 / 2,
@@ -72,7 +71,8 @@ FSK_BANDWIDTHS = [
 
 
 class RadioConfiguration:
-    def __init__(self, modulation=0, band=48, power=0, bandwidth=None, tx=True, crc=True, implicit=0, irq_direct=False, preamble=None, bitrate=None):
+    def __init__(self, modulation=0, band=48, power=0, bandwidth=None, tx=True, crc=True, implicit=0, irq_direct=False,
+                 preamble=None, bitrate=None):
         self.modulation = modulation
         self.band = band
         self.power = power
@@ -91,9 +91,10 @@ class RadioConfiguration:
         self.crc = crc
         self.implicit = implicit
 
-
     def __copy__(self):
-        return RadioConfiguration(modulation=self.modulation, band=self.band, power=self.power, tx=self.tx, crc=self.crc, implicit=self.implicit, irq_direct=self.irq_direct, preamble=self.preamble, bitrate=self.bitrate)
+        return RadioConfiguration(modulation=self.modulation, band=self.band, power=self.power, tx=self.tx,
+                                  crc=self.crc, implicit=self.implicit, irq_direct=self.irq_direct,
+                                  preamble=self.preamble, bitrate=self.bitrate)
 
     @property
     def cmd(self):
@@ -180,20 +181,19 @@ class RadioConfiguration:
     @property
     def bandwidth(self):
 
-            if self.modem == 'LoRa':
-                if self.custom_bandwidth is None:
-                    return 0
-                else:
-                    return int(self.custom_bandwidth)
-            elif self.modem == 'FSK':
-                if self.custom_bandwidth is None:
-                    if self.modulation == 8:
-                        return 250000
-                    if self.modulation == 9:
-                        return 250000
-                else:
-                    return self.custom_bandwidth
-
+        if self.modem == 'LoRa':
+            if self.custom_bandwidth is None:
+                return 0
+            else:
+                return int(self.custom_bandwidth)
+        elif self.modem == 'FSK':
+            if self.custom_bandwidth is None:
+                if self.modulation == 8:
+                    return 250000
+                if self.modulation == 9:
+                    return 250000
+            else:
+                return self.custom_bandwidth
 
     @property
     def real_bandwidth(self):
@@ -204,14 +204,13 @@ class RadioConfiguration:
         elif self.modem == 'FSK':
             return float(self.bandwidth)
 
-
-
     @property
     def modem(self):
         if self.modulation >= 0 and self.modulation < 8:
             return 'LoRa'
         if self.modulation >= 8 and self.modulation < 10:
             return 'FSK'
+
     @property
     def sf(self):
         if self.modulation >= 0 and self.modulation < 8:
@@ -249,8 +248,6 @@ class RadioConfiguration:
         if self.modulation >= 8 and self.modulation < 10:
             return 0
 
-
-
     @property
     def sync_word_length(self):
         if self.modulation >= 0 and self.modulation < 8:
@@ -266,7 +263,8 @@ class RadioConfiguration:
             return "N/A"
 
     @staticmethod
-    def get_random_configuration(tx=True, limit=None, bandwidth=False, power=np.arange(-17, 23), crc=True, implicit=0, modulation_range=np.arange(0, 10), irq_direct=False, preamble=False):
+    def get_random_configuration(tx=True, limit=None, bandwidth=False, power=np.arange(-17, 23), crc=True, implicit=0,
+                                 modulation_range=np.arange(0, 10), irq_direct=False, preamble=False):
         global FSK_BANDWIDTHS
 
         band_count = 52
@@ -289,18 +287,18 @@ class RadioConfiguration:
 
         if preamble is True:
             if RadioConfiguration(modulation).modem == 'LoRa':
-                preamble = np.random.randint(3,13)
+                preamble = np.random.randint(3, 13)
             else:
-                preamble = np.random.randint(2,13)
+                preamble = np.random.randint(2, 13)
 
         if bandwidth is True:
             if RadioConfiguration(modulation).modem == 'LoRa':
-                bandwidth = np.random.choice(np.arange(0,3))
+                bandwidth = np.random.choice(np.arange(0, 3))
             elif RadioConfiguration(modulation).modem == 'FSK':
                 bandwidth = np.random.choice(FSK_BANDWIDTHS)
 
-
-        return RadioConfiguration(modulation, band, power, bandwidth=bandwidth, tx=tx, crc=crc, implicit=implicit, irq_direct=irq_direct, preamble=preamble)
+        return RadioConfiguration(modulation, band, power, bandwidth=bandwidth, tx=tx, crc=crc, implicit=implicit,
+                                  irq_direct=irq_direct, preamble=preamble)
 
     @property
     def color(self):
@@ -315,13 +313,11 @@ class RadioConfiguration:
     def get_color(modulation):
         return RadioConfiguration(modulation).color
 
-
     @property
     def frequency(self):
         global BAND_FREQUENCIES
 
         return BAND_FREQUENCIES[self.band]
-
 
     @property
     def chirp_rate(self):
@@ -357,6 +353,3 @@ class RadioConfiguration:
     @property
     def modulation_index(self):
         return (2 * self.freq_deviation / self.bitrate)
-
-
-

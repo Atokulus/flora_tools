@@ -1,16 +1,15 @@
-import serial
-import serial.tools.list_ports
 import time
-
 from multiprocessing import Pool
 
-import os
+import serial
+import serial.tools.list_ports
+
 
 class Node:
     def __init__(self, port, test=True):
         try:
             self.ser = serial.Serial(port=port.device, baudrate=115200, parity=serial.PARITY_NONE,
-                                stopbits=serial.STOPBITS_ONE, timeout=0.1)
+                                     stopbits=serial.STOPBITS_ONE, timeout=0.1)
 
             if test:
                 self.ser.write(b"\x1b[3~\r\n")
@@ -65,7 +64,6 @@ class Node:
         else:
             return None
 
-
     @staticmethod
     def get_node(port):
         try:
@@ -88,5 +86,3 @@ class Node:
             return nodes
         else:
             print("NO flora ports detected!")
-
-

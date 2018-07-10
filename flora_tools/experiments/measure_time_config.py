@@ -21,15 +21,15 @@ class MeasureTimeConfig(Experiment):
         sample_period = window / (points - 1)
 
         for i in range(0, self.iterations):
-            configuration = RadioConfiguration.get_random_configuration(tx='randomize') # Does not work for FSK (random glitches on BUSY line)
-
+            configuration = RadioConfiguration.get_random_configuration(
+                tx='randomize')  # Does not work for FSK (random glitches on BUSY line)
 
             self.bench.scope.init_measurement(window, trigger_rise=True, trigger_channel="NSS", points=points)
             self.bench.scope.delay_acquisition_setup_time(window=window)
 
             self.bench.devkit_a.cmd(configuration.cmd)
 
-            wave = self.bench.scope.finish_measurement(channels=[1,3])
+            wave = self.bench.scope.finish_measurement(channels=[1, 3])
 
             if wave is not None:
                 nss_indices = utilities.get_edges(wave[0])
@@ -48,17 +48,19 @@ class MeasureTimeConfig(Experiment):
                 else:
                     delay = np.nan
 
-                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, configuration.tx, delay]
+                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band,
+                        configuration.tx, delay]
             else:
-                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, configuration.tx, np.nan]
+                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band,
+                        configuration.tx, np.nan]
 
             df.loc[i] = item
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
-        
+
         delay_lora_tx = df.loc[(df.modulation < 8) & (df.tx == True)].measured
         delay_lora_rx = df.loc[(df.modulation < 8) & (df.tx == False)].measured
         delay_fsk_tx = df.loc[(df.modulation >= 8) & (df.tx == True)].measured

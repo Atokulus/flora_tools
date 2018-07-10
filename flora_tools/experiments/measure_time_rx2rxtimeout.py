@@ -21,7 +21,7 @@ class MeasureTimeRx2RxTimeout(Experiment):
 
         for i in range(0, self.iterations):
             configuration = RadioConfiguration.get_random_configuration()
-            #configuration = RadioConfiguration(0, 0, 0)
+            # configuration = RadioConfiguration(0, 0, 0)
             configuration.tx = False
 
             self.bench.devkit_a.cmd(configuration.cmd)
@@ -39,7 +39,7 @@ class MeasureTimeRx2RxTimeout(Experiment):
             self.bench.scope.delay_acquisition_setup_time(window)
             self.bench.devkit_a.cmd("radio execute")
 
-            wave = self.bench.scope.finish_measurement(channels=[1,2])
+            wave = self.bench.scope.finish_measurement(channels=[1, 2])
 
             if wave is not None:
                 nss_indices = utilities.get_edges(wave[0])
@@ -91,7 +91,8 @@ class MeasureTimeRx2RxTimeout(Experiment):
                 plt.ylabel('Probability [‰]')
                 plt.show()
 
-                delays.loc[i] = [config.modulation_name, len(subset['rx2rxtimeout']), math.get_preamble_time(), subset['rx2rxtimeout'].mean(), subset['rx2rxtimeout'].std()]
+                delays.loc[i] = [config.modulation_name, len(subset['rx2rxtimeout']), math.get_preamble_time(),
+                                 subset['rx2rxtimeout'].mean(), subset['rx2rxtimeout'].std()]
 
             plt.figure(figsize=(14, 5))
             plt.subplot(121)
@@ -143,4 +144,3 @@ class MeasureTimeRx2RxTimeout(Experiment):
             plt.show()
 
             return delays
-

@@ -21,7 +21,8 @@ class MeasureTimeSleepMode(Experiment):
         sample_period = window / (points - 1)
 
         for i in range(0, self.iterations):
-            configuration = RadioConfiguration.get_random_configuration(tx='randomize') # Does not work for FSK (random glitches on BUSY line)
+            configuration = RadioConfiguration.get_random_configuration(
+                tx='randomize')  # Does not work for FSK (random glitches on BUSY line)
             self.bench.devkit_a.cmd(configuration.cmd)
             self.bench.devkit_a.delay_cmd_time()
 
@@ -34,7 +35,7 @@ class MeasureTimeSleepMode(Experiment):
             time.sleep(random_delay)
             self.bench.devkit_a.cmd("radio standby")
 
-            wave = self.bench.scope.finish_measurement(channels=[1,3])
+            wave = self.bench.scope.finish_measurement(channels=[1, 3])
 
             if wave is not None:
                 nss_indices = utilities.get_edges(wave[0])
@@ -54,15 +55,17 @@ class MeasureTimeSleepMode(Experiment):
                     sleep_delay = np.nan
                     wakeup_delay = np.nan
 
-                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, random_delay, sleep_delay, wakeup_delay]
+                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band,
+                        random_delay, sleep_delay, wakeup_delay]
             else:
-                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band, sleep_delay, np.nan, np.nan]
+                item = [dt.datetime.now(), window, sample_period, configuration.modulation, configuration.band,
+                        sleep_delay, np.nan, np.nan]
 
             df.loc[i] = item
             print(item)
             df.to_csv("{}.csv".format(self.name))
 
-    def analyze(self, df : pd.DataFrame):
+    def analyze(self, df: pd.DataFrame):
         df.dropna()
 
         columns = ['sleep', 'sleep_err', 'wakeup', 'wakeup_err']

@@ -1,13 +1,12 @@
 import numpy as np
 
-from flora_tools.sim.sim_message import SimMessage
-from flora_tools.sim.sim_lwb_slot_manager import SimLWBSlotManager
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.lwb_schedule_manager import LWBScheduleManager
 from flora_tools.sim.sim_event_manager import SimEventType
+from flora_tools.sim.sim_lwb_slot_manager import SimLWBSlotManager
+from flora_tools.sim.sim_message import SimMessage
 
-
-BACKOFF_TIME = 1/8E6 * np.exp2(29)
+BACKOFF_TIME = 1 / 8E6 * np.exp2(29)
 
 
 class SimLWBManager:
@@ -60,10 +59,14 @@ class SimLWBManager:
     def process_slot_schedule_slot(self, slot):
         if self.node.role is 'base':
             slot_schedule = self.lwb_schedule_manager.get_slot_schedule()
-            message = SimMessage(slot['modulation'], slot['offset'], self.node, slot['payload'], modulation=slot['modulation'], destination=None, type='slot_schedule', content=slot_schedule, power_level=0)
-            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, tx_node=self.node, message=message)
+            message = SimMessage(slot['modulation'], slot['offset'], self.node, slot['payload'],
+                                 modulation=slot['modulation'], destination=None, type='slot_schedule',
+                                 content=slot_schedule, power_level=0)
+            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, tx_node=self.node,
+                              message=message)
         else:
-            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, tx_node=self.node.current_base, message=None)
+            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, tx_node=self.node.current_base,
+                              message=None)
 
     def process_slot_schedule_slot_callback(self, message: SimMessage):
         if not (self.node.role is 'base') and message is not None and message.type is 'slot_schedule':
@@ -142,10 +145,14 @@ class SimLWBManager:
     def process_round_schedule_slot(self, slot):
         if self.node.role is 'base':
             round_schedule = self.lwb_schedule_manager.get_slot_schedule()
-            message = SimMessage(slot['modulation'], slot['offset'], self.node, slot['payload'], modulation=slot['modulation'], destination=None, type='round_schedule', content=round_schedule, power_level=0)
-            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, tx_node=self.node, message=message)
+            message = SimMessage(slot['modulation'], slot['offset'], self.node, slot['payload'],
+                                 modulation=slot['modulation'], destination=None, type='round_schedule',
+                                 content=round_schedule, power_level=0)
+            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, tx_node=self.node,
+                              message=message)
         else:
-            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, tx_node=self.node.current_base, message=None)
+            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, tx_node=self.node.current_base,
+                              message=None)
 
     def process_round_schedule_slot_callback(self, message: SimMessage):
         if self.node.role is not 'base' and message is not None and message.type is 'round_schedule':

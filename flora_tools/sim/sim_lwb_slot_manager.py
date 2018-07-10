@@ -1,10 +1,10 @@
-from flora_tools.sim.sim_message import SimMessage
-from flora_tools.sim.sim_gloria_flood import SimGloriaFlood
 import flora_tools.sim.sim_node as sim_node
+from flora_tools.sim.sim_gloria_flood import SimGloriaFlood
+from flora_tools.sim.sim_message import SimMessage
 
 
 class SimLWBSlotManager:
-    def __init__(self, node: 'sim_node.SimNode', slot, callback, tx_node: 'sim_node.SimNode'=None, message=None):
+    def __init__(self, node: 'sim_node.SimNode', slot, callback, tx_node: 'sim_node.SimNode' = None, message=None):
         self.node = node
         self.slot = slot
         self.message = message
@@ -31,6 +31,6 @@ class SimLWBSlotManager:
                 self.node.link_manager.downgrade_link(self.tx_node.id)
 
         elif message is not None:
-                self.node.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
+            self.node.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
 
         self.callback(message)

@@ -1,11 +1,10 @@
+from enum import Enum
 from typing import Callable
 
-import numpy as np
 import pandas as pd
 
 import flora_tools.sim.sim_network as sim_network
 import flora_tools.sim.sim_node as sim_node
-from enum import Enum
 
 
 class SimEventType(Enum):
@@ -14,6 +13,7 @@ class SimEventType(Enum):
     RX_DONE = 3
     CAD_DONE = 4
     UPDATE = 5
+    TX_DONE_BEFORE_RX_TIMEOUT = 6
 
 
 class SimEventManager:
@@ -33,5 +33,7 @@ class SimEventManager:
     def process_event(event):
         event['callback'](event)
 
-    def register_event(self, timestamp: float, node: 'sim_node.SimNode', type: SimEventType, callback: Callable[[None], None], content=None):
-        self.eq.loc[len(self.eq)] = [node.transform_local_to_global_timestamp(timestamp), timestamp, node, type, content, callback]
+    def register_event(self, timestamp: float, node: 'sim_node.SimNode', type: SimEventType,
+                       callback: Callable[[None], None], data=None):
+        self.eq.loc[len(self.eq)] = [node.transform_local_to_global_timestamp(timestamp), timestamp, node, type, data,
+                                     callback]

@@ -1,10 +1,10 @@
-from flora_tools.sim.sim_message import SimMessage
-from flora_tools.sim.sim_lwb_slot_manager import SimLWBSlotManager
-import flora_tools.sim.sim_node as sim_node
 import numpy as np
+
+import flora_tools.sim.sim_node as sim_node
 
 sync_period = 1 / 8E6 * np.exp2(29)  # Sync every 67.108864 (~ 15 years of battery life)
 schedule_granularity = sync_period / 256
+
 
 class LWBScheduleManager:
     def __init__(self, node: 'sim_node.SimNode'):
@@ -40,5 +40,3 @@ class LWBScheduleManager:
 
     def select_data_slot_message(self):
         pass
-
-

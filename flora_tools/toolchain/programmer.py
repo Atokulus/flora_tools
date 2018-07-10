@@ -1,12 +1,13 @@
 import os
 import time
 
-from intelhex import hex2bin
 import serial
+from intelhex import hex2bin
 
+from flora_tools.stm32loader.stm32loader import Stm32Bootloader, Stm32Loader
 from flora_tools.toolchain.bootloader import Bootloader
 from flora_tools.toolchain.platforms import *
-from flora_tools.stm32loader.stm32loader import Stm32Bootloader, Stm32Loader
+
 
 class Programmer:
     def __init__(self, flora_path, bootloader: Bootloader):
@@ -16,7 +17,7 @@ class Programmer:
     def program(self):
         if not os.path.isfile(os.path.join(self.flora_path, DEVKIT_FIRMWARE_PATH + '.binary')):
             hex2bin(os.path.join(self.flora_path, DEVKIT_FIRMWARE_PATH + '.hex'),
-                os.path.join(self.flora_path, DEVKIT_FIRMWARE_PATH + '.binary'))
+                    os.path.join(self.flora_path, DEVKIT_FIRMWARE_PATH + '.binary'))
 
         if not os.path.isfile(os.path.join(self.flora_path, COMBOARD_FIRMWARE_PATH + '.binary')):
             hex2bin(os.path.join(self.flora_path, COMBOARD_FIRMWARE_PATH + '.hex'),
@@ -58,7 +59,8 @@ class Programmer:
                 self.loader.configuration['data_file'] = os.path.join(self.flora_path, DEVKIT_FIRMWARE_PATH + '.binary')
             elif device_id == 0x435:
                 print("{} is ComBoard.".format(self.bootloader.port.device))
-                self.loader.configuration['data_file'] = os.path.join(self.flora_path, COMBOARD_FIRMWARE_PATH + '.binary')
+                self.loader.configuration['data_file'] = os.path.join(self.flora_path,
+                                                                      COMBOARD_FIRMWARE_PATH + '.binary')
 
             self.loader.perform_commands()
 
@@ -80,9 +82,8 @@ class Programmer:
                     filename + '.binary')
             firmware_path = filename + '.binary'
 
-
         ser = serial.Serial(port=port, baudrate=115200, parity=serial.PARITY_NONE,
-                                 stopbits=serial.STOPBITS_ONE, timeout=0.1)
+                            stopbits=serial.STOPBITS_ONE, timeout=0.1)
         ser.write(b"system bootloader\r\n")
         time.sleep(0.1)
 
@@ -98,5 +99,3 @@ class Programmer:
         loader.connect()
         loader.perform_commands()
         loader.reset()
-
-
