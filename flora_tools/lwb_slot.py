@@ -7,17 +7,18 @@ from flora_tools.radio_configuration import RadioConfiguration
 
 MODULATIONS = [3, 5, 7, 9]
 BANDS = [48]
-POWERS = [22, 10]
+POWERS = [10, 22]
 
-gloria_header_length = 4
-sync_header_length = gloria_header_length + 4
-contention_length = gloria_header_length + 3
+gloria_header_length = 8
+sync_header_length = gloria_header_length
+contention_length = gloria_header_length + 4
 
 rounds_schedule_buffer_items = len(MODULATIONS) * 2
 round_schedule_length = gloria_header_length + rounds_schedule_buffer_items * 4
 
 slot_schedule_item_length = 3
 
+DEFAULT_POWER_LEVELS = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0]
 RETRANSMISSIONS_COUNTS = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2]
 HOP_COUNTS = [1, 1, 1, 1, 2, 2, 2, 3, 3, 3]
 
@@ -27,16 +28,15 @@ class LWBSlotType(Enum):
     SLOT_SCHEDULE = 2
     ROUND_SCHEDULE = 3
     CONTENTION = 4
-    ROUND_CONTENTION = 5
-    DATA = 6
-    ACK = 7
-    EMPTY = 8
+    DATA = 5
+    ACK = 6
+    EMPTY = 7
 
 
 class LWBSlot:
     def __init__(self, round: 'lwb_round.LWBRound', slot_offset: float, modulation: int, payload: int,
                  type: LWBSlotType, acked=True, master: 'sim_node.SimNode' = None, index: int = None,
-                 power_level: int = 0):
+                 power_level: int = None):
         self.round = round
         self.slot_offset = slot_offset
         self.modulation = modulation
@@ -46,7 +46,11 @@ class LWBSlot:
         self.acked = acked
         self.master = master
         self.index = index
-        self.power_level = power_level
+
+        if power_level is None:
+            self.power_level = DEFAULT_POWER_LEVELS[self.gloria_modulation]
+        else:
+            self.power_level = power_level
 
         self.flood: 'GloriaFlood' = None
 

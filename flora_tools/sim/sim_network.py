@@ -31,14 +31,14 @@ class SimNetwork:
 
         self.G.add_edges_from(channels)
 
-    def draw(self, modulation=None):
+    def draw(self, modulation=None, power=22):
         if modulation is not None:
             H = self.G.copy()
             config = RadioConfiguration(modulation)
             math = RadioMath(config)
             edges_to_remove = []
             for (u, v, pl) in H.edges.data('path_loss'):
-                if pl > -math.link_budget():
+                if pl > -math.link_budget(power=power):
                     edges_to_remove.append((u, v))
 
             H.remove_edges_from(edges_to_remove)

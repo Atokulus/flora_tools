@@ -1,6 +1,6 @@
 import pandas as pd
 
-import flora_tools.lwb_visualizer as lwb_math
+import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_node as sim_node
 
 
@@ -24,11 +24,11 @@ class SimLinkManager:
     def downgrade_link(self, target_node: 'sim_node.SimNode'):
         self.links[target_node.id, 'counter'] += 1
         if self.links[target_node.id, 'counter'] > 1:
-            if self.links[target_node.id, 'power'] < len(lwb_math.powers) - 1:
+            if self.links[target_node.id, 'power'] < len(lwb_slot.POWERS) - 1:
                 self.links[target_node.id] = [self.links[target_node.id, 'modulation'],
                                               self.links[target_node.id, 'power'] + 1, 1]
             else:
-                if self.links[target_node.id, 'modulation'] < len(lwb_math.modulations) - 1:
+                if self.links[target_node.id, 'modulation'] < len(lwb_slot.MODULATIONS) - 1:
                     self.links[target_node.id] = [self.links[target_node.id, 'modulation'] + 1,
                                                   self.links[target_node.id, 'power'] + 1, 1]
                 else:

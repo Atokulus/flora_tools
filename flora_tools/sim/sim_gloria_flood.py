@@ -2,12 +2,11 @@ import numpy as np
 
 import flora_tools.gloria_flood as gloria_flood
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.lwb_slot import gloria_header_length
+from flora_tools.lwb_slot import gloria_header_length, POWERS
 from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
 MAX_ACKS = 1
-
 
 class SimGloriaFlood:
     def __init__(self, node: 'sim_node.SimNode', flood: 'gloria_flood.GloriaFlood', finished_callback,
@@ -27,7 +26,6 @@ class SimGloriaFlood:
         self.is_initial_node = True if init_tx_message is not None else False
         self.power_increase = power_increase
         self.update_timestamp = update_timestamp
-        self.minimum_power_level = init_tx_message.power_level if init_tx_message is not None else 0
         self.rx_timeout_event = None
 
         slot = flood.slots[self.slot_index]
@@ -42,7 +40,6 @@ class SimGloriaFlood:
                 self.node.mm.tx(self.node,
                                 self.flood.modulation,
                                 self.flood.band,
-                                self.tx_message.power_level,
                                 self.tx_message)
 
                 self.node.em.register_event(slot.tx_done_marker,
@@ -50,7 +47,7 @@ class SimGloriaFlood:
                                             self.progress_gloria_flood)
 
                 self.retransmission_count -= 1
-                if self.power_increase and self.is_initial_node:
+                if self.power_increase and self.is_initial_node and self.tx_message.power_level < len(POWERS) - 1:
                     self.tx_message.power_level += 1
             else:
                 self.finished_callback(None)
@@ -152,8 +149,6 @@ class SimGloriaFlood:
                 self.process_next_slot()
         else:
             if not self.is_initial_node:
-                self.minimum_power_level = np.min(
-                    [self.potential_message.power_level, self.minimum_power_level])
                 self.tx_message = self.potential_message
                 self.tx_message.hop_count += 1
                 if self.update_timestamp:
@@ -185,7 +180,6 @@ class SimGloriaFlood:
                     self.node.mm.tx(self.node,
                                     self.flood.modulation,
                                     self.flood.band,
-                                    self.ack_message.power_level,
                                     self.ack_message)
 
                     self.node.em.register_event(slot.tx_done_marker,
@@ -218,7 +212,6 @@ class SimGloriaFlood:
                 self.node.mm.tx(self.node,
                                 self.flood.modulation,
                                 self.flood.band,
-                                self.tx_message.power_level,
                                 self.tx_message)
 
                 self.node.em.register_event(slot.tx_done_marker,
