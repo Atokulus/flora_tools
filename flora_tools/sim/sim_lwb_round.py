@@ -3,7 +3,7 @@ from enum import Enum
 
 import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
-import flora_tools.sim.sim_lwb_manager as sim_lwb_manager
+import flora_tools.sim.sim_lwb as sim_lwb_manager
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.sim_lwb_slot_manager import SimLWBSlotManager
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
@@ -15,10 +15,10 @@ class AckOperation(Enum):
 
 
 class SimLWBRound:
-    def __init__(self, node: 'sim_node.SimNode', lwb_manager: 'sim_lwb_manager.SimLWBManager',
+    def __init__(self, node: 'sim_node.SimNode', lwb: 'sim_lwb_manager.SimLWB',
                  round: 'lwb_round.LWBRound', callback: Callable[[bool], None]):
         self.node = node
-        self.lwb_manager = lwb_manager
+        self.lwb = lwb
         self.round = round
         self.callback = callback
 
@@ -65,7 +65,7 @@ class SimLWBRound:
             SimLWBSlotManager(self.node, slot, self.process_sync_slot_callback, master=self.node,
                               message=message)
         else:
-            SimLWBSlotManager(self.node, slot, self.process_sync_slot_callback, master=self.lwb_manager.base,
+            SimLWBSlotManager(self.node, slot, self.process_sync_slot_callback, master=self.lwb.base,
                               message=None)
 
     def process_sync_slot_callback(self, message: SimMessage):
@@ -73,7 +73,7 @@ class SimLWBRound:
 
     def process_slot_schedule_slot(self, slot: 'lwb_slot.LWBSlot'):
         if self.node.role is sim_node.SimNodeRole.BASE:
-            slot_schedule = self.lwb_manager.lwb_schedule_manager.slot_schedule
+            slot_schedule = self.lwb.lwb_schedule_manager.slot_schedule
             message = SimMessage(slot.slot_marker, self.node, slot.payload,
                                  modulation=slot.modulation, destination=None, type=SimMessageType.SLOT_SCHEDULE,
                                  content=slot_schedule, power_level=slot.power_level)
@@ -81,13 +81,13 @@ class SimLWBRound:
                               message=message)
         else:
             SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback,
-                              master=self.lwb_manager.base,
+                              master=self.lwb.base,
                               message=None)
 
     def process_slot_schedule_slot_callback(self, message: SimMessage):
         if self.node.role is not sim_node.SimNodeRole.BASE and \
                 message is not None and message.type is SimMessageType.SLOT_SCHEDULE:
-            self.lwb_manager.lwb_schedule_manager.register_slot_schedule(message.content)
+            self.lwb.lwb_schedule_manager.register_slot_schedule(message.content)
 
         self.process_next_slot()
 
@@ -120,13 +120,13 @@ class SimLWBRound:
     def process_contention_slot(self, slot: 'lwb_slot.LWBSlot'):
         if self.node.role is not sim_node.SimNodeRole.BASE and (slot.master is None or slot.master is self.node):
             if self.round.type is lwb_round.LWBRoundType.ROUND_CONTENTION:
-                message = self.lwb_manager.stream_manager.get_round_request()
+                message = self.lwb.stream_manager.get_round_request()
             elif self.round.type is lwb_round.LWBRoundType.NOTIFICATION:
-                message = self.lwb_manager.stream_manager.get_notification()
+                message = self.lwb.stream_manager.get_notification()
             elif self.round.type is lwb_round.LWBRoundType.LP_NOTIFICATION:
-                message = self.lwb_manager.stream_manager.get_notification()
+                message = self.lwb.stream_manager.get_notification()
             elif self.round.type is lwb_round.LWBRoundType.STREAM_CONTENTION:
-                message = self.lwb_manager.stream_manager.get_stream_request()
+                message = self.lwb.stream_manager.get_stream_request()
             else:
                 message = None
 
@@ -180,23 +180,23 @@ class SimLWBRound:
 
     def process_ack_slot_callback(self, message: SimMessage):
         if message.type is SimMessageType.ACK:
-            self.lwb_manager.stream_manager.ack_data(message.content['id'])
+            self.lwb.stream_manager.ack_data(message.content['id'])
 
     def process_round_schedule_slot(self, slot: 'lwb_slot.LWBSlot'):
         if self.node.role is sim_node.SimNodeRole.BASE:
-            round_schedule = self.lwb_manager.lwb_schedule_manager.get_slot_schedule()
+            round_schedule = self.lwb.lwb_schedule_manager.get_slot_schedule()
             message = SimMessage(slot.slot_marker, self.node, slot.payload,
                                  modulation=slot.modulation, destination=None, type=SimMessageType.ROUND_SCHEDULE,
                                  content=round_schedule, power_level=slot.power_level)
             SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, master=self.node,
                               message=message)
         else:
-            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, master=self.lwb_manager.base,
+            SimLWBSlotManager(self.node, slot, self.process_slot_schedule_slot_callback, master=self.lwb.base,
                               message=None)
 
     def process_round_schedule_slot_callback(self, message: SimMessage):
         if self.node.role is not sim_node.SimNodeRole.BASE and message is not None and message.type is SimMessageType.ROUND_SCHEDULE:
-            self.lwb_manager.lwb_schedule_manager.register_round_schedule(message.content)
+            self.lwb.lwb_schedule_manager.register_round_schedule(message.content)
 
     def slot_valid(self):
         return self.round.slots[self.current_slot_index] is not None
