@@ -4,7 +4,7 @@ import flora_tools.gloria_flood as gloria_flood
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.lwb_slot import gloria_header_length
 from flora_tools.sim.sim_event_manager import SimEventType
-from flora_tools.sim.sim_message import SimMessage
+from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
 MAX_ACKS = 1
 
@@ -141,7 +141,8 @@ class SimGloriaFlood:
             self.last_tx_slot_marker = self.potential_message.timestamp
             self.last_slot_marker = slot.tx_marker
 
-        if slot.type is 'ack' and self.potential_message.type is 'ack':
+        if slot.type in [gloria_flood.GloriaSlotType.RX_ACK,
+                         gloria_flood.GloriaSlotType.TX_ACK] and self.potential_message.type is SimMessageType.ACK:
             if self.potential_message.destination is self.node:
                 self.finished_callback(self.potential_message)
             elif not self.is_initial_node:
@@ -166,7 +167,7 @@ class SimGloriaFlood:
         if self.is_not_finished():
             slot = self.flood.slots[self.slot_index]
 
-            if slot.type is 'ack':
+            if slot.type in [gloria_flood.GloriaSlotType.RX_ACK, gloria_flood.GloriaSlotType.TX_ACK]:
                 if self.tx_message is not None and self.tx_message.destination is self.node:
                     self.acked = True
 
@@ -177,7 +178,7 @@ class SimGloriaFlood:
                                                   source=self.tx_message.source,
                                                   payload=gloria_header_length,
                                                   destination=self.tx_message.source,
-                                                  type='ack',
+                                                  type=SimMessageType.ACK,
                                                   power_level=self.tx_message.power_level,
                                                   modulation=self.tx_message.modulation)
 
@@ -247,7 +248,8 @@ class SimGloriaFlood:
         self.acked = True
         self.slot_index += 2
         if self.is_not_finished() and \
-                self.flood.slots[self.slot_index].type is 'ack' and \
+                self.flood.slots[self.slot_index].type in [gloria_flood.GloriaSlotType.RX_ACK,
+                                                           gloria_flood.GloriaSlotType.TX_ACK] and \
                 self.ack_counter < MAX_ACKS:
 
             slot = self.flood.slots[self.slot_index]
@@ -293,11 +295,8 @@ class SimGloriaFlood:
         return self.flood.slots[self.slot_index - count].tx_marker - self.flood.slots[self.slot_index - 1].tx_marker
 
     def update_local_timestamp(self, new_timestamp):
-        offset = new_timestamp - self.last_tx_slot_marker
+        correction = new_timestamp - self.last_tx_slot_marker
 
-        for slot in self.flood.slots:
-            slot.slot_offset += offset
-
-        self.node.local_timestamp += offset
+        self.node.local_timestamp += correction
         self.last_tx_slot_marker = new_timestamp
         self.last_slot_marker = new_timestamp

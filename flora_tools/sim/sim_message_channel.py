@@ -43,7 +43,7 @@ class SimMessageChannel:
 
         interfering_power = 0
         for interferer_index, interferer in interfering_set.rx_power:
-            if interferer['message_id'] is not message.id or not (
+            if interferer['message_hash'] is not message.hash or not (
                     (tx_start - 100E6) < interferer['tx_start'] < (tx_start + 100E6)):
                 interfering_power += np.pow(10, interferer['rx_power'] / 10)
 
@@ -96,7 +96,7 @@ class SimMessageChannel:
             for index_candidate, candidate in subset.sort_values(by=['tx_start'], ascending=False):
                 interfering_power = 0
                 for index_interferer, interferer in interfering_set.iterrows():
-                    if interferer['message_id'] is not candidate['message_id'] or not (
+                    if interferer['message_hash'] is not candidate['message_hash'] or not (
                             (candidate['tx_start'] - 100E6) < interferer['tx_start'] < (candidate['tx_start'] + 100E6)):
                         interfering_power += np.pow(10, interferer['rx_power'] / 10)
 
@@ -116,20 +116,13 @@ class SimMessageChannel:
         def calc_power_message(item):
             return self.calculate_path_loss(rx_node, self.network.nodes[item.source.id]) + item['power']
 
-        config = RadioConfiguration(modulation, preamble=GloriaFlood().preamble_len(modulation))
-        math = RadioMath(config)
-        valid_rx_start = rx_start + math.get_symbol_time() * 0.5
-
-        tx_start = potential_message.tx_start
-        tx_end = tx_start + potential_message.time
-
         interfering_set = (self.mm.mq.loc[
             self.mm.mq.modulation == modulation &
             self.mm.mq.band == band & self.mm.mq.event_type == 'tx' &
             self.mm.mq.tx_end > rx_start &
             self.mm.mq.tx_start < potential_message.tx_end &
             (
-                    self.mm.mq.message_id != potential_message.id |
+                    self.mm.mq.message_hash != potential_message.hash |
                     ((self.mm.mq.tx_start < (potential_message.tx_start - 100E6)) | (
                             self.mm.mq.tx_start > (potential_message.tx_start + 100E6)))
             )

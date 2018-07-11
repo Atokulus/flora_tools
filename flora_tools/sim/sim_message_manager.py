@@ -13,7 +13,7 @@ class SimMessageManager:
     def __init__(self, network: 'sim_network.SimNetwork'):
         self.network = network
         self.mq = pd.DataFrame(
-            columns=['source', 'modulation', 'band', 'power', 'tx_start', 'tx_end', 'message', 'message_id'])
+            columns=['source', 'modulation', 'band', 'power', 'tx_start', 'tx_end', 'message', 'message_hash'])
         self.rxq = []  # [{'rx_node', 'modulation', 'band', 'rx_start', 'callback'}]
 
     def tx(self, source: 'sim_node.SimNode', modulation, band, power, message: SimMessage):
@@ -30,7 +30,7 @@ class SimMessageManager:
                                      message.tx_start,
                                      message.tx_end,
                                      message,
-                                     message.id]
+                                     message.hash]
 
         for rx_node_item in self.rxq:
             if (rx_node_item is not None and

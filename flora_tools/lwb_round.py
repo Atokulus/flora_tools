@@ -13,10 +13,12 @@ min_contention_layout = [0, 0, 0, 0]
 
 class LWBRoundType(Enum):
     SYNC = 1
-    CONTENTION = 2
-    NOTIFICATION = 3
-    DATA = 4
-    LP_NOTIFICATION = 5
+    ROUND_CONTENTION = 2
+    STREAM_CONTENTION = 3
+    NOTIFICATION = 4
+    DATA = 5
+    LP_NOTIFICATION = 6
+    EMPTY = 7
 
 
 class LWBSlotItemType(Enum):
@@ -45,7 +47,7 @@ class LWBDataSlotItem:
 
 class LWBRound:
     def __init__(self, round_marker, modulation, type: LWBRoundType, master: 'SimNode' = None, layout=None,
-                 low_power=False):
+                 low_power=False, first_id: int = None):
         self.round_marker = round_marker
         self.modulation = modulation
         self.gloria_modulation = MODULATIONS[self.modulation]
@@ -54,6 +56,7 @@ class LWBRound:
         self.master = master
         self.layout = layout
         self.low_power = low_power
+        self.first_id = first_id
 
         self.slots: typing.List[LWBSlot] = []
 
@@ -74,33 +77,42 @@ class LWBRound:
     def generate(self):
         slot_offset = 0
 
+        index: int = 0
         item: LWBSlotItem
         for item in self.layout:
             if item.type is LWBSlotItemType.SYNC:
-                slot = LWBSlot.create_sync_slot(self, slot_offset, self.modulation, master=item.master)
+                slot = LWBSlot.create_sync_slot(self, slot_offset, self.modulation, master=item.master, index=index)
             elif item.type is LWBSlotItemType.ROUND_SCHEDULE:
-                slot = LWBSlot.create_round_schedule_slot(self, slot_offset, self.modulation, master=item.master)
+                slot = LWBSlot.create_round_schedule_slot(self, slot_offset, self.modulation, master=item.master,
+                                                          index=index)
             elif item.type is LWBSlotItemType.SLOT_SCHEDULE:
-                slot = LWBSlot.create_slot_schedule_slot(self, slot_offset, self.modulation, master=item.master)
+                slot = LWBSlot.create_slot_schedule_slot(self, slot_offset, self.modulation, master=item.master,
+                                                         index=index)
             elif item.type is LWBSlotItemType.CONTENTION:
-                slot = LWBSlot.create_contention_slot(self, slot_offset, self.modulation, master=item.master)
+                slot = LWBSlot.create_contention_slot(self, slot_offset, self.modulation, master=item.master,
+                                                      index=index)
                 self.slots.append(slot)
+                index += 1
                 slot_offset += slot.total_time
-                slot = LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target)
+                slot = LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target, index=index)
             elif item.type is LWBSlotItemType.ROUND_CONTENTION:
-                slot = LWBSlot.create_round_contention_slot(self, slot_offset, self.modulation, master=item.master)
+                slot = LWBSlot.create_round_contention_slot(self, slot_offset, self.modulation, master=item.master,
+                                                            index=index)
                 self.slots.append(slot)
+                index += 1
                 slot_offset += slot.total_time
-                slot = LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target)
+                slot = LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target, index=index)
             elif item.type is LWBSlotItemType.DATA:
                 slot = LWBSlot.create_data_slot(self, slot_offset, self.modulation, payload=item.data_payload,
-                                                master=item.master)
+                                                master=item.master, index=index)
                 self.slots.append(slot)
+                index += 1
                 slot_offset += slot.total_time
-                slot = LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target)
+                slot = LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target, index=index)
 
             self.slots.append(slot)
             slot_offset += slot.total_time
+            index += 1
 
     @staticmethod
     def create_sync_round(round_marker: float, modulation: int, master: 'SimNode' = None):

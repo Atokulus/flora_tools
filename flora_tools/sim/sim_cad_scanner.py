@@ -1,17 +1,17 @@
 from flora_tools.gloria_flood import GloriaTimings
-from flora_tools.lwb_slot import BANDS
-from flora_tools.lwb_slot import MODULATIONS
+from flora_tools.lwb_slot import BANDS, MODULATIONS, LWBSlot
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
 from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_node import SimNode
 
 SCAN_BANDS = BANDS
-RX_SYMBOL_TIMEOUT = [255, 255, 255, 255]
+
+RX_SYMBOL_TIMEOUT = [LWBSlot.create_empty_slot(i) for i in MODULATIONS]
 CAD_SYMBOL_TIMEOUT = [1, 1, 1]
 
 
-class SimChannelScanner:
+class SimCADScanner:
     def __init__(self, node: 'SimNode', callback):
         self.node = node
         self.current_modulation = len(MODULATIONS) - 1
