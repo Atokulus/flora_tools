@@ -6,7 +6,7 @@ import numpy as np
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
-from flora_tools.sim.sim_event_manager import SimEventManager
+import flora_tools.sim.sim_event_manager as sim_event_manager
 from flora_tools.sim.sim_message_channel import SimMessageChannel
 from flora_tools.sim.sim_message_manager import SimMessageManager
 
@@ -16,9 +16,10 @@ class SimNetwork:
         self.current_timestamp = 0
         self.mm = SimMessageManager(self)
         self.mc = SimMessageChannel(self)
-        self.em = SimEventManager(self)
+        self.em = sim_event_manager.SimEventManager(self)
 
-        self.nodes = [sim_node.SimNode(self, mm=self.mm, em=self.em, id=i, role=('sensor' if i is not 0 else 'base'))
+        self.nodes = [sim_node.SimNode(self, mm=self.mm, em=self.em, id=i, role=(
+            sim_node.SimNodeRole.SENSOR if i is not 0 else sim_node.SimNodeRole.BASE))
                       for i in range(count)]
         self.G = nx.Graph()
         self.G.add_nodes_from(range(count))
@@ -30,6 +31,10 @@ class SimNetwork:
         channels = [tuple([edge[0], edge[1], {'path_loss': path_losses[index]}]) for index, edge in enumerate(edges)]
 
         self.G.add_edges_from(channels)
+
+    def run(self):
+        for node in self.node:
+            node.run()
 
     def draw(self, modulation=None, power=22):
         if modulation is not None:

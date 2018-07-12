@@ -233,7 +233,7 @@ class GloriaFlood:
 
         return
 
-    def energy(self, power=10E-3):
+    def energy(self):
         energy = self.overhead * proc_power
         for slot in self.slots:
             energy += slot.energy

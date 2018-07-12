@@ -3,7 +3,7 @@ import numpy as np
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_network as sim_network
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.gloria_flood import GloriaFlood
+import flora_tools.gloria as gloria
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath, RADIO_SNR
 from flora_tools.sim.sim_message import SimMessage
@@ -21,7 +21,7 @@ class SimMessageChannel:
                                  lwb_slot.POWERS[self.message.power_level]):
             return None
 
-        config = RadioConfiguration(modulation, preamble=GloriaFlood().preamble_len(modulation))
+        config = RadioConfiguration(modulation, preamble=gloria.GloriaTimings(modulation).preamble_len)
         math = RadioMath(config)
 
         valid_rx_start = rx_start + math.get_symbol_time() * 0.1
@@ -63,7 +63,7 @@ class SimMessageChannel:
         def calc_power_message(item):
             return self.calculate_path_loss(rx_node, self.network.nodes[item.source.id]) + item['power']
 
-        config = RadioConfiguration(modulation, preamble=GloriaFlood().preamble_len(modulation))
+        config = RadioConfiguration(modulation, preamble=gloria.GloriaFlood().preamble_len(modulation))
         math = RadioMath(config)
 
         valid_rx_start = rx_start + math.get_symbol_time() * 0.1

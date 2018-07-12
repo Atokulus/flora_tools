@@ -4,8 +4,8 @@ import pandas as pd
 
 import flora_tools.sim.sim_network as sim_network
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.lwb_slot import POWERS
-from flora_tools.sim.sim_event_manager import SimEventType
+import flora_tools.lwb_slot as lwb_slot
+import flora_tools.sim.sim_event_manager as sim_event_type
 from flora_tools.sim.sim_message import SimMessage
 
 
@@ -17,7 +17,7 @@ class SimMessageManager:
         self.rxq = []  # [{'rx_node', 'modulation', 'band', 'rx_start', 'callback'}]
 
     def tx(self, source: 'sim_node.SimNode', modulation, band, message: SimMessage):
-        power = POWERS[message.power_level]
+        power = lwb_slot.POWERS[message.power_level]
 
         message = copy(message)
         message.hop_count += 1
@@ -38,7 +38,7 @@ class SimMessageManager:
                     rx_node_item['band'] is band):
                 self.network.em.register_event(message.tx_end,
                                                rx_node_item['rx_node'],
-                                               SimEventType.TX_DONE_BEFORE_RX_TIMEOUT,
+                                               sim_event_type.SimEventType.TX_DONE_BEFORE_RX_TIMEOUT,
                                                rx_node_item['callback'],
                                                {'message': message, 'rx': rx_node_item})
 

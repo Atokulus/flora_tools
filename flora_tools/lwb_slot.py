@@ -1,8 +1,8 @@
 from enum import Enum
 
+import flora_tools.gloria as gloria
 import flora_tools.lwb_round as lwb_round
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.gloria_flood import GloriaFlood
 from flora_tools.radio_configuration import RadioConfiguration
 
 MODULATIONS = [3, 5, 7, 9]
@@ -32,36 +32,41 @@ class LWBSlotType(Enum):
     ACK = 6
     EMPTY = 7
 
+    def __str__(self):
+        return '{0}'.format(self.name)
+
 
 class LWBSlot:
     def __init__(self, round: 'lwb_round.LWBRound', slot_offset: float, modulation: int, payload: int,
                  type: LWBSlotType, acked=True, master: 'sim_node.SimNode' = None, index: int = None,
-                 power_level: int = None):
+                 power_level: int = None, stream=None):
         self.round = round
         self.slot_offset = slot_offset
         self.modulation = modulation
         self.gloria_modulation = MODULATIONS[self.modulation]
         self.payload = payload
         self.type = type
-        self.acked = acked
+        self.is_ack = acked
         self.master = master
         self.index = index
+        self.stream = stream
 
         if power_level is None:
             self.power_level = DEFAULT_POWER_LEVELS[self.gloria_modulation]
         else:
             self.power_level = power_level
 
-        self.flood: 'GloriaFlood' = None
+        self.flood: gloria.GloriaFlood = None
 
         self.radio_configuration = RadioConfiguration(self.gloria_modulation)
 
         self.generate()
 
     def generate(self):
-        self.flood = GloriaFlood(self, self.gloria_modulation, self.payload,
-                                 RETRANSMISSIONS_COUNTS[self.gloria_modulation], HOP_COUNTS[self.gloria_modulation],
-                                 acked=self.acked, is_master=(self.master is not None))
+        self.flood = gloria.GloriaFlood(self, self.gloria_modulation, self.payload,
+                                        RETRANSMISSIONS_COUNTS[self.gloria_modulation],
+                                        HOP_COUNTS[self.gloria_modulation],
+                                        acked=self.is_ack, is_master=(self.master is not None))
         self.flood.generate()
 
     @property
@@ -82,8 +87,6 @@ class LWBSlot:
             return 'fuchsia'
         elif self.type is LWBSlotType.ROUND_SCHEDULE:
             return 'rebeccapurple'
-        elif self.type is LWBSlotType.ROUND_CONTENTION:
-            return 'lightcoral'
         elif self.type is LWBSlotType.CONTENTION:
             return 'lightcoral'
         elif self.type is LWBSlotType.SLOT_SCHEDULE:
@@ -127,7 +130,7 @@ class LWBSlot:
 
     @staticmethod
     def create_round_contention_slot(round, slot_offset, modulation, master: 'sim_node.SimNode', index=None):
-        slot = LWBSlot(round, slot_offset, modulation, contention_length, LWBSlotType.ROUND_CONTENTION, master=master,
+        slot = LWBSlot(round, slot_offset, modulation, contention_length, LWBSlotType.CONTENTION, master=master,
                        acked=True,
                        index=index)
         return slot

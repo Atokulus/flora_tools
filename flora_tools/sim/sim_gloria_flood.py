@@ -1,12 +1,13 @@
 import numpy as np
 
-import flora_tools.gloria_flood as gloria_flood
+import flora_tools.gloria as gloria_flood
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.lwb_slot import gloria_header_length, POWERS
 from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
 MAX_ACKS = 1
+
 
 class SimGloriaFlood:
     def __init__(self, node: 'sim_node.SimNode', flood: 'gloria_flood.GloriaFlood', finished_callback,
