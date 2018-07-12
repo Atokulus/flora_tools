@@ -13,7 +13,7 @@ Module | Description
 
 # Installation Guide
 
-Install Python3.6+ and pip 10.0+. If your are using Ubuntu 18.04, these are already installed. Then you can install the pip package `flora-tools`
+Install Python3.7+ and pip 10.0+. If your are using Ubuntu 18.04, these are already installed. Then you can install the pip package `flora-tools`
 
 ```sh
 python -m pip install flora-tools

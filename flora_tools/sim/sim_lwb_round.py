@@ -69,6 +69,8 @@ class SimLWBRound:
                               message=None)
 
     def process_sync_slot_callback(self, message: SimMessage):
+        if self.node.role is not sim_node.SimNodeRole.BASE:
+            self.lwb.lwb_schedule_manager.register_sync()
         self.process_next_slot()
 
     def process_slot_schedule_slot(self, slot: 'lwb_slot.LWBSlot'):

@@ -59,6 +59,8 @@ class SimCADScanner:
                                                                                     self.rx_start,
                                                                                     event['data']['message'].tx_start)
         if message is not None:
+            self.node.local_timestamp = message.tx_end
+
             self.node.em.unregister_event(self.rx_timeout_event)
             self.callback()
 
@@ -81,6 +83,7 @@ class SimCADScanner:
         if self.node.network.mc.check_if_successfully_received(self.current_modulation, self.current_band,
                                                                self.potential_message, self.rx_start,
                                                                self.node):
+            self.node.local_timestamp = self.potential_message.tx_end
             self.callback(self.potential_message)
         else:
             self.process_next_slot()

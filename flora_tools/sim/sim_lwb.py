@@ -7,14 +7,14 @@ from flora_tools.sim.lwb_schedule_manager import LWBScheduleManager
 from flora_tools.sim.sim_link_manager import SimLinkManager
 from flora_tools.sim.stream import StreamManager
 
-Tim
-BACKOFF_PERIOD = 1 / 8E6 * np.exp2(29)
+
+SYNC_PERIOD = 1 / 8E6 * np.exp2(31)  # 268.435456 s
 
 
 class LWBState(Enum):
     CAD = 1
     SYNCED = 2
-    SCHEDULED = 3
+    ASSIGNED = 3
 
 
 class SimLWB:
@@ -25,6 +25,7 @@ class SimLWB:
 
         self.link_manager = SimLinkManager(self)
         self.stream_manager = StreamManager(self)
+        self.state: LWBState = LWBState.CAD
 
         if self.node.role is 'base':
             self.base = self.node
