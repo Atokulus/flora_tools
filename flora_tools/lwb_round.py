@@ -33,11 +33,11 @@ class LWBSlotItemType(Enum):
 
 
 class LWBSlotItem:
-    def __init__(self, type: LWBSlotItemType, master: 'SimNode' = None, target: 'SimNode' = None, data_payload=None):
+    def __init__(self, type: LWBSlotItemType, master: 'SimNode' = None, target: 'SimNode' = None, payload=None):
         self.type = type
         self.master = master
         self.target = target
-        self.data_payload = data_payload
+        self.payload = payload
 
 
 class LWBDataSlotItem:
@@ -106,7 +106,7 @@ class LWBRound:
                                                                      master=item.master,
                                                                      index=index)
             elif item.type is LWBSlotItemType.DATA:
-                slot = lwb_slot.LWBSlot.create_data_slot(self, slot_offset, self.modulation, payload=item.data_payload,
+                slot = lwb_slot.LWBSlot.create_data_slot(self, slot_offset, self.modulation, payload=item.payload,
                                                          master=item.master, index=index)
                 self.slots.append(slot)
                 index += 1
@@ -135,7 +135,7 @@ class LWBRound:
         item: LWBDataSlotItem
         for item in data_slots:
             layout.append(LWBSlotItem(LWBSlotItemType.DATA, master=item.master, target=item.target,
-                                      data_payload=item.data_payload))
+                                      payload=item.data_payload + lwb_slot.data_header_length))
         layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))
 
         return LWBRound(round_marker, modulation, type=LWBRoundType.DATA, layout=layout, master=master)
@@ -159,7 +159,7 @@ class LWBRound:
         item: LWBDataSlotItem
         for item in data_slots:
             layout.append(LWBSlotItem(LWBSlotItemType.DATA, master=item.master, target=item.target,
-                                      data_payload=item.data_payload))
+                                      payload=item.data_payload))
         layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))
 
         return LWBRound(round_marker, modulation, type=LWBRoundType.NOTIFICATION, layout=layout, master=master)

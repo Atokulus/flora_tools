@@ -40,7 +40,7 @@ rx_power = 5.5E-3 * voltage
 
 
 def tx_power(power):
-    return 8E-3 * voltage + power
+    return 1E3 * 8E-3 * voltage + np.log10(np.power(10, power / 10) * 3)
 
 
 gap = 50E-6

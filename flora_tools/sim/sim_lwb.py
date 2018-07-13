@@ -1,15 +1,10 @@
 from enum import Enum
 
-import numpy as np
-
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.lwb_schedule_manager import LWBScheduleManager
 from flora_tools.sim.sim_cad_sync import SimCADSync
 from flora_tools.sim.sim_link_manager import LWBLinkManager
 from flora_tools.sim.stream import LWBStreamManager
-
-
-SYNC_PERIOD = 1 / 8E6 * np.exp2(31)  # 268.435456 s
 
 
 class LWBState(Enum):

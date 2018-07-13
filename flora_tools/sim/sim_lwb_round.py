@@ -88,7 +88,7 @@ class SimLWBRound:
     def process_data_slot(self, slot: 'lwb_slot.LWBSlot'):
         if slot.master is self.node:
             if self.round.type is lwb_round.LWBRoundType.DATA:
-                stream, message = self.node.lwb.stream_manager.get_data(slot.payload, slot.is_ack)
+                stream, message = self.lwb.stream_manager.get_data(slot.payload)
             else:
                 stream, message = self.node.lwb.stream_manager.get_notification()
 
@@ -147,6 +147,12 @@ class SimLWBRound:
                        message=None)
         else:
             self.process_next_slot()
+
+        if self.round.type is lwb_round.LWBRoundType.STREAM_CONTENTION:
+            if message is None:
+                self.lwb.schedule_manager.decrement_contention(slot.modulation)
+            elif message.type is SimMessageType.STREAM_REQUEST:
+                self.lwb.schedule_manager.increment_contention(slot.modulation)
 
     def process_contention_slot_callback(self, message: SimMessage):
         if message is not None and self.node.role is sim_node.SimNodeRole.BASE:

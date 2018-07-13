@@ -18,7 +18,7 @@ class SimGloriaFlood:
         self.finished_callback = finished_callback
         self.tx_message = init_tx_message
         self.slot_index = 0
-        self.acked = False
+        self.is_ack = False
         self.retransmission_count = flood.retransmission_count
         self.hop_count = flood.hop_count
         self.ack_counter = 0
@@ -66,7 +66,7 @@ class SimGloriaFlood:
 
     def progress_gloria_flood(self, event):
         if event['type'] is SimEventType.TX_DONE:
-            if self.acked:
+            if self.is_ack:
                 self.process_next_ack()
             else:
                 self.slot_index += 1
@@ -165,7 +165,7 @@ class SimGloriaFlood:
 
             if slot.type in [gloria_flood.GloriaSlotType.RX_ACK, gloria_flood.GloriaSlotType.TX_ACK]:
                 if self.tx_message is not None and self.tx_message.destination is self.node:
-                    self.acked = True
+                    self.is_ack = True
 
                     self.last_tx_slot_marker = slot.tx_marker
                     self.last_slot_marker = slot.tx_marker
@@ -239,7 +239,7 @@ class SimGloriaFlood:
             self.finished_callback(self.tx_message)
 
     def process_next_ack(self):
-        self.acked = True
+        self.is_ack = True
         self.slot_index += 2
         if self.is_not_finished() and \
                 self.flood.slots[self.slot_index].type in [gloria_flood.GloriaSlotType.RX_ACK,

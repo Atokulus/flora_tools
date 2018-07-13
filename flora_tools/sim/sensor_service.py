@@ -1,24 +1,26 @@
-from flora_tools.sim.service import Service
 import flora_tools.sim.sim_node as sim_node
-
+from flora_tools.lwb_slot import max_data_payload
+from flora_tools.sim.service import Service
 from flora_tools.sim.stream import DataStream, NotificationStream
 
 
 class SensorService(Service):
-    def __init__(self, node: 'sim_node.SimNode', name, datarate, slot_size=255, period=10, priority=3, subpriority=1):
+    def __init__(self, node: 'sim_node.SimNode', name, datarate, payload_size=max_data_payload, period=10, priority=3,
+                 subpriority=1):
         self.node = node
         self.name = name
         self.datarate = datarate
-        self.slot_size = slot_size
+        self.payload_size = payload_size
         self.period = period
         self.priority = priority
         self.subpriority = subpriority
 
-        self.slot_size = slot_size
+        self.payload_size = payload_size
         self.accumulated_data = 0.0
         self.last_timestamp = node.network.current_timestamp
 
-        self.datastream = DataStream(self, self.priority, self.subpriority, self.datarate, self.period, self.slot_size)
+        self.datastream = DataStream('sensor{}'.format(self.node.id), self.node, self.node, self.priority,
+                                     self.subpriority, self.period, self, max_payload=self.payload_size)
 
     def get_data(self):
         data = self.data_available()
@@ -29,8 +31,8 @@ class SensorService(Service):
         self.accumulated_data += elapsed * self.datarate
         self.last_timestamp = self.node.network.current_timestamp
 
-        if self.accumulated_data >= self.slot_size:
-            data = {'node': self.node,'timestamp': self.node.local_timestamp,'payload': self.slot_size}
+        if self.accumulated_data >= self.payload_size:
+            data = {'node': self.node, 'timestamp': self.node.local_timestamp, 'payload': self.payload_size}
             return data
         else:
             return None
@@ -48,7 +50,7 @@ class SensorService(Service):
         notification_stream.retry()
 
     def ack_data_callback(self):
-        self.accumulated_data -= self.slot_size
+        self.accumulated_data -= self.payload_size
 
     def ack_notification_callback(self):
         return

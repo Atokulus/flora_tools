@@ -1,22 +1,61 @@
 from enum import Enum
 
+import numpy as np
+
 import flora_tools.gloria as gloria
 import flora_tools.lwb_round as lwb_round
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 
-MODULATIONS = [3, 5, 7, 9]
+MODULATIONS = [3, 5, 7, 9]  # SF9, SF7, SF5, FSK 200 Kb/s
 BANDS = [48]
-POWERS = [10, 22]
+POWERS = [10, 22]  # dBm
 
+TIMER_FREQUENCY = 8E6  # 0.125 us
+TIME_DEPTH = 6  # 6 Bytes, ~1.116 years
+SCHEDULE_GRANULARITY = 1 / TIMER_FREQUENCY * np.exp2(11)  # 256 us
+SYNC_PERIOD = 1 / TIMER_FREQUENCY * np.exp2(31)  # 268.435456 s
+
+# GLORIA_HEADER: uint8_t[8]
+#   - TYPE: uint8_t
+#   - POWER_LEVEL: uint8_t
+#   - FIELDS: uint8_t[6]
+#       - TYPE in [SYNC, SLOT_SCHEDULE, ROUND_SCHEDULE]:
+#           - TIMESTAMP: uint8_t[6]
+#       - TYPE in [CONTENTION, DATA, ACK]
+#           - SOURCE: uint16_t
+#           - DESTINATION: uint16_t
+#           - STREAM_ID: uint16_t
 gloria_header_length = 8
-sync_header_length = gloria_header_length
-contention_length = gloria_header_length + 4
 
-rounds_schedule_buffer_items = len(MODULATIONS) * 2
-round_schedule_length = gloria_header_length + rounds_schedule_buffer_items * 4
+# CONTENTION_HEADER: uint8_t[14]
+#   - GLORIA_HEADER: uint8_t[8]
+#   - PAYLOAD_SIZE: uint16_t
+#   - PERIOD: uint8_t[3]
+#   - PRIORITIES: uint8_t
+#       - PRIORITY: uint8_t: 4
+#       - SUB_PRIORITY: uint8_t: 4
+contention_header_length = gloria_header_length + 6
 
-slot_schedule_item_length = 3
+data_header_length = gloria_header_length
+max_data_payload = 255 - data_header_length
+
+# SLOT_SCHEDULE_ITEM: uint8_t[6]
+#   - TYPE: uint8_t
+#   - SLOT_SIZE: uint8_t
+#   - MASTER: uint16_t
+#   - STREAM_ID: uint16_t
+slot_schedule_item_length = 6
+
+# ROUND_SCHEDULE_ITEM: uint8_t[4]
+#   - TYPE: uint8_t
+#   - SLOT_SIZE: uint8_t
+#   - MASTER: uint16_t
+#   - STREAM_ID: uint16_t
+round_schedule_item = 6
+
+round_schedule_item_count = len(MODULATIONS) * 3  # 2 * PERIODIC (SYNC + LP_NOTIFICATION) +  1 * ABSOLUTE Schedule
+round_schedule_length = gloria_header_length + round_schedule_item_count * round_schedule_item
 
 DEFAULT_POWER_LEVELS = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0]
 RETRANSMISSIONS_COUNTS = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2]
@@ -110,7 +149,8 @@ class LWBSlot:
 
     @staticmethod
     def create_sync_slot(round, slot_offset, modulation, master: 'sim_node.SimNode', index=None):
-        slot = LWBSlot(round, slot_offset, modulation, sync_header_length, LWBSlotType.SYNC, master=master, acked=False,
+        slot = LWBSlot(round, slot_offset, modulation, gloria_header_length, LWBSlotType.SYNC, master=master,
+                       acked=False,
                        index=index)
         return slot
 
@@ -123,21 +163,21 @@ class LWBSlot:
 
     @staticmethod
     def create_slot_schedule_slot(round, slot_offset, modulation, master: 'sim_node.SimNode', index=None):
-        payload = sync_header_length + lwb_round.SLOT_COUNTS[MODULATIONS[modulation]] * slot_schedule_item_length
+        payload = gloria_header_length + lwb_round.SLOT_COUNTS[MODULATIONS[modulation]] * slot_schedule_item_length
         slot = LWBSlot(round, slot_offset, modulation, payload, LWBSlotType.SLOT_SCHEDULE, master=master, acked=False,
                        index=index)
         return slot
 
     @staticmethod
     def create_round_contention_slot(round, slot_offset, modulation, master: 'sim_node.SimNode', index=None):
-        slot = LWBSlot(round, slot_offset, modulation, contention_length, LWBSlotType.CONTENTION, master=master,
+        slot = LWBSlot(round, slot_offset, modulation, contention_header_length, LWBSlotType.CONTENTION, master=master,
                        acked=True,
                        index=index)
         return slot
 
     @staticmethod
     def create_contention_slot(round, slot_offset, modulation, master: 'sim_node.SimNode', index=None):
-        slot = LWBSlot(round, slot_offset, modulation, contention_length, LWBSlotType.CONTENTION, master=master,
+        slot = LWBSlot(round, slot_offset, modulation, contention_header_length, LWBSlotType.CONTENTION, master=master,
                        acked=True,
                        index=index)
         return slot

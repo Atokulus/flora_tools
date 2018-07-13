@@ -30,6 +30,8 @@ class LWBLinkManager:
     def downgrade_link(self, target_node: 'sim_node.SimNode'):
         self.links[target_node.id, 'counter'] += 1
         if self.links[target_node.id, 'counter'] > DOWNGRADE_COUNTER:
+            self.remove_acknowledged_link(target_node)
+
             if self.links[target_node.id, 'power_level'] < len(lwb_slot.POWERS) - 1:
                 self.links[target_node.id] = [self.links[target_node.id, 'modulation'],
                                               self.links[target_node.id, 'power_level'] + 1, 0]
@@ -42,6 +44,9 @@ class LWBLinkManager:
 
     def acknowledge_link(self, target_node: 'sim_node.SimNode'):
         self.acknowledged_links.loc[target_node.id, :] = self.links.loc[target_node.id, :]
+
+    def remove_acknowledged_link(self, target_node: 'sim_node.SimNode'):
+        self.acknowledged_links.loc[target_node.id].drop()
 
     def get_link(self, target_node: 'sim_node.SimNode'):
         link = self.links.loc[target_node.id, :]
