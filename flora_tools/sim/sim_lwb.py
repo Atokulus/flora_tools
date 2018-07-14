@@ -34,7 +34,8 @@ class SimLWB:
             self.sync = SimCADSync(self.node)
             self.sync.run(self.sync_callback)
         elif self.state is LWBState.ASSIGNED:
-            self.schedule_manager.get_round()
+            self.schedule_manager.get_next_round()
 
     def sync_callback(self):
         self.state = LWBState.ASSIGNED
+        self.run()

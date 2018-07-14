@@ -55,8 +55,11 @@ class DataStream:
     def get(self):
         return self.service.get_data()
 
-    def available(self):
-        if self.last_consumption - self.service.node.local_timestamp > self.period:
+    def available(self, timestamp=None):
+        if timestamp is None:
+            timestamp = self.service.node.local_timestamp
+
+        if timestamp - self.last_consumption > self.period:
             if self.service is not None:
                 return self.service.data_available()
             else:
@@ -122,8 +125,11 @@ class NotificationStream:
     def get(self):
         return self.service.get_notification()
 
-    def available(self):
-        if self.last_consumption - self.service.node.local_timestamp > self.period:
+    def available(self, timestamp=None):
+        if timestamp is None:
+            timestamp = self.service.node.local_timestamp
+
+        if timestamp - self.last_consumption > self.period:
             if self.service is not None:
                 return self.service.notification_available()
             else:
@@ -172,7 +178,7 @@ class LWBStreamManager:
     def remove_notification(self, notification_stream: NotificationStream):
         self.notification_streams.remove(notification_stream)
 
-    def select_data(self, slot_size: int = None, selection: List[DataStream] = None):
+    def select_data(self, slot_size: int = None, selection: List[DataStream] = None, timestamp=None):
         if selection is None:
             selection = self.datastreams
 
@@ -181,36 +187,38 @@ class LWBStreamManager:
         if slot_size:
             stream: DataStream
             for stream in selection:
-                if (stream.is_ack and stream.available()
+                if (stream.is_ack and stream.available(timestamp=timestamp)
                         and stream.current_slot_size <= slot_size - lwb_slot.data_header_length):
                     if best_match is None:
                         best_match = stream
                     else:
                         if best_match.priority >= stream.priority \
                                 and best_match.subpriority >= stream.subpriority \
-                                and best_match.available()['payload'] < stream.available()['payload']:
+                                and best_match.available(timestamp)['payload'] < stream.available(timestamp)['payload']\
+                                and best_match.last_consumption > stream.last_consumption:
                             best_match = stream
         else:
             stream: DataStream
             for stream in selection:
-                if stream.is_ack and stream.available():
+                if stream.is_ack and stream.available(timestamp):
                     if best_match is None:
                         best_match = stream
                     else:
                         if best_match.priority >= stream.priority \
                                 and best_match.subpriority >= stream.subpriority \
-                                and best_match.available()['payload'] < stream.available()['payload']:
+                                and best_match.available(timestamp)['payload'] < stream.available(timestamp)['payload'] \
+                                and best_match.last_consumption > stream.last_consumption:
                             best_match = stream
         return best_match
 
-    def select_notification(self, selection: List[NotificationStream] = None, low_power=False):
+    def select_notification(self, selection: List[NotificationStream] = None, low_power=False, timestamp=None):
         if selection is None:
             selection = self.notification_streams
 
         best_match: NotificationStream = None
         stream: NotificationStream
         for stream in selection:
-            if stream.is_ack and stream.available() and (stream.low_power if low_power else True):
+            if stream.is_ack and stream.available(timestamp=timestamp) and (stream.low_power if low_power else True):
                 if best_match is None:
                     best_match = stream
                 else:
@@ -220,13 +228,13 @@ class LWBStreamManager:
 
         return best_match
 
-    def schedule_data(self, slot_count: int, modulation: int):
+    def schedule_data(self, timestamp, slot_count: int, modulation: int):
         selection = self.datastreams
         streams: List[DataStream] = []
         count = 0
 
         while count < slot_count:
-            stream = self.select_data(selection=selection)
+            stream = self.select_data(timestamp=timestamp, selection=selection)
             if stream is not None and stream.priority <= modulation:
                 link = self.node.lwb.link_manager.get_acknowledged_link(stream.master)
                 if link['modulation'] is modulation:
@@ -241,7 +249,7 @@ class LWBStreamManager:
 
         return streams
 
-    def schedule_notification(self, slot_count: int, modulation: int):
+    def schedule_notification(self, timestamp, slot_count: int, modulation: int):
         selection = self.notification_streams
         streams: List[NotificationStream] = []
         count = 0

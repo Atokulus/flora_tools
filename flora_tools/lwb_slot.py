@@ -40,8 +40,12 @@ contention_header_length = gloria_header_length + 6
 data_header_length = gloria_header_length
 max_data_payload = 255 - data_header_length
 
-# SLOT_SCHEDULE_ITEM: uint8_t[6]
+# SLOT_SCHEDULE_HEADER: uint8_t[2]
 #   - TYPE: uint8_t
+#   - COUNT: uint8_t
+slot_schedule_header_length = gloria_header_length + 2
+
+# SLOT_SCHEDULE_ITEM: uint8_t[6]
 #   - SLOT_SIZE: uint8_t
 #   - MASTER: uint16_t
 #   - STREAM_ID: uint16_t
@@ -163,7 +167,7 @@ class LWBSlot:
 
     @staticmethod
     def create_slot_schedule_slot(round, slot_offset, modulation, master: 'sim_node.SimNode', index=None):
-        payload = gloria_header_length + lwb_round.SLOT_COUNTS[MODULATIONS[modulation]] * slot_schedule_item_length
+        payload = slot_schedule_header_length + lwb_round.SLOT_COUNTS[MODULATIONS[modulation]] * slot_schedule_item_length
         slot = LWBSlot(round, slot_offset, modulation, payload, LWBSlotType.SLOT_SCHEDULE, master=master, acked=False,
                        index=index)
         return slot
