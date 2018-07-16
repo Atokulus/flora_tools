@@ -8,14 +8,14 @@ import flora_tools.sim.sim_node as sim_node
 import flora_tools.sim.stream as stream
 
 SLOT_COUNTS = [2, 2, 4, 4, 6, 6, 16, 16, 32, 32]
-max_contention_layout = [2, 2, 4, 8]
-initial_contention_layout = [1, 1, 1, 8]
-min_contention_layout = [0, 0, 0, 0]
+MAX_STREAM_REQUEST_LAYOUT = [2, 2, 4, 8]
+INITIAL_STREAM_REQUEST_LAYOUT = [1, 1, 1, 8]
+MIN_STREAM_REQUEST_LAYOUT = [0, 0, 0, 0]
 
 
 class LWBRoundType(Enum):
     SYNC = 1
-    STREAM_CONTENTION = 2
+    STREAM_REQUEST = 2
     NOTIFICATION = 3
     DATA = 4
     LP_NOTIFICATION = 5
@@ -54,8 +54,8 @@ class LWBDataSlotItem:
 
 
 class LWBRound:
-    def __init__(self, round_marker, modulation, type: LWBRoundType, master: 'sim_node.SimNode' = None, layout=None,
-                 low_power=False, first_id: int = None):
+    def __init__(self, round_marker, modulation, type: LWBRoundType, master: 'sim_node.SimNode' = None, layout:
+    typing.List[LWBSlotItem]=None):
         self.round_marker = round_marker
         self.modulation = modulation
         self.gloria_modulation = lwb_slot.MODULATIONS[self.modulation]
@@ -63,12 +63,17 @@ class LWBRound:
         self.type = type
         self.master = master
         self.layout = layout
-        self.low_power = low_power
-        self.first_id = first_id
 
         self.slots: typing.List[lwb_slot.LWBSlot] = []
 
         self.generate()
+
+    @property
+    def low_power(self):
+        if self.type is LWBRoundType.LP_NOTIFICATION:
+            return True
+        else:
+            return False
 
     @property
     def color(self):
@@ -155,7 +160,7 @@ class LWBRound:
             layout.append(LWBSlotItem(LWBSlotItemType.CONTENTION))
         layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))
 
-        return LWBRound(round_marker, modulation, type=LWBRoundType.STREAM_CONTENTION, layout=layout, master=master)
+        return LWBRound(round_marker, modulation, type=LWBRoundType.STREAM_REQUEST, layout=layout, master=master)
 
     @staticmethod
     def create_notification_round(round_marker: float, modulation: int, data_slots,
@@ -177,5 +182,4 @@ class LWBRound:
         for i in range(notification_count):
             layout.append(LWBSlotItem(LWBSlotItemType.CONTENTION, master=master))
 
-        return LWBRound(round_marker, modulation, type=LWBRoundType.LP_NOTIFICATION, layout=layout, master=master,
-                        low_power=True)
+        return LWBRound(round_marker, modulation, type=LWBRoundType.LP_NOTIFICATION, layout=layout, master=master)

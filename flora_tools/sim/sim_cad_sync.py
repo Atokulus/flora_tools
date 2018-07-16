@@ -38,12 +38,15 @@ class SimCADSync:
 
             if message.type is SimMessageType.SYNC:
                 self.node.lwb.lwb_schedule_manager.register_sync()
+                self.sync_timestamp()
                 self.callback()
             elif message.type is SimMessageType.SLOT_SCHEDULE:
-                self.node.lwb.lwb_schedule_manager.register_slot_schedule(message.content)
+                self.node.lwb.lwb_schedule_manager.register_slot_schedule(message)
+                self.sync_timestamp()
                 self.callback()
             elif message.type is SimMessageType.ROUND_SCHEDULE:
-                self.node.lwb.lwb_schedule_manager.register_round_schedule(message.content)
+                self.node.lwb.lwb_schedule_manager.register_round_schedule(message)
+                self.sync_timestamp()
                 self.callback()
             else:
                 self.scan()
@@ -57,3 +60,6 @@ class SimCADSync:
                 self.node.em.register_event(self.node.local_timestamp + self.backoff_period * np.exp2(self.backoff_counter), self.node, SimEventType.GENERIC, self.run)
             else:
                 self.scan()
+
+    def sync_timestamp(self, message: SimMessage):
+        self.node.local_timestamp = message.timestamp + message.tx_end - message.tx_start
