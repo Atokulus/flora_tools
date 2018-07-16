@@ -69,6 +69,10 @@ class EclipsePatcher:
             if not link_found:
                 xpath = './/linkedResources'
                 link_resources = project_et.find(xpath)
+
+                if link_resources is None:
+                    link_resources = xml.etree.ElementTree.SubElement(project_et.getroot(), 'linkedResources')
+
                 link = xml.etree.ElementTree.SubElement(link_resources, 'link')
                 name = xml.etree.ElementTree.SubElement(link, 'name')
                 name.text = 'lib'
@@ -81,7 +85,8 @@ class EclipsePatcher:
                     xml_string = xml.etree.ElementTree.tostring(project_et.getroot(), encoding="unicode")
 
                     file = open(
-                        "{}".format(os.path.join(self.flora_path, Platform.get_project_path(self.platform)), 'w'))
+                        os.path.join(self.flora_path, Platform.get_project_path(self.platform)), 'w+')
+
                     file.writelines([
                         '<?xml version = "1.0" encoding = "UTF-8"?>',
                     ])
@@ -103,7 +108,7 @@ class EclipsePatcher:
         if self.et is not None:
             xml_string = xml.etree.ElementTree.tostring(self.et.getroot(), encoding="unicode")
 
-            file = open("{}".format(os.path.join(self.flora_path, Platform.get_cproject_path(self.platform))), 'w')
+            file = open("{}".format(os.path.join(self.flora_path, Platform.get_cproject_path(self.platform))), 'w+')
             file.writelines([
                 '<?xml version = "1.0" encoding = "UTF-8"?>',
                 '<?fileVersion 4.0.0?>'

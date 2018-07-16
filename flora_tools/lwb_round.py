@@ -1,9 +1,11 @@
 import typing
 from enum import Enum
+from typing import Union
 
 import flora_tools.lwb_slot as lwb_slot
 from flora_tools.radio_configuration import RadioConfiguration
-from flora_tools.sim.sim_node import SimNode
+import flora_tools.sim.sim_node as sim_node
+import flora_tools.sim.stream as stream
 
 SLOT_COUNTS = [2, 2, 4, 4, 6, 6, 16, 16, 32, 32]
 max_contention_layout = [2, 2, 4, 8]
@@ -33,22 +35,26 @@ class LWBSlotItemType(Enum):
 
 
 class LWBSlotItem:
-    def __init__(self, type: LWBSlotItemType, master: 'SimNode' = None, target: 'SimNode' = None, payload=None):
+    def __init__(self, type: LWBSlotItemType, master: 'sim_node.SimNode' = None, target: 'sim_node.SimNode' = None,
+                 payload=None, stream: 'Union[stream.DataStream, stream.NotificationStream]' = None):
         self.type = type
         self.master = master
         self.target = target
         self.payload = payload
+        self.stream = stream
 
 
 class LWBDataSlotItem:
-    def __init__(self, master: 'SimNode' = None, target: 'SimNode' = None, data_payload=None):
+    def __init__(self, master: 'sim_node.SimNode' = None, target: 'sim_node.SimNode' = None, data_payload=None,
+                 stream: 'Union[stream.DataStream, stream.NotificationStream]' = None):
         self.master = master
         self.target = target
         self.data_payload = data_payload
+        self.stream = stream
 
 
 class LWBRound:
-    def __init__(self, round_marker, modulation, type: LWBRoundType, master: 'SimNode' = None, layout=None,
+    def __init__(self, round_marker, modulation, type: LWBRoundType, master: 'sim_node.SimNode' = None, layout=None,
                  low_power=False, first_id: int = None):
         self.round_marker = round_marker
         self.modulation = modulation
@@ -119,7 +125,7 @@ class LWBRound:
             index += 1
 
     @staticmethod
-    def create_sync_round(round_marker: float, modulation: int, master: 'SimNode' = None):
+    def create_sync_round(round_marker: float, modulation: int, master: 'sim_node.SimNode' = None):
         layout = []
 
         layout.append(LWBSlotItem(LWBSlotItemType.SYNC))
@@ -129,7 +135,7 @@ class LWBRound:
         return LWBRound(round_marker, modulation, type=LWBRoundType.SYNC, layout=layout, master=master)
 
     @staticmethod
-    def create_data_round(round_marker: float, modulation: int, data_slots, master: 'SimNode' = None):
+    def create_data_round(round_marker: float, modulation: int, data_slots, master: 'sim_node.SimNode' = None):
         layout = []
         layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE, master=master))
         item: LWBDataSlotItem
@@ -142,7 +148,7 @@ class LWBRound:
 
     @staticmethod
     def create_stream_request_round(round_marker: float, modulation: int, contention_count: int,
-                                    master: 'SimNode' = None):
+                                    master: 'sim_node.SimNode' = None):
         layout = []
         layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE))
         for i in range(contention_count):
@@ -153,7 +159,7 @@ class LWBRound:
 
     @staticmethod
     def create_notification_round(round_marker: float, modulation: int, data_slots,
-                                  master: 'SimNode' = None):
+                                  master: 'sim_node.SimNode' = None):
         layout = []
         layout.append(LWBSlotItem(LWBSlotItemType.SLOT_SCHEDULE, master=master))
         item: LWBDataSlotItem
@@ -166,7 +172,7 @@ class LWBRound:
 
     @staticmethod
     def create_lp_notification_round(round_marker: float, modulation: int, notification_count: int,
-                                     master: 'SimNode' = None):
+                                     master: 'sim_node.SimNode' = None):
         layout = []
         for i in range(notification_count):
             layout.append(LWBSlotItem(LWBSlotItemType.CONTENTION, master=master))

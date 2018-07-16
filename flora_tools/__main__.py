@@ -35,7 +35,7 @@ def main():
     parser = argparse.ArgumentParser(description='Executable flora_tools utilities', prog='flora_tools')
     parser.add_argument('command', help='Execute given command', choices=['program', 'program_all', 'patch_eclipse'])
     parser.add_argument('path', help='Set the path to the Flora main repository folder or .hex/.binary file')
-    parser.add_argument('-p', '--port', help='Set the serial port (e.g. "COM5" or "/sys/dev/ttyUSB0")')
+    parser.add_argument('-p', '--port', help='Set the serial port (e.g. "COM5" or "/dev/ttyUSB0")')
     args = parser.parse_args()
 
     if args.command == 'program':

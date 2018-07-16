@@ -14,7 +14,7 @@ MAX_TTL = 3
 class DataStream:
     def __init__(self, id: str, node: 'sim_node.SimNode', master: 'sim_node.SimNode', priority, subpriority, period,
                  service: 'service.Service' = None, destination: 'sim_node.SimNode' = None,
-                 max_payload=lwb_slot.max_data_payload, needs_ack=True):
+                 max_payload=None, needs_ack=True):
         self.id = id
         self.node = node
         self.master = master
@@ -32,6 +32,9 @@ class DataStream:
         self.last_consumption = None
         self.ttl = MAX_TTL
         self.is_ack = False
+
+        if max_payload is None:
+            max_payload = lwb_slot.max_data_payload
 
         self.slot_count = np.ceil(self.max_payload / max_payload)
         self.last_slot_size = self.max_payload % max_payload

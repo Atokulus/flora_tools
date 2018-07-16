@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 setup(
     name='flora_tools',
     python_requires='>=3.7',
-    version='0.1.10',
+    version='0.1.11',
     packages=setuptools.find_packages(),
     url='https://github.com/Atokulus/flora_tools.git',
     license='MIT',
@@ -17,10 +17,11 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
+        'setuptools',
         'numpy',
         'pandas',
         'matplotlib',
-        'networkx'
+        'networkx',
         'jupyter',
         'pyserial',
         'pyvisa',

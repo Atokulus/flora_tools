@@ -6,28 +6,34 @@ import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_node as sim_node
 
-
-class LWBScheduleItem:
-    def __init__(self, period: float):
-        self.period = period
-
+class LWBDataSlotItem:
+    def __init__(self, master: 'sim_node.SimNode', length, stream = None):
+        self.master = master
+        self.length = length
+        self.stream = stream
 
 class LWBSlotSchedule:
-    def __init__(self, rounde: 'lwb_round.LWBRound'):
-        self.round = rounde
-        self.type = rounde.type
+    def __init__(self, round: 'lwb_round.LWBRound'):
+        self.round = round
+        self.type = round.type
+
+        self.slot_count = int((len(round.slots) - 2) / 2)
+        self.schedule_items: List[lwb_round.LWBDataSlotItem] = []
 
         if self.type is lwb_round.LWBRoundType.NOTIFICATION:
-            self.slot_count = (len(rounde.slots) - 2) / 2
-
-            self.data_slots: List[lwb_round.LWBDataSlotItem] = []
-
             for i in range(self.slot_count):
                 slot = self.round.slots[i * 2 + 1]
-                self.data_slots.append(lwb_round.LWBDataSlotItem(slot.master, None, lwb_slot.gloria_header_length))
+                self.schedule_items.append(lwb_round.LWBDataSlotItem(slot.master, None, lwb_slot.gloria_header_length))
 
-        # TODO: Full Encoding. Add registration procedures for client nodes
+        elif self.type is lwb_round.LWBRoundType.STREAM_CONTENTION:
+            for i in range(self.slot_count):
+                slot = self.round.slots[i * 2 + 1]
+                self.schedule_items.append(lwb_round.LWBDataSlotItem(slot.master, None, slot.payload))
 
+        elif self.type is lwb_round.LWBRoundType.DATA:
+            for i in range(self.slot_count):
+                slot = self.round.slots[i * 2 + 1]
+                self.schedule_items.append(lwb_round.LWBDataSlotItem(slot.master, slot.stream, slot.payload))
 
 class LWBScheduleManager:
     def __init__(self, node: 'sim_node.SimNode'):
@@ -63,7 +69,7 @@ class LWBScheduleManager:
     def get_next_round(self):
         sorted_next_rounds: List[lwb_round.LWBRound] = sorted(
             [interfering_round for interfering_round in self.next_rounds if
-             interfering_round is not None], key=lambda x: x.round_marker)[0]
+             type(interfering_round) is lwb_round.LWBRound], key=lambda x: x.round_marker)[0]
 
         if len(sorted_next_rounds):
             round = sorted_next_rounds[0]
@@ -72,7 +78,23 @@ class LWBScheduleManager:
         else:
             return None
 
-    def schedule_next_rounds(self, current_round: lwb_round.LWBRound):
+    def get_schedule(self, current_round: 'lwb_round.LWBRound'):
+        self.schedule_next_rounds(current_round)
+
+        return self.next_rounds
+
+    def register_round_schedule(self, schedule):
+        self.next_rounds = schedule
+
+    def register_slot_schedule(self, round: 'lwb_round.LWBRound', schedule: LWBSlotSchedule):
+        if schedule.type is lwb_round.LWBRoundType.NOTIFICATION:
+            pass
+        elif schedule.type is lwb_round.LWBRoundType.STREAM_CONTENTION:
+            pass
+        elif schedule.type is lwb_round.LWBRoundType.DATA:
+            pass
+
+    def schedule_next_rounds(self, current_round: 'lwb_round.LWBRound'):
         last_round = current_round
 
         for i in reversed(range(current_round.modulation, len(lwb_slot.MODULATIONS))):
@@ -123,7 +145,7 @@ class LWBScheduleManager:
                     last_epoch = interfering_round.round_end_marker
                     round.round_marker = last_epoch
 
-    def get_next_epoch(self, round: lwb_round.LWBRound):
+    def get_next_epoch(self, round: 'lwb_round.LWBRound' = None):
         if round is None:
             return 0
         else:

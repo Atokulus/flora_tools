@@ -77,7 +77,7 @@ class Programmer:
     @staticmethod
     def program_device(firmware_path, port):
         filename, file_extension = os.path.splitext(firmware_path)
-        if file_extension is '.hex':
+        if file_extension == '.hex':
             hex2bin(firmware_path,
                     filename + '.binary')
             firmware_path = filename + '.binary'
@@ -85,6 +85,7 @@ class Programmer:
         ser = serial.Serial(port=port, baudrate=115200, parity=serial.PARITY_NONE,
                             stopbits=serial.STOPBITS_ONE, timeout=0.1)
         ser.write(b"system bootloader\r\n")
+        ser.close()
         time.sleep(0.1)
 
         loader = Stm32Loader()
@@ -97,5 +98,8 @@ class Programmer:
         loader.configuration['baud'] = 115200
 
         loader.connect()
+        loader.read_device_details()
+
+        time.sleep(0.1)
         loader.perform_commands()
         loader.reset()

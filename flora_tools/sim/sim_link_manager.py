@@ -13,17 +13,17 @@ class LWBLinkManager:
     def __init__(self, node: 'sim_node.SimNode'):
         self.node = node
 
-        self.links = pd.DataFrame(columns=['modulation', 'power_level', 'counter'])
-        self.acknowledged_links = pd.DataFrame(columns=['modulation', 'power_level', 'counter'])
+        self.links = pd.DataFrame(columns=['modulation', 'power_level', 'counter', 'hop_count'])
+        self.acknowledged_links = pd.DataFrame(columns=['modulation', 'power_level', 'counter', 'hop_count'])
         self.links.index.name = 'id'
 
-    def upgrade_link(self, target_node: 'sim_node.SimNode', modulation: int, power_level: int):
+    def upgrade_link(self, target_node: 'sim_node.SimNode', modulation: int, power_level: int, hop_count: int = None):
         current_link = self.links[target_node.id]
 
         if modulation > current_link['modulation'] or (
                 modulation == current_link['modulation'] and power_level < current_link['power_level']):
             if current_link['counter'] <= 0:
-                self.links[target_node.id] = [modulation, power_level, UPGRADE_COUNTER]
+                self.links[target_node.id] = [modulation, power_level, UPGRADE_COUNTER, hop_count]
             else:
                 self.links.loc[target_node.id, 'counter'] -= 1
 
