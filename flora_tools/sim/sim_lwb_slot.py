@@ -19,7 +19,7 @@ class SimLWBSlot:
         if slot.type is lwb_slot.LWBSlotType.DATA:
             self.power_increase = False
             self.update_timestamp = False
-        elif slot.type in [lwb_slot.LWBSlotType.CONTENTION, lwb_slot.LWBSlotType.ACK]:
+        elif slot.type is lwb_slot.LWBSlotType.CONTENTION:
             self.update_timestamp = False
 
         SimGloriaFlood(self.node, self.slot, self.finished_flood, init_tx_message=self.message,

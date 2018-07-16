@@ -5,18 +5,22 @@ import numpy as np
 import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_node as sim_node
+import flora_tools.sim.sim_message as sim_message
+
 
 class LWBDataSlotItem:
-    def __init__(self, master: 'sim_node.SimNode', length, stream = None):
+    def __init__(self, master: 'sim_node.SimNode', length, stream=None):
         self.master = master
         self.length = length
         self.stream = stream
+
 
 class LWBSlotSchedule:
     def __init__(self, round: 'lwb_round.LWBRound'):
         self.round = round
         self.type = round.type
 
+        self.round_marker = self.round_marker
         self.slot_count = int((len(round.slots) - 2) / 2)
         self.schedule_items: List[lwb_round.LWBDataSlotItem] = []
 
@@ -25,7 +29,7 @@ class LWBSlotSchedule:
                 slot = self.round.slots[i * 2 + 1]
                 self.schedule_items.append(lwb_round.LWBDataSlotItem(slot.master, None, lwb_slot.gloria_header_length))
 
-        elif self.type is lwb_round.LWBRoundType.STREAM_CONTENTION:
+        elif self.type is lwb_round.LWBRoundType.STREAM_REQUEST:
             for i in range(self.slot_count):
                 slot = self.round.slots[i * 2 + 1]
                 self.schedule_items.append(lwb_round.LWBDataSlotItem(slot.master, None, slot.payload))
@@ -34,6 +38,7 @@ class LWBSlotSchedule:
             for i in range(self.slot_count):
                 slot = self.round.slots[i * 2 + 1]
                 self.schedule_items.append(lwb_round.LWBDataSlotItem(slot.master, slot.stream, slot.payload))
+
 
 class LWBScheduleManager:
     def __init__(self, node: 'sim_node.SimNode'):
@@ -46,18 +51,18 @@ class LWBScheduleManager:
         self.data_slot_count = lwb_round.SLOT_COUNTS
         self.notification_slot_count = lwb_round.SLOT_COUNTS
 
-        self.stream_contention_layout = lwb_round.initial_contention_layout
+        self.stream_request_layout = lwb_round.INITIAL_STREAM_REQUEST_LAYOUT
 
         if self.node.role is sim_node.SimNodeRole.BASE:
             self.generate_initial_schedule()
 
     def increment_contention(self, modulation):
-        if self.stream_contention_layout[modulation] < lwb_round.max_contention_layout:
-            self.stream_contention_layout[modulation] += 1
+        if self.stream_request_layout[modulation] < lwb_round.MAX_STREAM_REQUEST_LAYOUT:
+            self.stream_request_layout[modulation] += 1
 
     def decrement_contention(self, modulation):
-        if self.stream_contention_layout[modulation] > lwb_round.min_contention_layout:
-            self.stream_contention_layout[modulation] -= 1
+        if self.stream_request_layout[modulation] > lwb_round.MIN_STREAM_REQUEST_LAYOUT:
+            self.stream_request_layout[modulation] -= 1
 
     def generate_initial_schedule(self):
         sync_round: lwb_round.LWBRound = lwb_round.LWBRound.create_sync_round(self.get_next_epoch(),
@@ -78,21 +83,38 @@ class LWBScheduleManager:
         else:
             return None
 
-    def get_schedule(self, current_round: 'lwb_round.LWBRound'):
-        self.schedule_next_rounds(current_round)
+    def get_slot_schedule(self, current_round: 'lwb_round.LWBRound'):
+        return LWBSlotSchedule(current_round)
 
+    def get_round_schedule(self, current_round: 'lwb_round.LWBRound'):
+        self.schedule_next_rounds(current_round)
         return self.next_rounds
 
-    def register_round_schedule(self, schedule):
-        self.next_rounds = schedule
+    def register_round_schedule(self, message: 'sim_message.SimMessage'):
+        schedule: List[lwb_round.LWBRound] = message.content
+        for round in schedule:
+            layout = round.layout[0:1]
+            empty_round = lwb_round.LWBRound(round.round_marker, round.modulation, round.type, round.master, layout)
+            self.next_rounds[round.modulation] = empty_round
 
-    def register_slot_schedule(self, round: 'lwb_round.LWBRound', schedule: LWBSlotSchedule):
+    def register_slot_schedule(self, message: 'sim_message.SimMessage'):
+        schedule: LWBSlotSchedule = message.content
+
         if schedule.type is lwb_round.LWBRoundType.NOTIFICATION:
-            pass
-        elif schedule.type is lwb_round.LWBRoundType.STREAM_CONTENTION:
-            pass
+            round = lwb_round.LWBRound.create_notification_round(schedule.round_marker, message.modulation,
+                                                         schedule.schedule_items, message.source)
+        elif schedule.type is lwb_round.LWBRoundType.STREAM_REQUEST:
+            round = lwb_round.LWBRound.create_stream_request_round(schedule.round_marker, message.modulation,
+                                                           len(schedule.schedule_items),
+                                                           message.source)
         elif schedule.type is lwb_round.LWBRoundType.DATA:
-            pass
+            round = lwb_round.LWBRound.create_data_round(schedule.round_marker, message.modulation,
+                                                         schedule.schedule_items, message.source)
+        return round
+
+    def register_sync(self, message: 'sim_message.SimMessage'):
+        round_marker = self.calculate_sync_round_marker(message)
+        return lwb_round.LWBRound.create_sync_round(round_marker, message.modulation, message.source)
 
     def schedule_next_rounds(self, current_round: 'lwb_round.LWBRound'):
         last_round = current_round
@@ -102,7 +124,7 @@ class LWBScheduleManager:
 
             if self.next_rounds[i] is not None:
                 if (self.next_rounds[i] > last_epoch
-                        and self.stream_contention_layout[i] > 0):
+                        and self.stream_request_layout[i] > 0):
                     round = lwb_round.LWBRound.create_stream_request_round(last_epoch)
                 else:
                     round = self.next_rounds[i]
@@ -150,3 +172,15 @@ class LWBScheduleManager:
             return 0
         else:
             return np.ceil(round.round_end_marker / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY
+
+    def calculate_sync_round_marker(self, message: 'sim_message.SimMessage'):
+        if message.type is sim_message.SimMessageType.SYNC:
+            tmp_sync = lwb_round.LWBRound.create_sync_round(0, message.modulation)
+            slot_time = tmp_sync.slots[0].flood.slots[0].slot_time
+            setup_time = tmp_sync.slots[0].flood.slots[0].tx_marker
+            round_marker = message.timestamp - slot_time * (message.hop_count) - setup_time
+
+            return round_marker
+        else:
+            return None
+

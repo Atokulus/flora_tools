@@ -40,10 +40,11 @@ contention_header_length = gloria_header_length + 6
 data_header_length = gloria_header_length
 max_data_payload = 255 - data_header_length
 
-# SLOT_SCHEDULE_HEADER: uint8_t[2]
+# SLOT_SCHEDULE_HEADER: uint8_t[8]
 #   - TYPE: uint8_t
 #   - COUNT: uint8_t
-slot_schedule_header_length = gloria_header_length + 2
+#   - TIMESTAMP: uint8_t[6]
+slot_schedule_header_length = gloria_header_length + 8
 
 # SLOT_SCHEDULE_ITEM: uint8_t[6]
 #   - SLOT_SIZE: uint8_t

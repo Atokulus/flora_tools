@@ -2,7 +2,7 @@ import numpy as np
 
 import flora_tools.gloria as gloria_flood
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.lwb_slot import gloria_header_length, POWERS
+import flora_tools.lwb_slot as lwb_slot
 from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
@@ -48,7 +48,7 @@ class SimGloriaFlood:
                                             self.progress_gloria_flood)
 
                 self.retransmission_count -= 1
-                if self.power_increase and self.is_initial_node and self.tx_message.power_level < len(POWERS) - 1:
+                if self.power_increase and self.is_initial_node and self.tx_message.power_level < len(lwb_slot.POWERS) - 1:
                     self.tx_message.power_level += 1
             else:
                 self.finished_callback(None)
@@ -172,7 +172,7 @@ class SimGloriaFlood:
 
                     self.ack_message = SimMessage(self.last_tx_slot_marker,
                                                   source=self.tx_message.source,
-                                                  payload=gloria_header_length,
+                                                  payload=lwb_slot.gloria_header_length,
                                                   destination=self.tx_message.source,
                                                   type=SimMessageType.ACK,
                                                   power_level=self.tx_message.power_level,
