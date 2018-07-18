@@ -20,33 +20,35 @@ class SimEventManager:
     def __init__(self, network: 'sim_network.SimNetwork', event_count: int = 1000):
         self.network = network
         self.event_count = event_count
-        self.eq = pd.DataFrame(columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback', 'processed'])
+        self.eq = pd.DataFrame(
+            columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback'])
+        self.processed_eq = pd.DataFrame(
+            columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback'])
 
     def loop(self, iterations=1):
         while self.event_count > 0:
             for i in range(iterations):
                 self.eq = self.eq.sort_values(by=['timestamp'])
-                subset = self.eq[self.eq.processed == False]
-                event = subset[self.eq.timestamp >= self.network.global_timestamp].iloc[0]
+                event = self.eq.iloc[0]
+                self.eq = self.eq.iloc[1:len(self.eq)]
 
                 self.process_event(event)
 
             self.event_count -= iterations
 
     def process_event(self, event):
+        print("{},\t{},\t{},\t{}".format(event['timestamp'], event['node'].id, event['type'], event['callback'].__qualname__))
         self.network.global_timestamp = event['timestamp']
         event['node'].local_timestamp = event['local_timestamp']
         event['callback'](event)
-
-        event['processed'] = True
+        self.processed_eq.loc[len(self.processed_eq)] = event
 
     def register_event(self, timestamp: float, node: 'sim_node.SimNode', event_type: SimEventType,
                        callback, data=None):
 
-        self.eq.loc[len(self.eq)] = [node.transform_local_to_global_timestamp(timestamp), timestamp, node, event_type, data,
-                                     callback, False]
-
-        return len(self.eq) - 1
+        self.eq.loc[len(self.eq)] = [
+            node.transform_local_to_global_timestamp(timestamp),
+            timestamp, node, event_type, data, callback]
 
     def unregister_event(self, index):
         self.eq.drop(index, inplace=True)

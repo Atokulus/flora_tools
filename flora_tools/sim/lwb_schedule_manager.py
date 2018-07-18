@@ -72,12 +72,13 @@ class LWBScheduleManager:
         self.next_rounds[0] = sync_round
 
     def get_next_round(self):
-        sorted_next_round: List[lwb_round.LWBRound] = sorted(
-            [interfering_round for interfering_round in self.next_rounds if
-             type(interfering_round) is lwb_round.LWBRound], key=lambda x: x.round_marker)[0]
+        sorted_next_rounds: List[lwb_round.LWBRound] = sorted(
+            [round for round in self.next_rounds if
+             round is not None],
+            key=lambda x: x.round_marker)
 
-        if sorted_next_round:
-            round = sorted_next_round
+        if len(sorted_next_rounds):
+            round = sorted_next_rounds[0]
             self.next_rounds[round.modulation] = None
             return round
         else:
@@ -102,11 +103,11 @@ class LWBScheduleManager:
 
         if schedule.type is lwb_round.LWBRoundType.NOTIFICATION:
             round = lwb_round.LWBRound.create_notification_round(schedule.round_marker, message.modulation,
-                                                         schedule.schedule_items, message.source)
+                                                                 schedule.schedule_items, message.source)
         elif schedule.type is lwb_round.LWBRoundType.STREAM_REQUEST:
             round = lwb_round.LWBRound.create_stream_request_round(schedule.round_marker, message.modulation,
-                                                           len(schedule.schedule_items),
-                                                           message.source)
+                                                                   len(schedule.schedule_items),
+                                                                   message.source)
         elif schedule.type is lwb_round.LWBRoundType.DATA:
             round = lwb_round.LWBRound.create_data_round(schedule.round_marker, message.modulation,
                                                          schedule.schedule_items, message.source)
@@ -183,4 +184,3 @@ class LWBScheduleManager:
             return round_marker
         else:
             return None
-

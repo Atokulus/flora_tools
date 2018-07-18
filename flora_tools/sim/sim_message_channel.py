@@ -34,10 +34,10 @@ class SimMessageChannel:
             (self.mm.mq.band == band) &
             (self.mm.mq.tx_end >= message.timestamp) &
             (self.mm.mq.tx_start <= message.tx_end)
-            ]).copy()
+            ])
 
         def calc_power_message(item):
-            return self.calculate_path_loss(rx_node, self.network.nodes[item.source.id]) + item['power']
+            return self.calculate_path_loss(rx_node, item.source) + item.power
 
         interfering_set['rx_power'] = interfering_set.apply(calc_power_message, axis=1)
         rx_power = self.calculate_path_loss(rx_node, message.source.id) + lwb_slot.POWERS[message.power_level]
@@ -74,7 +74,7 @@ class SimMessageChannel:
             (self.mm.mq.band == band) &
             (self.mm.mq.tx_end >= keep_quiet_start) &
             (self.mm.mq.tx_start <= valid_rx_start)
-            ]).copy()
+            ])
 
         if rx_timeout is None:
             rx_timeout = rx_start + math.get_preamble_time()
@@ -84,7 +84,7 @@ class SimMessageChannel:
             (self.mm.mq.band == band) &
             (self.mm.mq.tx_start >= valid_rx_start) &
             (self.mm.mq.tx_start <= rx_timeout)
-            ]).copy()
+            ])
 
         if len(subset):
             subset['reachable'] = subset.apply(mark_reachable_message, axis=1)
@@ -101,10 +101,12 @@ class SimMessageChannel:
                     interfering_power = 0
                     for index_interferer, interferer in interfering_set.iterrows():
                         if interferer['message_hash'] is not candidate['message_hash'] or not (
-                                (candidate['tx_start'] - 100E6) < interferer['tx_start'] < (candidate['tx_start'] + 100E6)):
+                                (candidate['tx_start'] - 100E6) < interferer['tx_start'] < (
+                                candidate['tx_start'] + 100E6)):
                             interfering_power += np.power(10, interferer['rx_power'] / 10)
 
-                    if np.power(10, candidate['rx_power'] / 10) > (interfering_power + np.power(10, RADIO_SNR[modulation])):
+                    if np.power(10, candidate['rx_power'] / 10) > (
+                            interfering_power + np.power(10, RADIO_SNR[modulation])):
                         candidates.append(candidate['message'])
 
                 if len(candidates) > 0:
@@ -120,7 +122,7 @@ class SimMessageChannel:
         rx_start = rx_node.transform_local_to_global_timestamp(rx_start)
 
         def calc_power_message(item):
-            return self.calculate_path_loss(rx_node, self.network.nodes[item.source.id]) + item['power']
+            return self.calculate_path_loss(rx_node, item.source) + item['power']
 
         interfering_set = (self.mm.mq.loc[
             (self.mm.mq.modulation == modulation) &
@@ -133,17 +135,18 @@ class SimMessageChannel:
                     ((self.mm.mq.tx_start < (potential_message.tx_start - 100E6)) | (
                             self.mm.mq.tx_start > (potential_message.tx_start + 100E6)))
             )
-            ]).copy()
+            ])
 
         if len(interfering_set):
             interfering_set['rx_power'] = interfering_set.apply(calc_power_message, axis=1)
-        potential_message['rx_power'] = calc_power_message(potential_message)
+
+        rx_power = calc_power_message(lwb_slot.POWERS[potential_message.power_level])
 
         interfering_power = 0
         for i in interfering_set.rx_power:
-            interfering_power += np.pow(10, i / 10)
+            interfering_power += np.power(10, i / 10)
 
-        if np.pow(10, potential_message.rx_power / 10) > (interfering_power + np.pow(10, RADIO_SNR[modulation])):
+        if np.power(10, rx_power / 10) > (interfering_power + np.power(10, RADIO_SNR[modulation])):
             return True
         else:
             return False
@@ -152,10 +155,10 @@ class SimMessageChannel:
         timestamp = rx_node.transform_local_to_global_timestamp(timestamp)
 
         def mark_reachable_message(item):
-            return self.network.is_reachable(modulation, rx_node, item.source, power=item.power)
+            return self.is_reachable(modulation, rx_node, item.source, power=item.power)
 
         def calc_power_message(item):
-            return self.network.calculate_path_loss(rx_node, self.network.nodes[item.source]) + item['power']
+            return self.calculate_path_loss(rx_node, item.source) + item.power
 
         config = RadioConfiguration(modulation)
         math = RadioMath(config)
@@ -164,19 +167,24 @@ class SimMessageChannel:
         cad_end = timestamp - math.get_symbol_time() * 0.5
 
         subset = (self.mm.mq.loc[
-            self.mm.mq.modulation == modulation &
-            self.mm.mq.band == band &
-            self.mm.mq.tx_end >= cad_start &
-            self.mm.mq.tx_start <= cad_end
-            ]).copy()
+            (self.mm.mq.modulation == modulation) &
+            (self.mm.mq.band == band) &
+            (self.mm.mq.tx_end >= cad_start) &
+            (self.mm.mq.tx_start <= cad_end)
+            ])
 
-        subset['reachable'] = subset.apply(mark_reachable_message, axis=1)
-        subset = subset.loc[subset.reachable == True]
+        if len(subset):
+            subset['reachable'] = subset.apply(mark_reachable_message, axis=1)
+            subset = subset.loc[subset.reachable == True]
 
-        subset['rx_power'] = subset.apply(calc_power_message, axis=1)
+            if len(subset):
+                print(subset.to_string())
+                subset['rx_power'] = subset.apply(calc_power_message, axis=1)
 
-        if len(subset) > 0:
-            return subset.rx_power.max()
+                return subset.rx_power.max()
+
+            else:
+                return None
         else:
             return None
 

@@ -28,7 +28,7 @@ class SimCADSearch:
 
     @property
     def rx_symbol_timeout(self):
-        return [lwb_slot.LWBSlot.create_empty_slot(i).total_time for i in range(len(lwb_slot.MODULATIONS))]
+        return [lwb_slot.LWBSlot.create_empty_slot(i, payload=255).total_time for i in range(len(lwb_slot.MODULATIONS))]
 
     def process_next_slot(self):
         self.current_modulation -= 1
@@ -106,7 +106,7 @@ class SimCADSearch:
                                     SimEventType.CAD_DONE,
                                     self.process_lora_cad_done)
 
-    def process_lora_cad_done(self):
+    def process_lora_cad_done(self, event):
         if self.node.network.mc.cad_process(modulation=lwb_slot.MODULATIONS[self.current_modulation],
                                             band=self.current_band,
                                             rx_node=self.node,
