@@ -14,7 +14,8 @@ class SimMessageManager:
         self.network = network
         self.mq = pd.DataFrame(
             columns=['source', 'modulation', 'band', 'power', 'tx_start', 'tx_end', 'message', 'message_hash'])
-        self.rxq = []  # [{'rx_node', 'modulation', 'band', 'rx_start', 'callback'}]
+        self.rxq = pd.DataFrame(
+            columns=['rx_node', 'modulation', 'band', 'rx_start', 'callback'])
 
     def tx(self, source: 'sim_node.SimNode', modulation, band, message: SimMessage):
         power = lwb_slot.POWERS[message.power_level]
@@ -32,7 +33,7 @@ class SimMessageManager:
                                      message,
                                      message.hash]
 
-        for rx_node_item in self.rxq:
+        for rx_node_item_index, rx_node_item in self.rxq.iterrows():
             if (rx_node_item is not None and
                     rx_node_item['modulation'] is modulation and
                     rx_node_item['band'] is band):
@@ -44,11 +45,7 @@ class SimMessageManager:
 
     def register_rx(self, rx_node: 'sim_node.SimNode', rx_start: float, modulation: int, band: int, callback):
         rx_start = rx_node.transform_local_to_global_timestamp(rx_start)
-        self.rxq[rx_node.id] = {'rx_node': rx_node,
-                                'modulation': modulation,
-                                'band': band,
-                                'rx_start': rx_start,
-                                'callback': callback}
+        self.rxq.loc[rx_node.id, :] = [rx_node, modulation, band, rx_start, callback]
 
     def unregister_rx(self, rx_node: 'sim_node.SimNode'):
-        self.rxq[rx_node.id] = None
+        self.rxq.loc[rx_node.id, :] = None

@@ -10,12 +10,12 @@ MAX_ACKS = 1
 
 
 class SimGloriaFlood:
-    def __init__(self, node: 'sim_node.SimNode', flood: 'gloria_flood.GloriaFlood', finished_callback,
+    def __init__(self, node: 'sim_node.SimNode', flood: 'gloria_flood.GloriaFlood', callback,
                  init_tx_message: SimMessage = None,
                  power_increase=True, update_timestamp=False):
         self.node = node
         self.flood = flood
-        self.finished_callback = finished_callback
+        self.finished_callback = callback
         self.tx_message = init_tx_message
         self.slot_index = 0
         self.is_ack = False
@@ -71,7 +71,7 @@ class SimGloriaFlood:
             else:
                 self.slot_index += 1
                 if self.slot_index < len(self.flood.slots) and \
-                        self.flood.slots[self.slot_index].rx_marker > self.node.network.current_timestamp:
+                        self.flood.slots[self.slot_index].rx_marker > self.node.network.global_timestamp:
 
                     slot = self.flood.slots[self.slot_index]
 
@@ -280,7 +280,7 @@ class SimGloriaFlood:
             return False
 
     def valid_to_send(self):
-        if not self.is_not_finished() and self.tx_message.hop_count < self.hop_count and self.retransmission_count > 0:
+        if self.is_not_finished() and self.tx_message.hop_count < self.hop_count and self.retransmission_count > 0:
             return True
         else:
             return False

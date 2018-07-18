@@ -20,7 +20,7 @@ class SensorService(Service):
 
         self.payload_size = payload_size
         self.accumulated_data = 0.0
-        self.last_timestamp = node.network.current_timestamp
+        self.last_timestamp = node.local_timestamp
 
         self.datastream = DataStream('sensor{}'.format(self.node.id), self.node, self.node, self.priority,
                                      self.subpriority, self.period, self, max_payload=self.payload_size)

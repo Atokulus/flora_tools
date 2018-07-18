@@ -1,4 +1,6 @@
 import numpy as np
+
+from flora_tools import lwb_slot
 from flora_tools.sim.sim_event_manager import SimEventType
 
 import flora_tools.sim.sim_lwb as sim_lwb
@@ -19,7 +21,7 @@ class SimCADSync:
 
     @property
     def backoff_period(self):
-        return sim_lwb.SYNC_PERIOD
+        return lwb_slot.SYNC_PERIOD
 
     def run(self, callback):
         self.start = self.node.local_timestamp
@@ -28,8 +30,8 @@ class SimCADSync:
 
         self.scan()
 
-    def scan(self):
-        self.cad_scanner = sim_cad_search.SimCADSearch(self.node, self.scanner_callback)
+    def scan(self, modulation: int = None):
+        self.cad_scanner = sim_cad_search.SimCADSearch(self.node, self.scanner_callback, start_modulation=modulation)
 
     def scanner_callback(self, message: SimMessage):
         if message is not None:
@@ -49,7 +51,7 @@ class SimCADSync:
                 self.sync_timestamp()
                 self.callback()
             else:
-                self.scan()
+                self.scan(modulation=message.modulation)
 
         else:
             elapsed = self.node.local_timestamp - self.start
@@ -57,7 +59,9 @@ class SimCADSync:
             if elapsed > self.backoff_period:
                 if self.backoff_counter < MAX_BACKOFF_EXPONENT - 1:
                     self.backoff_counter += 1
-                self.node.em.register_event(self.node.local_timestamp + self.backoff_period * np.exp2(self.backoff_counter), self.node, SimEventType.GENERIC, self.run)
+                self.node.em.register_event(
+                    self.node.local_timestamp + self.backoff_period * np.exp2(self.backoff_counter), self.node,
+                    SimEventType.GENERIC, self.run)
             else:
                 self.scan()
 

@@ -6,6 +6,7 @@ from flora_tools.toolchain.bootloader import Bootloader
 from flora_tools.toolchain.eclipse_patcher import EclipsePatcher
 from flora_tools.toolchain.platforms import Platform
 from flora_tools.toolchain.programmer import Programmer
+from flora_tools.sim.sim import Sim
 
 
 def program_all_devices(flora_path):
@@ -31,11 +32,23 @@ def patch_eclipse(flora_path):
     comboard_patcher.patch()
 
 
+def run_simulation(output_path, event_count: int = 1000):
+    sim = Sim(event_count=event_count)
+    sim.run()
+
+
+def generate_code(flora_path):
+    pass
+
+
 def main():
     parser = argparse.ArgumentParser(description='Executable flora_tools utilities', prog='flora_tools')
-    parser.add_argument('command', help='Execute given command', choices=['program', 'program_all', 'patch_eclipse'])
+    parser.add_argument('command', help='Execute given command',
+                        choices=['program', 'program_all', 'patch_eclipse', 'run_simulation', 'generate_code'])
     parser.add_argument('path', help='Set the path to the Flora main repository folder or .hex/.binary file')
     parser.add_argument('-p', '--port', help='Set the serial port (e.g. "COM5" or "/dev/ttyUSB0")')
+    parser.add_argument('-n', '--count', type=int, help='Set the number of events that get executed by the simulation',
+                        default=1000)
     args = parser.parse_args()
 
     if args.command == 'program':
@@ -47,6 +60,10 @@ def main():
         program_all_devices(args.path)
     elif args.command == 'patch_eclipse':
         patch_eclipse(args.path)
+    elif args.command == 'run_simulation':
+        run_simulation(args.path, args.count)
+    elif args.command == 'generate_code':
+        generate_code(args.path)
 
 
 if __name__ == '__main__':

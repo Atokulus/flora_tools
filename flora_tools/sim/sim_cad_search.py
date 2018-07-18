@@ -9,10 +9,13 @@ CAD_SYMBOL_TIMEOUT = [1, 1, 1]
 
 
 class SimCADSearch:
-    def __init__(self, node: 'sim_node.SimNode', callback):
+    def __init__(self, node: 'sim_node.SimNode', callback, start_modulation: int=None):
         self.node = node
-        self.current_modulation = len(lwb_slot.MODULATIONS)
-        self.current_band = lwb_slot.BANDS[0]
+        if start_modulation is not None:
+            self.current_modulation = start_modulation
+        else:
+            self.current_modulation = len(lwb_slot.MODULATIONS)
+        self.current_band = gloria.BANDS[0]
         self.callback = callback
         self.rx_start = None
         self.potential_message = None
@@ -25,21 +28,21 @@ class SimCADSearch:
 
     @property
     def rx_symbol_timeout(self):
-        return [lwb_slot.LWBSlot.create_empty_slot(i) for i in lwb_slot.MODULATIONS]
+        return [lwb_slot.LWBSlot.create_empty_slot(i).total_time for i in range(len(lwb_slot.MODULATIONS))]
 
     def process_next_slot(self):
         self.current_modulation -= 1
 
         if self.current_modulation >= 0:
-            self.config = RadioConfiguration(modulation=lwb_slot.MODULATIONS[self.current_modulation])
-            self.math = RadioMath(self.config)
+            self.radio_config = RadioConfiguration(modulation=lwb_slot.MODULATIONS[self.current_modulation])
+            self.radio_math = RadioMath(self.radio_config)
 
-            if self.config.modem is 'FSK':
+            if self.radio_config.modem is 'FSK':
                 self.process_rx()
             else:
                 self.process_lora_cad()
         else:
-            self.callback()
+            self.callback(None)
 
     def process_rx(self):
         self.rx_start = self.node.local_timestamp + gloria.GloriaTimings(
@@ -69,7 +72,7 @@ class SimCADSearch:
             self.node.em.unregister_event(self.rx_timeout_event)
             self.callback()
 
-    def process_rx_timeout(self):
+    def process_rx_timeout(self, event):
         self.potential_message = self.node.network.mc.receive_message_on_rx_timeout(
             modulation=lwb_slot.MODULATIONS[self.current_modulation],
             band=self.current_band,
@@ -97,7 +100,7 @@ class SimCADSearch:
     def process_lora_cad(self):
 
         self.node.em.register_event(self.node.local_timestamp + gloria.GloriaTimings(
-            self.current_modulation).rx_setup_time + self.math.get_symbol_time() * (
+            self.current_modulation).rx_setup_time + self.radio_math.get_symbol_time() * (
                                             CAD_SYMBOL_TIMEOUT[self.current_modulation] + 0.5),
                                     self.node,
                                     SimEventType.CAD_DONE,

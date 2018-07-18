@@ -76,6 +76,7 @@ class SimMessage:
         return "{timestamp},{source},{destination},{type},{content},{power_level},{hop_count},{id}".format(
             timestamp=self.timestamp,
             source=self.source,
+            destination=self.destination,
             type=self.type,
             content=self.content,
             power_level=self.power_level,

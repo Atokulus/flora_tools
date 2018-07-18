@@ -17,26 +17,34 @@ class SimEventType(Enum):
 
 
 class SimEventManager:
-    def __init__(self, network: 'sim_network.SimNetwork'):
+    def __init__(self, network: 'sim_network.SimNetwork', event_count: int = 1000):
         self.network = network
-        self.eq = pd.DataFrame(columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback'])
+        self.event_count = event_count
+        self.eq = pd.DataFrame(columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback', 'processed'])
 
     def loop(self, iterations=1):
-        for i in range(iterations):
-            self.eq = self.eq.sort_values(by=['timestamp'])
-            event = self.eq[self.eq.timestamp >= self.network.current_timestamp].iloc[0, :]
-            self.process_event(event)
-            self.network.current_timestamp = event['timestamp']
-            event['node'].local_timestamp = event['local_timestamp']
+        while self.event_count > 0:
+            for i in range(iterations):
+                self.eq = self.eq.sort_values(by=['timestamp'])
+                subset = self.eq[self.eq.processed == False]
+                event = subset[self.eq.timestamp >= self.network.global_timestamp].iloc[0]
 
-    @staticmethod
-    def process_event(event):
+                self.process_event(event)
+
+            self.event_count -= iterations
+
+    def process_event(self, event):
+        self.network.global_timestamp = event['timestamp']
+        event['node'].local_timestamp = event['local_timestamp']
         event['callback'](event)
 
-    def register_event(self, timestamp: float, node: 'sim_node.SimNode', type: SimEventType,
-                       callback: Callable[[None], None], data=None):
-        self.eq.loc[len(self.eq)] = [node.transform_local_to_global_timestamp(timestamp), timestamp, node, type, data,
-                                     callback]
+        event['processed'] = True
+
+    def register_event(self, timestamp: float, node: 'sim_node.SimNode', event_type: SimEventType,
+                       callback, data=None):
+
+        self.eq.loc[len(self.eq)] = [node.transform_local_to_global_timestamp(timestamp), timestamp, node, event_type, data,
+                                     callback, False]
 
         return len(self.eq) - 1
 

@@ -66,18 +66,18 @@ class LWBScheduleManager:
 
     def generate_initial_schedule(self):
         sync_round: lwb_round.LWBRound = lwb_round.LWBRound.create_sync_round(self.get_next_epoch(),
-                                                                              lwb_slot.MODULATIONS[0],
+                                                                              0,
                                                                               self.node)
         self.last_sync: float = 0
         self.next_rounds[0] = sync_round
 
     def get_next_round(self):
-        sorted_next_rounds: List[lwb_round.LWBRound] = sorted(
+        sorted_next_round: List[lwb_round.LWBRound] = sorted(
             [interfering_round for interfering_round in self.next_rounds if
              type(interfering_round) is lwb_round.LWBRound], key=lambda x: x.round_marker)[0]
 
-        if len(sorted_next_rounds):
-            round = sorted_next_rounds[0]
+        if sorted_next_round:
+            round = sorted_next_round
             self.next_rounds[round.modulation] = None
             return round
         else:
@@ -130,17 +130,17 @@ class LWBScheduleManager:
                     round = self.next_rounds[i]
             else:
                 notification_schedule = self.node.lwb.stream_manager.schedule_notification(
-                    lwb_round.SLOT_COUNTS[i], i, timestamp=self.get_next_epoch(last_round))
+                    self.get_next_epoch(last_round), lwb_round.SLOT_COUNTS[i], i)
 
                 if len(notification_schedule):
                     round = lwb_round.LWBRound.create_notification_round(last_epoch, i, notification_schedule)
                 else:
                     data_schedule = self.node.lwb.stream_manager.schedule_data(
-                        lwb_round.SLOT_COUNTS[i], i, timestamp=self.get_next_epoch(last_round))
+                        self.get_next_epoch(last_round), lwb_round.SLOT_COUNTS[i], i)
                     if len(data_schedule):
                         round = lwb_round.LWBRound.create_data_round(data_schedule)
                     else:
-                        next_time = self.node.lwb.stream_manager.get_next_round_schedule_timestamp()
+                        next_time = self.node.lwb.stream_manager.get_next_round_schedule_timestamp(i)
                         if next_time is not None:
                             round = lwb_round.LWBRound.create_sync_round(next_time, i, self.node)
                         else:

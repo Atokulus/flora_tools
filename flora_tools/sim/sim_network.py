@@ -12,19 +12,20 @@ from flora_tools.sim.sim_message_manager import SimMessageManager
 
 
 class SimNetwork:
-    def __init__(self, count=10, path_loss=[110, 170], seed=None):
-        self.current_timestamp = 0
+    def __init__(self, node_count=10, event_count=1000, path_loss=[110, 170], seed=None):
+        self.global_timestamp = 0
+
         self.mm = SimMessageManager(self)
         self.mc = SimMessageChannel(self)
-        self.em = sim_event_manager.SimEventManager(self)
+        self.em = sim_event_manager.SimEventManager(self, event_count=event_count)
 
         self.nodes = [sim_node.SimNode(self, mm=self.mm, em=self.em, id=i, role=(
             sim_node.SimNodeRole.SENSOR if i is not 0 else sim_node.SimNodeRole.BASE))
-                      for i in range(count)]
+                      for i in range(node_count)]
         self.G = nx.Graph()
-        self.G.add_nodes_from(range(count))
+        self.G.add_nodes_from(range(node_count))
 
-        edges = list(combinations(range(count), 2))
+        edges = list(combinations(range(node_count), 2))
 
         np.random.seed(seed)
         path_losses = np.random.uniform(path_loss[0], path_loss[1], len(list(edges)))
@@ -33,8 +34,10 @@ class SimNetwork:
         self.G.add_edges_from(channels)
 
     def run(self):
-        for node in self.node:
+        for node in self.nodes:
             node.run()
+
+        self.em.loop()
 
     def draw(self, modulation=None, power=22):
         if modulation is not None:

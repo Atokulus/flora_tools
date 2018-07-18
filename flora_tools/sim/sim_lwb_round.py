@@ -24,9 +24,9 @@ class SimLWBRound:
         self.process_slot()
 
     def process_slot(self):
-        slot = self.round.slots[self.current_slot_index]
-
         if self.slot_valid():
+            slot = self.round.slots[self.current_slot_index]
+
             if slot.type is not lwb_slot.LWBSlotType.ACK:
                 self.ack_stream = None
 
@@ -52,6 +52,7 @@ class SimLWBRound:
             message = SimMessage(slot.slot_marker, self.node, slot.payload,
                                  modulation=slot.modulation, destination=None, type=SimMessageType.SYNC,
                                  power_level=slot.power_level)
+
             SimLWBSlot(self.node, slot, self.process_sync_slot_callback, master=self.node,
                        message=message)
         else:
@@ -217,4 +218,4 @@ class SimLWBRound:
         self.process_next_slot()
 
     def slot_valid(self):
-        return self.round.slots[self.current_slot_index] is not None
+        return self.current_slot_index < len(self.round.slots) and self.round.slots[self.current_slot_index] is not None

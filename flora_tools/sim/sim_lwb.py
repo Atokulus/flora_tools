@@ -26,6 +26,7 @@ class SimLWB:
 
         if self.node.role is sim_node.SimNodeRole.BASE:
             self.base = self.node
+            self.state: LWBState = LWBState.ASSIGNED
         else:
             self.base = None
             self.state: LWBState = LWBState.CAD
@@ -42,7 +43,7 @@ class SimLWB:
                 self.state = LWBState.CAD
                 self.run()
 
-    def round_callback(self):
+    def round_callback(self, success):
         self.run()
 
     def sync_callback(self):

@@ -371,7 +371,10 @@ class LWBStreamManager:
                 elif stream.next_period < next_period:
                     next_period = stream.next_period
 
-        return np.ceil(next_period / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY
+        if next_period is not None:
+            return np.ceil(next_period / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY
+        else:
+            return None
 
     def get_next_lp_notifiaction_round_schedule_timestamp(self, modulation):
         next_period: int = None

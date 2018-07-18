@@ -4,7 +4,7 @@ from flora_tools.sim.sensor_service import SensorService
 import flora_tools.sim.sim_event_manager as sim_event_manager
 from flora_tools.sim.sim_lwb import SimLWB
 from flora_tools.sim.sim_message_manager import SimMessageManager
-from flora_tools.sim.sim_network import SimNetwork
+import flora_tools.sim.sim_network as sim_network
 
 
 class SimNodeRole(Enum):
@@ -14,7 +14,8 @@ class SimNodeRole(Enum):
 
 
 class SimNode:
-    def __init__(self, network: 'SimNetwork', em: 'sim_event_manager.SimEventManager', mm: SimMessageManager, id: int = None,
+    def __init__(self, network: 'sim_network.SimNetwork', em: 'sim_event_manager.SimEventManager',
+                 mm: SimMessageManager, id: int = None,
                  role: SimNodeRole = SimNodeRole.SENSOR):
         self.state = 'init'
         self.network = network
@@ -38,4 +39,4 @@ class SimNode:
         return str(self.id)
 
     def transform_local_to_global_timestamp(self, timestamp):
-        timestamp - self.local_timestamp + self.network.current_timestamp
+        return timestamp + (self.network.global_timestamp - self.local_timestamp)
