@@ -55,7 +55,7 @@ class LWBDataSlotItem:
 
 class LWBRound:
     def __init__(self, round_marker, modulation, type: LWBRoundType, master: 'sim_node.SimNode' = None, layout:
-    typing.List[LWBSlotItem]=None):
+    typing.List[LWBSlotItem]=[]):
         self.round_marker = round_marker
         self.modulation = modulation
         self.gloria_modulation = lwb_slot.MODULATIONS[self.modulation]

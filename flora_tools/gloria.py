@@ -4,9 +4,10 @@ from typing import List
 import numpy as np
 
 import flora_tools.lwb_slot as lwb_slot
-from flora_tools.lwb_slot import BANDS
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
+
+BANDS = [48]
 
 rx_time_offsets = [
     [0.359425231, 0.080458787],
@@ -34,13 +35,13 @@ tx_time_offsets = [
     [0.000274632, 5.29E-07],
 ]
 
-voltage = 3.7
-proc_power = 48 * 120E-6 * voltage
-rx_power = 5.5E-3 * voltage
+voltage = 3.3
+proc_power = 48 * 120E-3 * voltage  # Based on ST application note regarding STM32L4 power modes
+rx_power = 5.5 * voltage
 
 
 def tx_power(power):
-    return 1E3 * 8E-3 * voltage + np.log10(np.power(10, power / 10) * 3)
+    return 8 * voltage + np.log10(np.power(10, power / 10) * 3)
 
 
 gap = 50E-6
@@ -60,11 +61,11 @@ class GloriaSlotType(Enum):
 
 class GloriaSlot:
     def __init__(self, flood: 'GloriaFlood', slot_offset: float, type: GloriaSlotType = None, payload=None,
-                 power=10E-3):
+                 power=10):
         self.slot_offset = slot_offset
         self.flood = flood
         self.type = type
-        self.power = power
+        self.power = power  # in dBm
         if payload is None:
             self.payload = self.flood.payload
         else:
@@ -163,13 +164,16 @@ class GloriaSlot:
 class GloriaFlood:
     def __init__(self, lwb_slot: 'lwb_slot.LWBSlot', modulation: int, payload: int, retransmission_count: int,
                  hop_count: int,
-                 acked=False, safety_factor=2, is_master=True, power=10E-3, band: int = BANDS[0]):
+                 is_ack=False, safety_factor=2, is_master=True, power=10, band: int = None):
+        if band is None:
+            band = BANDS[0]
+
         self.lwb_slot = lwb_slot
         self.modulation = modulation
         self.payload = payload
         self.retransmission_count = retransmission_count
         self.hop_count = hop_count
-        self.acked = acked
+        self.acked = is_ack
         self.safety_factor = safety_factor
         self.is_master = is_master
         self.power = power
@@ -233,6 +237,7 @@ class GloriaFlood:
 
         return
 
+    @property
     def energy(self):
         energy = self.overhead * proc_power
         for slot in self.slots:
@@ -240,6 +245,7 @@ class GloriaFlood:
 
         return energy
 
+    @property
     def bitrate(self):
         return self.payload * 8 / self.total_time
 
