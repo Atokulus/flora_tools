@@ -19,7 +19,7 @@ class SimLWB:
 
         self.rounds = []
 
-        self.link_manager = LWBLinkManager(self)
+        self.link_manager = LWBLinkManager(self.node)
         self.stream_manager = LWBStreamManager(self.node)
         self.schedule_manager = LWBScheduleManager(self.node)
         self.sync: SimCADSync = None
