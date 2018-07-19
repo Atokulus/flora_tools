@@ -45,7 +45,7 @@ class SimMessage:
         self.power_level = power_level
 
         self.hop_count = 0
-        self.radio_configuration = RadioConfiguration(modulation, lwb_slot.POWERS[self.power_level], tx=True,
+        self.radio_configuration = RadioConfiguration(lwb_slot.MODULATIONS[modulation], lwb_slot.POWERS[self.power_level], tx=True,
                                                       preamble=(2 if self.modulation > 7 else 3))
         self.radio_math = RadioMath(self.radio_configuration)
 
@@ -73,7 +73,7 @@ class SimMessage:
 
     @property
     def hash(self):
-        return "{timestamp},{source},{destination},{type},{content},{power_level},{hop_count},{id}".format(
+        return "{timestamp},{source},{destination},{type},{power_level},{hop_count},{id}".format(
             timestamp=self.timestamp,
             source=self.source,
             destination=self.destination,

@@ -37,16 +37,31 @@ class SimMessageManager:
             if (rx_node_item is not None and
                     rx_node_item['modulation'] is modulation and
                     rx_node_item['band'] is band):
-                self.network.em.register_event(message.tx_end,
-                                               rx_node_item['rx_node'],
-                                               sim_event_type.SimEventType.TX_DONE_BEFORE_RX_TIMEOUT,
-                                               rx_node_item['callback'],
-                                               {'message': message, 'rx': rx_node_item})
+                self.network.em.register_event(
+                    message.tx_end,
+                    rx_node_item['rx_node'],
+                    sim_event_type.SimEventType.TX_DONE_BEFORE_RX_TIMEOUT,
+                    rx_node_item['callback'],
+                    {'source': source, 'message': message, 'rx': rx_node_item},
+                    local=False)
 
     def register_rx(self, rx_node: 'sim_node.SimNode', rx_start: float, modulation: int, band: int, callback):
-        rx_start = rx_node.transform_local_to_global_timestamp(rx_start)
-        self.rxq.loc[rx_node.id, :] = [rx_node, modulation, band, rx_start, callback]
+        rx_start_global = rx_node.transform_local_to_global_timestamp(rx_start)
+        self.rxq.loc[rx_node.id, :] = [rx_node, modulation, band, rx_start_global, callback]
+
+        future_transmissions = self.mq.loc[self.mq.tx_start > rx_start_global]
+        for future_transmission_idx, future_transmission in future_transmissions.iterrows():
+            if (future_transmission['modulation'] is modulation and
+                    future_transmission['band'] is band):
+                self.network.em.register_event(
+                    future_transmission['tx_end'],
+                    rx_node,
+                    sim_event_type.SimEventType.TX_DONE_BEFORE_RX_TIMEOUT,
+                    callback,
+                    {'message': future_transmission['message'],
+                     'rx': [rx_node, modulation, band, rx_start_global, callback]},
+                    local=False)
 
     def unregister_rx(self, rx_node: 'sim_node.SimNode'):
+        self.network.em.remove_all_events(rx_node, sim_event_type.SimEventType.TX_DONE_BEFORE_RX_TIMEOUT)
         self.rxq.loc[rx_node.id, :] = None
-        #TODO

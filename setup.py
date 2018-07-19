@@ -26,6 +26,8 @@ setup(
         'pyserial',
         'pyvisa',
         'intelhex',
+        'coloredlogs',
+        'pycairo'
     ],
     classifiers=(
         "Programming Language :: Python :: 3",

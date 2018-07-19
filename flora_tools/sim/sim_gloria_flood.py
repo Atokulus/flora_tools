@@ -22,7 +22,8 @@ class SimGloriaFlood:
         self.retransmission_count = flood.retransmission_count
         self.hop_count = flood.hop_count
         self.ack_counter = 0
-        self.potential_message = None
+        self.potential_message: SimMessage = None
+        self.potential_node: sim_node.SimNode = None
         self.ack_message = None
         self.is_initial_node = True if init_tx_message is not None else False
         self.power_increase = power_increase
@@ -48,8 +49,6 @@ class SimGloriaFlood:
                                             self.progress_gloria_flood)
 
                 self.retransmission_count -= 1
-                if self.power_increase and self.is_initial_node and self.tx_message.power_level < len(lwb_slot.POWERS) - 1:
-                    self.tx_message.power_level += 1
             else:
                 self.finished_callback(None)
 
@@ -91,7 +90,7 @@ class SimGloriaFlood:
         elif event['type'] is SimEventType.TX_DONE_BEFORE_RX_TIMEOUT:
             slot = self.flood.slots[self.slot_index]
 
-            message = self.node.network.mc.receive_message_on_tx_done_before_rx_timeout(
+            message, tx_node = self.node.network.mc.receive_message_on_tx_done_before_rx_timeout(
                 self.node,
                 self.flood.modulation,
                 self.flood.band,
@@ -100,17 +99,21 @@ class SimGloriaFlood:
                 event['data']['message'].tx_start)
             if message is not None:
                 self.potential_message = message
-                self.node.em.unregister_event(self.rx_timeout_event)
+                self.potential_node = tx_node
+                self.node.em.remove_all_events(self.node, SimEventType.RX_TIMEOUT)
                 self.process_rx_message()
 
         elif event['type'] is SimEventType.RX_TIMEOUT:
             slot = self.flood.slots[self.slot_index]
-            self.potential_message = self.node.network.mc.receive_message_on_rx_timeout(
+            message, tx_node = self.node.network.mc.receive_message_on_rx_timeout(
                 modulation=self.flood.modulation,
                 band=self.flood.band,
                 rx_node=self.node,
                 rx_start=slot.rx_marker,
                 rx_timeout=self.node.local_timestamp)
+            self.potential_message = message
+            self.potential_node = tx_node
+
             if self.potential_message is not None:
                 self.node.em.register_event(np.max([self.potential_message.tx_end, slot.rx_end_marker]),
                                             self.node,
@@ -125,7 +128,7 @@ class SimGloriaFlood:
 
             if self.node.network.mc.check_if_successfully_received(self.flood.modulation, self.flood.band,
                                                                    self.potential_message, slot.rx_marker,
-                                                                   self.node):
+                                                                   self.node, self.potential_node):
                 self.process_rx_message()
             else:
                 self.process_next_slot()
@@ -220,7 +223,9 @@ class SimGloriaFlood:
                                             self.progress_gloria_flood)
 
                 self.retransmission_count -= 1
-                if self.power_increase and self.is_initial_node:
+                if (self.power_increase and
+                        self.is_initial_node and
+                        self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
                     self.tx_message.power_level += 1
 
             else:
@@ -292,5 +297,5 @@ class SimGloriaFlood:
         correction = new_timestamp - self.last_tx_slot_marker
 
         self.node.local_timestamp += correction
-        self.last_tx_slot_marker = new_timestamp
-        self.last_slot_marker = new_timestamp
+        self.last_tx_slot_marker = self.node.local_timestamp
+        self.last_slot_marker = self.node.local_timestamp

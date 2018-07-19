@@ -1,3 +1,5 @@
+import logging
+
 import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_lwb as sim_lwb_manager
@@ -9,6 +11,9 @@ from flora_tools.sim.sim_message import SimMessage, SimMessageType
 class SimLWBRound:
     def __init__(self, node: 'sim_node.SimNode', lwb: 'sim_lwb_manager.SimLWB',
                  round: 'lwb_round.LWBRound', callback):
+
+        self.logger = logging.getLogger(self.__class__.__qualname__)
+
         self.node = node
         self.lwb = lwb
         self.round = round
@@ -17,7 +22,16 @@ class SimLWBRound:
         self.current_slot_index = 0
         self.ack_stream = None
 
+        self.log_round()
         self.process_slot()
+
+    def log_round(self):
+        self.logger.info(
+            "Marker:{:10f}\tNode:{:3d}\tMod:{:2d}\tType:{:16s}\tTime:{:10f}".format(self.round.round_marker,
+                                                                                    self.node.id,
+                                                                                    self.round.modulation,
+                                                                                    self.round.type,
+                                                                                    self.round.total_time))
 
     def process_next_slot(self):
         self.current_slot_index += 1
@@ -80,7 +94,7 @@ class SimLWBRound:
     def process_slot_schedule_slot_callback(self, message: SimMessage):
         if self.node.role is not sim_node.SimNodeRole.BASE and \
                 message is not None and message.type is SimMessageType.SLOT_SCHEDULE:
-            self.round = self.lwb.schedule_manager.register_slot_schedule(message.content)
+            self.round = self.lwb.schedule_manager.register_slot_schedule(message)
 
         self.process_next_slot()
 
@@ -117,6 +131,8 @@ class SimLWBRound:
         self.process_next_slot()
 
     def process_contention_slot(self, slot: 'lwb_slot.LWBSlot'):
+        message = None
+
         if self.node.role is not sim_node.SimNodeRole.BASE and (slot.master is None or slot.master is self.node):
             if self.round.type is lwb_round.LWBRoundType.SYNC:
                 message = self.lwb.stream_manager.get_round_request()
@@ -147,12 +163,6 @@ class SimLWBRound:
         else:
             self.process_next_slot()
 
-        if self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
-            if message is None:
-                self.lwb.schedule_manager.decrement_contention(slot.modulation)
-            elif message.type is SimMessageType.STREAM_REQUEST:
-                self.lwb.schedule_manager.increment_contention(slot.modulation)
-
     def process_contention_slot_callback(self, message: SimMessage):
         if message is not None and self.node.role is sim_node.SimNodeRole.BASE:
             if message.type in [SimMessageType.NOTIFICATION, SimMessageType.STREAM_REQUEST]:
@@ -163,6 +173,12 @@ class SimLWBRound:
                         self.ack_stream = message.content['stream']
             elif message.type is SimMessageType.ROUND_REQUEST:
                 self.node.lwb.lwb_schedule_manager.round_request(message.content)
+
+        if self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST and self.node.role is sim_node.SimNodeRole.BASE:
+            if message is None:
+                self.lwb.schedule_manager.decrement_contention(self.round.modulation)
+            elif message.type is SimMessageType.STREAM_REQUEST:
+                self.lwb.schedule_manager.increment_contention(self.round.modulation)
 
         self.process_next_slot()
 
@@ -185,6 +201,8 @@ class SimLWBRound:
 
                     SimLWBSlot(self.node, slot, self.process_ack_slot_callback, master=self.node,
                                message=message)
+        else:
+            self.process_next_slot()
 
     def process_ack_slot_callback(self, message: SimMessage):
         if message.type is SimMessageType.ACK and message.destination is self.node:
@@ -212,8 +230,10 @@ class SimLWBRound:
                        message=None)
 
     def process_round_schedule_slot_callback(self, message: SimMessage):
-        if self.node.role is not sim_node.SimNodeRole.BASE and message is not None and message.type is SimMessageType.ROUND_SCHEDULE:
-            self.lwb.schedule_manager.register_round_schedule(message.content)
+        if (self.node.role is not sim_node.SimNodeRole.BASE and
+                message is not None and
+                message.type is SimMessageType.ROUND_SCHEDULE):
+            self.lwb.schedule_manager.register_round_schedule(message)
 
         self.process_next_slot()
 

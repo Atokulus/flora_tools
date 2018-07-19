@@ -20,9 +20,9 @@ class SimLWB:
         self.rounds = []
 
         self.link_manager = LWBLinkManager(self)
-        self.stream_manager = LWBStreamManager(self)
+        self.stream_manager = LWBStreamManager(self.node)
         self.schedule_manager = LWBScheduleManager(self.node)
-        self.state: LWBState = LWBState.CAD
+        self.sync: SimCADSync = None
 
         if self.node.role is sim_node.SimNodeRole.BASE:
             self.base = self.node

@@ -15,6 +15,7 @@ class SimCADSync:
     def __init__(self, node: 'sim_node.SimNode'):
         self.node = node
         self.cad_scanner = None
+        self.callback = None
 
         self.start: float = None
         self.backoff_counter: int = -1
@@ -40,15 +41,15 @@ class SimCADSync:
 
             if message.type is SimMessageType.SYNC:
                 self.node.lwb.lwb_schedule_manager.register_sync()
-                self.sync_timestamp()
+                self.sync_timestamp(message)
                 self.callback()
             elif message.type is SimMessageType.SLOT_SCHEDULE:
-                self.node.lwb.lwb_schedule_manager.register_slot_schedule(message)
-                self.sync_timestamp()
+                self.node.lwb.schedule_manager.register_slot_schedule(message)
+                self.sync_timestamp(message)
                 self.callback()
             elif message.type is SimMessageType.ROUND_SCHEDULE:
-                self.node.lwb.lwb_schedule_manager.register_round_schedule(message)
-                self.sync_timestamp()
+                self.node.lwb.schedule_manager.register_round_schedule(message)
+                self.sync_timestamp(message)
                 self.callback()
             else:
                 self.scan(modulation=message.modulation)

@@ -3,21 +3,26 @@ from itertools import combinations
 import networkx as nx
 import numpy as np
 
+import cairo
+
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
 import flora_tools.sim.sim_event_manager as sim_event_manager
 from flora_tools.sim.sim_message_channel import SimMessageChannel
 from flora_tools.sim.sim_message_manager import SimMessageManager
+from flora_tools.sim.sim_visualizer import SimVisualizer
 
 
 class SimNetwork:
-    def __init__(self, node_count=10, event_count=1000, path_loss=[110, 170], seed=None):
+    def __init__(self, surface: cairo.SVGSurface, node_count=2, event_count: int = None, time_limit: float = None, path_loss=[110, 170], seed=None):
         self.global_timestamp = 0
+
+        self.visualizer = SimVisualizer(surface)
 
         self.mm = SimMessageManager(self)
         self.mc = SimMessageChannel(self)
-        self.em = sim_event_manager.SimEventManager(self, event_count=event_count)
+        self.em = sim_event_manager.SimEventManager(self, event_count=event_count, time_limit=time_limit)
 
         self.nodes = [sim_node.SimNode(self, mm=self.mm, em=self.em, id=i, role=(
             sim_node.SimNodeRole.SENSOR if i is not 0 else sim_node.SimNodeRole.BASE))

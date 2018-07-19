@@ -13,13 +13,15 @@ Module | Description
 
 # Installation Guide
 
+Install Cairo on your OS, as it is needed as the SVG graphics engine. On Windows you should install Cairo in bundle with GTK (see https://www.gtk.org/download/windows.php for further instructions).
+
 Install Python3.7+ and pip 10.0+. If your are using Ubuntu 18.04, these are already installed. Then you can install the pip package `flora-tools`
 
 ```sh
 python -m pip install flora-tools
 ```
 
-If you run into problems, try `python3 -m pip` or `pip3`, as there are still many old distributions around.
+If you run into problems, try `python3 -m pip` or `pip3`, as there are still many old distributions around. Also, if the pip packages in question might not be available prebuilt from PyPi for Windows, try https://www.lfd.uci.edu/~gohlke/pythonlibs
 
 ### Run The script ###
 
@@ -103,3 +105,11 @@ Add your Tektronix MSO4104B oscilloscope in NI MAX. You have to note down the VI
 ## FlockLab Integration
 
 *To be integrated.*
+
+## Contact
+The latest version of flora-tools is available on PyPI and GitHub. The online documentation will be available in the future on Read The Docs and includes a changelog. For bug reports please create an issue on GitHub. If you have questions, suggestions, etc. feel free to send me an e-mail at mw@technokrat.ch.
+
+##License
+This software is licensed under the MIT license.
+
+© 2018 Markus Wegmann

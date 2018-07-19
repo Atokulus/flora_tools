@@ -32,7 +32,7 @@ class SimLWBSlot:
                 if message is not None and message.type in [SimMessageType.SYNC,
                                                             SimMessageType.SLOT_SCHEDULE]:
                     self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
-                else:
+                elif self.tx_node is not None:
                     self.node.lwb.link_manager.downgrade_link(self.tx_node)
         elif self.slot.type is lwb_slot.LWBSlotType.ACK:
             self.node.lwb.link_manager.acknowledge_link(message.source)

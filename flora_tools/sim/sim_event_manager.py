@@ -1,5 +1,5 @@
+import logging
 from enum import Enum
-from typing import Callable
 
 import pandas as pd
 
@@ -17,39 +17,59 @@ class SimEventType(Enum):
 
 
 class SimEventManager:
-    def __init__(self, network: 'sim_network.SimNetwork', event_count: int = 1000):
+    def __init__(self, network: 'sim_network.SimNetwork', event_count: int = None, time_limit: float = None):
+        self.logger = logging.getLogger(self.__class__.__qualname__)
+
         self.network = network
         self.event_count = event_count
+        self.time_limit = time_limit
+
         self.eq = pd.DataFrame(
             columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback'])
         self.processed_eq = pd.DataFrame(
             columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback'])
 
     def loop(self, iterations=1):
-        while self.event_count > 0:
-            for i in range(iterations):
-                self.eq = self.eq.sort_values(by=['timestamp'])
-                event = self.eq.iloc[0]
-                self.eq = self.eq.iloc[1:len(self.eq)]
+        while (self.event_count is not None and self.event_count > 0) or (
+                self.time_limit is not None) and self.network.global_timestamp <= self.time_limit:
+            self.log_event_queue()
 
-                self.process_event(event)
+            self.eq = self.eq.sort_values(by=['timestamp'])
+            event = self.eq.iloc[0]
+            self.eq = self.eq.iloc[1:len(self.eq), :]
+            self.process_event(event)
 
-            self.event_count -= iterations
+            if self.event_count is not None:
+                self.event_count -= 1
 
     def process_event(self, event):
-        print("{},\t{},\t{},\t{}".format(event['timestamp'], event['node'].id, event['type'], event['callback'].__qualname__))
-        print(self.eq)
+        self.logger.info("{:10f}\t{:3d}\t{:24s}\t{:24s}".format(event['timestamp'], event['node'].id, event['type'],
+                                                                event['callback'].__qualname__))
         self.network.global_timestamp = event['timestamp']
+
         event['node'].local_timestamp = event['local_timestamp']
         event['callback'](event)
         self.processed_eq.loc[len(self.processed_eq)] = event
 
     def register_event(self, timestamp: float, node: 'sim_node.SimNode', event_type: SimEventType,
-                       callback, data=None):
+                       callback, data=None, local=True):
+        if local:
+            local_timestamp = timestamp
+            timestamp = node.transform_local_to_global_timestamp(timestamp)
+        else:
+            local_timestamp = node.transform_global_to_local_timestamp(timestamp)
 
-        self.eq.loc[len(self.eq)] = [
-            node.transform_local_to_global_timestamp(timestamp),
-            timestamp, node, event_type, data, callback]
+        tmp_df = pd.DataFrame([[timestamp,
+                                local_timestamp, node, event_type, data, callback]],
+                              columns=['timestamp', 'local_timestamp', 'node', 'type', 'data', 'callback'])
+
+        self.eq = self.eq.append(tmp_df)
 
     def unregister_event(self, index):
-        self.eq.drop(index, inplace=True)
+        self.eq = self.eq.drop(index, inplace=True)
+
+    def remove_all_events(self, node, event_type):
+        self.eq = self.eq.loc[(self.eq.node != node) | (self.eq.type != event_type)]
+
+    def log_event_queue(self):
+        self.logger.debug("{}\n{}\n".format("Event Queue:", self.eq.to_string()))

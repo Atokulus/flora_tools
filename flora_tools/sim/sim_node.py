@@ -26,11 +26,19 @@ class SimNode:
 
         self.lwb = SimLWB(self)
 
-        self.local_timestamp = 0
+        self.local_time_offset = 0
 
         if self.role is SimNodeRole.SENSOR:
             service = SensorService(self, "sensor_data{}".format(self.id), 10)
             self.lwb.stream_manager.register_data(service.datastream)
+
+    @property
+    def local_timestamp(self):
+        return self.local_time_offset + self.network.global_timestamp
+
+    @local_timestamp.setter
+    def local_timestamp(self, updated_timestamp):
+         self.local_time_offset += updated_timestamp - self.local_timestamp
 
     def run(self):
         self.lwb.run()
@@ -39,4 +47,7 @@ class SimNode:
         return str(self.id)
 
     def transform_local_to_global_timestamp(self, timestamp):
-        return timestamp + (self.network.global_timestamp - self.local_timestamp)
+        return timestamp - self.local_time_offset
+
+    def transform_global_to_local_timestamp(self, timestamp):
+        return timestamp + self.local_time_offset
