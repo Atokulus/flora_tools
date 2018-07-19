@@ -121,8 +121,8 @@ class SimMessageChannel:
     def check_if_successfully_received(self, modulation, band, potential_message: 'SimMessage', rx_start, rx_node):
         rx_start = rx_node.transform_local_to_global_timestamp(rx_start)
 
-        def calc_power_message(item):
-            return self.calculate_path_loss(rx_node, item.source) + item['power']
+        def calc_power_message(item, power, source):
+            return self.calculate_path_loss(rx_node, source) + power
 
         interfering_set = (self.mm.mq.loc[
             (self.mm.mq.modulation == modulation) &
@@ -132,15 +132,15 @@ class SimMessageChannel:
             (self.mm.mq.tx_start < potential_message.tx_end) &
             (
                     (self.mm.mq.message_hash != potential_message.hash) |
-                    ((self.mm.mq.tx_start < (potential_message.tx_start - 100E6)) | (
-                            self.mm.mq.tx_start > (potential_message.tx_start + 100E6)))
+                    ((self.mm.mq.tx_start < (potential_message.tx_start - 100E6)) |
+                     (self.mm.mq.tx_start > (potential_message.tx_start + 100E6)))
             )
             ])
 
         if len(interfering_set):
             interfering_set['rx_power'] = interfering_set.apply(calc_power_message, axis=1)
 
-        rx_power = calc_power_message(lwb_slot.POWERS[potential_message.power_level])
+        rx_power = calc_power_message(lwb_slot.POWERS[potential_message.power_level], potential_message.source)
 
         interfering_power = 0
         for i in interfering_set.rx_power:

@@ -49,3 +49,4 @@ class SimMessageManager:
 
     def unregister_rx(self, rx_node: 'sim_node.SimNode'):
         self.rxq.loc[rx_node.id, :] = None
+        #TODO

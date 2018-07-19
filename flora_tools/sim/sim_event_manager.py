@@ -38,6 +38,7 @@ class SimEventManager:
 
     def process_event(self, event):
         print("{},\t{},\t{},\t{}".format(event['timestamp'], event['node'].id, event['type'], event['callback'].__qualname__))
+        print(self.eq)
         self.network.global_timestamp = event['timestamp']
         event['node'].local_timestamp = event['local_timestamp']
         event['callback'](event)
