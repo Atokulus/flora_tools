@@ -198,8 +198,10 @@ class SimLWBRound:
                 if self.round.type in [lwb_round.LWBRoundType.DATA, lwb_round.LWBRoundType.NOTIFICATION,
                                        lwb_round.LWBRoundType.LP_NOTIFICATION]:
                     message = self.lwb.stream_manager.tx_ack(self.ack_stream)
-                    message.power_level = self.lwb.link_manager.get_acknowledged_link(message.destination)[
-                        'power_level']
+                    power_level = self.lwb.link_manager.get_link(message.destination)['power_level']
+                    if np.isnan(power_level):
+                        power_level = lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]]
+                    message.power_level = power_level
                     message.modulation = slot.modulation
 
                     SimLWBSlot(self.node, slot, self.process_ack_slot_callback, master=self.node,
@@ -207,8 +209,10 @@ class SimLWBRound:
 
                 elif self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
                     message = self.lwb.stream_manager.tx_ack_stream_request(self.ack_stream)
-                    message.power_level = self.lwb.link_manager.get_acknowledged_link(message.destination)[
-                        'power_level']
+                    power_level = self.lwb.link_manager.get_link(message.destination)['power_level']
+                    if np.isnan(power_level):
+                        power_level = lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]]
+                    message.power_level = power_level
                     message.modulation = slot.modulation
 
                     SimLWBSlot(self.node, slot, self.process_ack_slot_callback, master=self.node,
@@ -217,13 +221,17 @@ class SimLWBRound:
                 SimLWBSlot(self.node, slot, self.process_ack_slot_callback, master=self.round.master,
                            message=None)
         else:
-            self.process_next_slot()
+            SimLWBSlot(self.node, slot, self.process_ack_slot_callback, master=self.round.master,
+                       message=None)
 
     def process_ack_slot_callback(self, message: SimMessage):
-        if message.type is SimMessageType.ACK and message.destination is self.node:
-            if self.round in [lwb_round.LWBRoundType.NOTIFICATION, lwb_round.LWBRoundType.LP_NOTIFICATION]:
+        if (message is not None
+                and message.type is SimMessageType.ACK
+                and message.destination is self.node):
+            if self.round.type in [lwb_round.LWBRoundType.NOTIFICATION, lwb_round.LWBRoundType.LP_NOTIFICATION,
+                              lwb_round.LWBRoundType.DATA]:
                 self.lwb.stream_manager.rx_ack(message)
-            elif self.round is lwb_round.LWBRoundType.STREAM_REQUEST:
+            elif self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
                 self.lwb.stream_manager.rx_ack_stream_request(message)
         elif self.ack_stream is not None:
             self.ack_stream.fail()
@@ -241,7 +249,7 @@ class SimLWBRound:
             SimLWBSlot(self.node, slot, self.process_round_schedule_slot_callback, master=self.node,
                        message=message)
         else:
-            SimLWBSlot(self.node, slot, self.process_round_schedule_slot_callback, master=self.lwb.base,
+            SimLWBSlot(self.node, slot, self.process_round_schedule_slot_callback,
                        message=None)
 
     def process_round_schedule_slot_callback(self, message: SimMessage):

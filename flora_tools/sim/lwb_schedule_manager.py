@@ -89,7 +89,7 @@ class LWBScheduleManager:
 
     def get_round_schedule(self, current_round: 'lwb_round.LWBRound'):
         self.schedule_next_rounds(current_round)
-        return self.next_rounds
+        return self.next_rounds.copy()
 
     def register_round_schedule(self, message: 'sim_message.SimMessage'):
         schedule: List[lwb_round.LWBRound] = message.content

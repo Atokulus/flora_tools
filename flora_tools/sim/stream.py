@@ -1,5 +1,5 @@
 from copy import copy
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Optional
 
 import numpy as np
 
@@ -203,7 +203,7 @@ class LWBStreamManager:
                     else:
                         if best_match.priority >= stream.priority \
                                 and best_match.subpriority >= stream.subpriority \
-                                and best_match.available(timestamp)['payload'] < stream.available(timestamp)['payload']\
+                                and best_match.available(timestamp)['payload'] < stream.available(timestamp)['payload'] \
                                 and best_match.last_consumption > stream.last_consumption:
                             best_match = stream
         else:
@@ -297,8 +297,8 @@ class LWBStreamManager:
 
         return stream, message
 
-    def get_notification(self, low_power=False) -> Tuple[NotificationStream, SimMessage]:
-        stream = self.select_notification(low_power)
+    def get_notification(self, low_power=False) -> Tuple[Optional[NotificationStream], Optional[SimMessage]]:
+        stream = self.select_notification(low_power=low_power)
         content = {'notification': stream.get(), 'stream': stream}
 
         message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
@@ -307,7 +307,7 @@ class LWBStreamManager:
 
         return stream, message
 
-    def get_stream_request(self) -> Tuple[Union[DataStream, NotificationStream], SimMessage]:
+    def get_stream_request(self) -> Tuple[Optional[Union[DataStream, NotificationStream]], Optional[SimMessage]]:
         for stream in self.notification_streams:
             if not stream.is_ack:
                 message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
@@ -340,7 +340,9 @@ class LWBStreamManager:
     def tx_ack_stream_request(self, stream: Union[DataStream, NotificationStream]):
         return SimMessage(self.node.local_timestamp, self.node, lwb_slot.gloria_header_length, 0,
                           stream.master,
-                          SimMessageType.STREAM_REQUEST, content={'type': 'notification', 'stream': copy(stream)})
+                          SimMessageType.ACK,
+                          content={'type': ('data' if type(stream) is DataStream else 'notification'),
+                                   'stream': copy(stream)})
 
     def tx_ack(self, stream: Union[DataStream, NotificationStream]):
         stream.success()
@@ -363,7 +365,7 @@ class LWBStreamManager:
         next_period: int = None
 
         for stream in self.datastreams:
-            if self.node.lwb.link_manager.get_acknowledged_link(stream.master)['modulation'] is modulation:
+            if self.node.lwb.link_manager.get_link(stream.master)['modulation'] is modulation:
                 if next_period is None:
                     next_period = stream.next_period
                 elif stream.next_period < next_period:
@@ -371,7 +373,7 @@ class LWBStreamManager:
 
         for stream in self.notification_streams:
             if (not stream.low_power and
-                    self.node.lwb.link_manager.get_acknowledged_link(stream.master)['modulation'] is modulation):
+                    self.node.lwb.link_manager.get_link(stream.master)['modulation'] is modulation):
                 if next_period is None:
                     next_period = stream.next_period
                 elif stream.next_period < next_period:
@@ -394,3 +396,10 @@ class LWBStreamManager:
                     next_period = stream.next_period
 
         return np.ceil(next_period / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY
+
+    def retry_all_streams(self):
+        for stream in self.datastreams:
+            stream.retry()
+
+        for stream in self.notification_streams:
+            stream.retry()

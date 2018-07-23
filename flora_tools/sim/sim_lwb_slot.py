@@ -27,24 +27,21 @@ class SimLWBSlot:
 
     def finished_flood(self, message: 'SimMessage'):
         if self.node.role is not sim_node.SimNodeRole.BASE:
-            if self.slot.type in [lwb_slot.LWBSlotType.SYNC, lwb_slot.LWBSlotType.SLOT_SCHEDULE]:
+            if self.slot.type in [lwb_slot.LWBSlotType.SYNC,
+                                  lwb_slot.LWBSlotType.SLOT_SCHEDULE,
+                                  lwb_slot.LWBSlotType.ROUND_SCHEDULE]:
                 if message is not None and message.type in [SimMessageType.SYNC,
-                                                            SimMessageType.SLOT_SCHEDULE]:
+                                                            SimMessageType.SLOT_SCHEDULE,
+                                                            SimMessageType.ROUND_SCHEDULE]:
                     self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
                 elif self.master is not None:
                     self.node.lwb.link_manager.downgrade_link(self.master)
             elif self.slot.type in [lwb_slot.LWBSlotType.ACK]:
-                if message is not None and message.type in [SimMessageType.ACK]:
-                    self.node.lwb.link_manager.acknowledge_link(message.source)
-
-        else:
-            if self.slot.type in [lwb_slot.LWBSlotType.CONTENTION]:
-                if message is not None and message.type in [SimMessageType.STREAM_REQUEST,
-                                                            SimMessageType.ROUND_REQUEST]:
+                if message is not None:
                     self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
-                    if message.modulation is self.node.lwb.link_manager.get_link(message.source)['modulation']:
-                        self.node.lwb.link_manager.acknowledge_link(message.source)
-            elif message is not None:
+
+        else:  # if self.node.role is sim_node.SimNodeRole.BASE
+            if message is not None:
                 self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
 
         self.callback(message)
