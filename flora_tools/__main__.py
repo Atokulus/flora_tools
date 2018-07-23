@@ -32,8 +32,8 @@ def patch_eclipse(flora_path):
     comboard_patcher.patch()
 
 
-def run_simulation(output_path, event_count: int = None, time_limit: float = None):
-    sim = Sim(output_path=output_path, event_count=event_count, time_limit=time_limit)
+def run_simulation(output_path, event_count: int = None, time_limit: float = None, seed: int = 0):
+    sim = Sim(output_path=output_path, event_count=event_count, time_limit=time_limit, seed=seed)
     sim.run()
 
 
@@ -49,6 +49,8 @@ def main():
     parser.add_argument('-p', '--port', help='Set the serial port (e.g. "COM5" or "/dev/ttyUSB0")')
     parser.add_argument('-t', '--time', type=float,
                         help='Set the time limit for events that get executed by the simulation')
+    parser.add_argument('-s', '--seed', type=int, default=0,
+                        help='Set the random number generators seed for reproducible results')
     parser.add_argument('-c', '--event_count', type=int,
                         help='Set the maximum number of events that get executed by the simulation')
     args = parser.parse_args()
@@ -63,7 +65,7 @@ def main():
     elif args.command == 'patch_eclipse':
         patch_eclipse(args.path)
     elif args.command == 'run_simulation':
-        run_simulation(args.path, event_count=args.event_count, time_limit=args.time)
+        run_simulation(args.path, event_count=args.event_count, time_limit=args.time, seed=args.seed)
     elif args.command == 'generate_code':
         generate_code(args.path)
 

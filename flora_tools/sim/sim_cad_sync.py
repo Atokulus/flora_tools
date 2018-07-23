@@ -1,11 +1,11 @@
+import logging
+
 import numpy as np
 
-from flora_tools import lwb_slot
-from flora_tools.sim.sim_event_manager import SimEventType
-
-import flora_tools.sim.sim_lwb as sim_lwb
 import flora_tools.sim.sim_cad_search as sim_cad_search
+import flora_tools.sim.sim_event_manager as sim_event_manager
 import flora_tools.sim.sim_node as sim_node
+from flora_tools import lwb_slot
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
 MAX_BACKOFF_EXPONENT = 5  # 143.165576533 min
@@ -13,6 +13,8 @@ MAX_BACKOFF_EXPONENT = 5  # 143.165576533 min
 
 class SimCADSync:
     def __init__(self, node: 'sim_node.SimNode'):
+        self.logger = logging.getLogger(self.__class__.__qualname__)
+
         self.node = node
         self.cad_scanner = None
         self.callback = None
@@ -39,8 +41,15 @@ class SimCADSync:
             self.start = self.node.local_timestamp
             self.backoff_counter = -1
 
+            self.logger.info(
+                "Marker:{:10f}\tNode:{:3d}\tTx_End:{:10f}\tMod:{:2d}\tType:{:16s}".format(self.node.local_timestamp,
+                                                                                          self.node.id,
+                                                                                          message.tx_end,
+                                                                                          message.modulation,
+                                                                                          message.type))
+
             if message.type is SimMessageType.SYNC:
-                self.node.lwb.lwb_schedule_manager.register_sync()
+                self.node.lwb.schedule_manager.register_sync(message)
                 self.sync_timestamp(message)
                 self.callback()
             elif message.type is SimMessageType.SLOT_SCHEDULE:
@@ -62,7 +71,7 @@ class SimCADSync:
                     self.backoff_counter += 1
                 self.node.em.register_event(
                     self.node.local_timestamp + self.backoff_period * np.exp2(self.backoff_counter), self.node,
-                    SimEventType.GENERIC, self.run)
+                    sim_event_manager.SimEventType.GENERIC, self.run)
             else:
                 self.scan()
 

@@ -4,8 +4,8 @@ import numpy as np
 
 import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
-import flora_tools.sim.sim_node as sim_node
 import flora_tools.sim.sim_message as sim_message
+import flora_tools.sim.sim_node as sim_node
 
 
 class LWBDataSlotItem:
@@ -94,9 +94,10 @@ class LWBScheduleManager:
     def register_round_schedule(self, message: 'sim_message.SimMessage'):
         schedule: List[lwb_round.LWBRound] = message.content
         for round in schedule:
-            layout = round.layout[0:1]
-            empty_round = lwb_round.LWBRound(round.round_marker, round.modulation, round.type, round.master, layout)
-            self.next_rounds[round.modulation] = empty_round
+            if round is not None:
+                layout = round.layout[0:1]
+                empty_round = lwb_round.LWBRound(round.round_marker, round.modulation, round.type, round.master, layout)
+                self.next_rounds[round.modulation] = empty_round
 
     def register_slot_schedule(self, message: 'sim_message.SimMessage'):
         schedule: LWBSlotSchedule = message.content

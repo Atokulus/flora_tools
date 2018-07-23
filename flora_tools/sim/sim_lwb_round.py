@@ -1,5 +1,7 @@
 import logging
 
+import numpy as np
+
 import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_lwb as sim_lwb_manager
@@ -74,7 +76,7 @@ class SimLWBRound:
                        message=None)
 
     def process_sync_slot_callback(self, message: SimMessage):
-        if self.node.role is not sim_node.SimNodeRole.BASE:
+        if self.node.role is not sim_node.SimNodeRole.BASE and message is not None:
             self.lwb.schedule_manager.register_sync(message)
         self.process_next_slot()
 
@@ -108,6 +110,8 @@ class SimLWBRound:
             message.timestamp = slot.slot_marker
             message.modulation = slot.modulation
             message.id = slot.id
+            message.power_level = np.min(lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]],
+                                         self.lwb.link_manager.get_link(target_node=self.round.master))
 
             SimLWBSlot(self.node, slot, self.process_data_slot_callback, master=slot.master,
                        message=message)
@@ -147,6 +151,12 @@ class SimLWBRound:
             if message is not None:
                 message.timestamp = slot.slot_marker
                 message.modulation = slot.modulation
+                power_level = self.lwb.link_manager.get_link(target_node=self.round.master)['power_level']
+
+                if np.isnan(power_level):
+                    power_level = lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]]
+
+                message.power_level = power_level
 
                 SimLWBSlot(self.node, slot, self.process_contention_slot_callback, master=self.node,
                            message=message)
@@ -167,7 +177,7 @@ class SimLWBRound:
         if message is not None and self.node.role is sim_node.SimNodeRole.BASE:
             if message.type in [SimMessageType.NOTIFICATION, SimMessageType.STREAM_REQUEST]:
                 if message.type is SimMessageType.STREAM_REQUEST:
-                    if not self.node.lwb.stream_manager.register_stream_request(message.content):
+                    if not self.node.lwb.stream_manager.register(message.content['stream']):
                         self.ack_stream = message.content['stream']
                     elif message.type is SimMessageType.NOTIFICATION:
                         self.ack_stream = message.content['stream']
@@ -188,7 +198,8 @@ class SimLWBRound:
                 if self.round.type in [lwb_round.LWBRoundType.DATA, lwb_round.LWBRoundType.NOTIFICATION,
                                        lwb_round.LWBRoundType.LP_NOTIFICATION]:
                     message = self.lwb.stream_manager.tx_ack(self.ack_stream)
-                    message.power_level = self.lwb.link_manager.get_acknowledged_link(message.destination)
+                    message.power_level = self.lwb.link_manager.get_acknowledged_link(message.destination)[
+                        'power_level']
                     message.modulation = slot.modulation
 
                     SimLWBSlot(self.node, slot, self.process_ack_slot_callback, master=self.node,
@@ -196,11 +207,15 @@ class SimLWBRound:
 
                 elif self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
                     message = self.lwb.stream_manager.tx_ack_stream_request(self.ack_stream)
-                    message.power_level = self.lwb.link_manager.get_acknowledged_link(message.destination)
+                    message.power_level = self.lwb.link_manager.get_acknowledged_link(message.destination)[
+                        'power_level']
                     message.modulation = slot.modulation
 
                     SimLWBSlot(self.node, slot, self.process_ack_slot_callback, master=self.node,
                                message=message)
+            else:
+                SimLWBSlot(self.node, slot, self.process_ack_slot_callback, master=self.round.master,
+                           message=None)
         else:
             self.process_next_slot()
 

@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 
 import flora_tools.lwb_slot as lwb_slot
@@ -53,11 +51,9 @@ class LWBLinkManager:
         self.acknowledged_links.loc[target_node.id].drop()
 
     def get_link(self, target_node: 'sim_node.SimNode'):
-        link = self.links.loc[target_node.id, :]
-        link: List[int, int, int]
+        link = self.links.loc[target_node.id]
         return link
 
     def get_acknowledged_link(self, target_node: 'sim_node.SimNode'):
-        link = self.links.loc[target_node.id, :]
-        link: List[int, int, int]
+        link = self.links.loc[target_node.id]
         return link

@@ -64,6 +64,17 @@ class SimMessage:
         message.hop_count = self.hop_count
         return message
 
+    def __str__(self):
+        return "<SimMessage {:f},{:d},{:d},{},{},{},{}>".format(
+            self.timestamp,
+            self.modulation,
+            self.power_level,
+            self.type,
+            self.source,
+            self.destination,
+            self.payload
+        )
+
     def increase_timestamp(self, offset):
         self.timestamp += offset
 

@@ -1,21 +1,21 @@
 from itertools import combinations
 
+import cairo
 import networkx as nx
 import numpy as np
 
-import cairo
-
+import flora_tools.sim.sim_event_manager as sim_event_manager
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
-import flora_tools.sim.sim_event_manager as sim_event_manager
 from flora_tools.sim.sim_message_channel import SimMessageChannel
 from flora_tools.sim.sim_message_manager import SimMessageManager
 from flora_tools.sim.sim_visualizer import SimVisualizer
 
 
 class SimNetwork:
-    def __init__(self, surface: cairo.SVGSurface, node_count=2, event_count: int = None, time_limit: float = None, path_loss=[110, 170], seed=None):
+    def __init__(self, surface: cairo.SVGSurface, node_count=2, event_count: int = None,
+                 time_limit: float = None, path_loss=[110, 170], seed: int = 0):
         self.global_timestamp = 0
 
         self.visualizer = SimVisualizer(surface)

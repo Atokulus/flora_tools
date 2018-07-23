@@ -11,7 +11,7 @@ class SimLWBSlot:
         self.slot = slot
         self.message = message
         self.callback = callback
-        self.tx_node = master
+        self.master = master
 
         self.power_increase = True
         self.update_timestamp = True
@@ -26,17 +26,25 @@ class SimLWBSlot:
                        power_increase=self.power_increase, update_timestamp=self.update_timestamp)
 
     def finished_flood(self, message: 'SimMessage'):
-        if self.slot.type in [lwb_slot.LWBSlotType.SYNC,
-                              lwb_slot.LWBSlotType.SLOT_SCHEDULE]:
-            if self.node.role is not sim_node.SimNodeRole.BASE:
+        if self.node.role is not sim_node.SimNodeRole.BASE:
+            if self.slot.type in [lwb_slot.LWBSlotType.SYNC, lwb_slot.LWBSlotType.SLOT_SCHEDULE]:
                 if message is not None and message.type in [SimMessageType.SYNC,
                                                             SimMessageType.SLOT_SCHEDULE]:
                     self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
-                elif self.tx_node is not None:
-                    self.node.lwb.link_manager.downgrade_link(self.tx_node)
-        elif self.slot.type is lwb_slot.LWBSlotType.ACK:
-            self.node.lwb.link_manager.acknowledge_link(message.source)
-        elif message is not None:
-            self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
+                elif self.master is not None:
+                    self.node.lwb.link_manager.downgrade_link(self.master)
+            elif self.slot.type in [lwb_slot.LWBSlotType.ACK]:
+                if message is not None and message.type in [SimMessageType.ACK]:
+                    self.node.lwb.link_manager.acknowledge_link(message.source)
+
+        else:
+            if self.slot.type in [lwb_slot.LWBSlotType.CONTENTION]:
+                if message is not None and message.type in [SimMessageType.STREAM_REQUEST,
+                                                            SimMessageType.ROUND_REQUEST]:
+                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
+                    if message.modulation is self.node.lwb.link_manager.get_link(message.source)['modulation']:
+                        self.node.lwb.link_manager.acknowledge_link(message.source)
+            elif message is not None:
+                self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
 
         self.callback(message)

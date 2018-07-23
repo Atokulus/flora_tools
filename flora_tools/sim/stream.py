@@ -165,6 +165,12 @@ class LWBStreamManager:
         self.datastreams: List[DataStream] = []
         self.notification_streams: List[NotificationStream] = []
 
+    def register(self, stream: Union[DataStream, NotificationStream]):
+        if type(stream) is DataStream:
+            self.register_data(stream)
+        else:
+            self.register_notification(stream)
+
     def register_data(self, datastream: DataStream):
         datastream.node = self.node
         self.datastreams.append(datastream)
@@ -331,9 +337,9 @@ class LWBStreamManager:
                     stream.to_be_registered = False
                     break
 
-    def tx_ack_stream_request(self, stream):
+    def tx_ack_stream_request(self, stream: Union[DataStream, NotificationStream]):
         return SimMessage(self.node.local_timestamp, self.node, lwb_slot.gloria_header_length, 0,
-                          stream.master_node,
+                          stream.master,
                           SimMessageType.STREAM_REQUEST, content={'type': 'notification', 'stream': copy(stream)})
 
     def tx_ack(self, stream: Union[DataStream, NotificationStream]):

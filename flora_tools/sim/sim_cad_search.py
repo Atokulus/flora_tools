@@ -1,9 +1,9 @@
 import flora_tools.gloria as gloria
 import flora_tools.lwb_slot as lwb_slot
+import flora_tools.sim.sim_event_manager as sim_event_manager
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
-from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage
 
 CAD_SYMBOL_TIMEOUT = [1, 1, 1]
@@ -57,18 +57,19 @@ class SimCADSearch:
         self.rx_timeout_event = self.node.em.register_event(
             self.rx_start + self.rx_symbol_timeout[self.current_modulation],
             self.node,
-            SimEventType.RX_TIMEOUT,
+            sim_event_manager.SimEventType.RX_TIMEOUT,
             self.process_rx_timeout)
 
     def process_tx_done_before_rx_timeout_callback(self, event):
         message, node = self.node.network.mc.receive_message_on_tx_done_before_rx_timeout(self.node,
-                                                                                    lwb_slot.MODULATIONS[
-                                                                                        self.current_modulation],
-                                                                                    self.current_band,
-                                                                                    event['data']['message'],
-                                                                                    self.rx_start,
-                                                                                    event['data']['message'].tx_start,
-                                                                                    event['data'])
+                                                                                          lwb_slot.MODULATIONS[
+                                                                                              self.current_modulation],
+                                                                                          self.current_band,
+                                                                                          event['data']['message'],
+                                                                                          self.rx_start,
+                                                                                          event['data'][
+                                                                                              'message'].tx_start,
+                                                                                          event['data'])
         if message is not None:
             self.callback(message)
 
@@ -83,7 +84,7 @@ class SimCADSearch:
         if self.potential_message is not None:
             self.node.em.register_event(self.potential_message.tx_end,
                                         self.node,
-                                        SimEventType.RX_DONE,
+                                        sim_event_manager.SimEventType.RX_DONE,
                                         self.process_rx_done)
         else:
             self.process_next_mod()
@@ -102,7 +103,7 @@ class SimCADSearch:
             self.current_modulation).rx_setup_time + self.radio_math.get_symbol_time() * (
                                             CAD_SYMBOL_TIMEOUT[self.current_modulation] + 0.5),
                                     self.node,
-                                    SimEventType.CAD_DONE,
+                                    sim_event_manager.SimEventType.CAD_DONE,
                                     self.process_lora_cad_done)
 
     def process_lora_cad_done(self, event):

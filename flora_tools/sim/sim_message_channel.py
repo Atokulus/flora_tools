@@ -8,7 +8,6 @@ import flora_tools.sim.sim_network as sim_network
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath, RADIO_SNR
-from flora_tools.sim.sim_event_manager import SimEventType
 from flora_tools.sim.sim_message import SimMessage
 
 
@@ -54,13 +53,13 @@ class SimMessageChannel:
                 interfering_power += np.power(10, interferer['rx_power'] / 10)
 
         if np.power(10, rx_power / 10) > (interfering_power * np.power(10, RADIO_SNR[modulation])):
-            rx_node.em.remove_all_events(rx_node, SimEventType.RX_TIMEOUT)
+            rx_node.mm.unregister_rx(rx_node)
             return message, transmission['source']
         else:
             return None, None
 
     def receive_message_on_rx_timeout(self, modulation, band, rx_node: 'sim_node.SimNode', rx_start,
-                                      rx_timeout=None) -> Tuple[Optional[SimMessage], Optional[sim_node.SimNode]]:
+                                      rx_timeout) -> Tuple[Optional[SimMessage], Optional[sim_node.SimNode]]:
         self.mm.unregister_rx(rx_node)
         rx_start = rx_node.transform_local_to_global_timestamp(rx_start)
 
@@ -81,9 +80,6 @@ class SimMessageChannel:
             (self.mm.mq.tx_end >= keep_quiet_start) &
             (self.mm.mq.tx_start <= valid_rx_start)
             ]).copy()
-
-        if rx_timeout is None:
-            rx_timeout = rx_start + math.get_preamble_time()
 
         subset = (self.mm.mq.loc[
             (self.mm.mq.modulation == modulation) &

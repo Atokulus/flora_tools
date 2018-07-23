@@ -2,10 +2,10 @@ from copy import copy
 
 import pandas as pd
 
-import flora_tools.sim.sim_network as sim_network
-import flora_tools.sim.sim_node as sim_node
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_event_manager as sim_event_type
+import flora_tools.sim.sim_network as sim_network
+import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.sim_message import SimMessage
 
 
@@ -35,6 +35,7 @@ class SimMessageManager:
 
         for rx_node_item_index, rx_node_item in self.rxq.iterrows():
             if (rx_node_item is not None and
+                    rx_node_item['rx_start'] < message.tx_start and
                     rx_node_item['modulation'] is modulation and
                     rx_node_item['band'] is band):
                 self.network.em.register_event(
@@ -64,4 +65,5 @@ class SimMessageManager:
 
     def unregister_rx(self, rx_node: 'sim_node.SimNode'):
         self.network.em.remove_all_events(rx_node, sim_event_type.SimEventType.TX_DONE_BEFORE_RX_TIMEOUT)
-        self.rxq.loc[rx_node.id, :] = None
+        self.network.em.remove_all_events(rx_node, sim_event_type.SimEventType.RX_TIMEOUT)
+        self.rxq = self.rxq.drop(rx_node.id)
