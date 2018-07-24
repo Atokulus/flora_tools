@@ -107,16 +107,23 @@ class SimLWBRound:
             else:
                 stream, message = self.node.lwb.stream_manager.get_notification()
 
-            message.timestamp = slot.slot_marker
-            message.modulation = slot.modulation
-            message.id = slot.id
-            message.power_level = np.min(lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]],
-                                         self.lwb.link_manager.get_link(target_node=self.round.master))
+            if message is not None:
 
-            SimLWBSlot(self.node, slot, self.process_data_slot_callback, master=slot.master,
-                       message=message)
+                message.timestamp = slot.slot_marker
+                message.modulation = slot.modulation
 
-            self.ack_stream = stream
+                power_level = self.lwb.link_manager.get_link(target_node=self.round.master)['power_level']
+                if power_level is None:
+                    power_level = lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]]
+
+                message.power_level = power_level
+
+                SimLWBSlot(self.node, slot, self.process_data_slot_callback, master=slot.master,
+                           message=message)
+
+                self.ack_stream = stream
+            else:
+                self.process_next_slot()
 
         else:
             self.ack_stream = slot.stream
@@ -143,7 +150,9 @@ class SimLWBRound:
             elif self.round.type is lwb_round.LWBRoundType.LP_NOTIFICATION:
                 stream, message = self.lwb.stream_manager.get_notification(low_power=True)
             elif self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
-                stream, message = self.lwb.stream_manager.get_stream_request()
+                stream, message = self.lwb.stream_manager.get_stream_request(slot.modulation,
+                                                                             self.lwb.link_manager.get_link(
+                                                                                 self.round.master)['power_level'])
             else:
                 stream = None
                 message = None
@@ -229,7 +238,7 @@ class SimLWBRound:
                 and message.type is SimMessageType.ACK
                 and message.destination is self.node):
             if self.round.type in [lwb_round.LWBRoundType.NOTIFICATION, lwb_round.LWBRoundType.LP_NOTIFICATION,
-                              lwb_round.LWBRoundType.DATA]:
+                                   lwb_round.LWBRoundType.DATA]:
                 self.lwb.stream_manager.rx_ack(message)
             elif self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
                 self.lwb.stream_manager.rx_ack_stream_request(message)

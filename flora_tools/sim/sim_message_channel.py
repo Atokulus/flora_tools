@@ -20,7 +20,7 @@ class SimMessageChannel:
             self, rx_node: 'sim_node.SimNode', modulation, band,
             message: SimMessage,
             rx_start: float, tx_start: float, transmission
-    ) -> Tuple[Optional[SimMessage], Optional[sim_node.SimNode]]:
+    ) -> Tuple[Optional[SimMessage], Optional['sim_node.SimNode']]:
         if not self.is_reachable(modulation, rx_node, message.source,
                                  lwb_slot.POWERS[message.power_level]):
             return None, None
@@ -54,12 +54,12 @@ class SimMessageChannel:
 
         if np.power(10, rx_power / 10) > (interfering_power * np.power(10, RADIO_SNR[modulation])):
             rx_node.mm.unregister_rx(rx_node)
-            return message, transmission['source']
+            return message.copy(), transmission['source']
         else:
             return None, None
 
     def receive_message_on_rx_timeout(self, modulation, band, rx_node: 'sim_node.SimNode', rx_start,
-                                      rx_timeout) -> Tuple[Optional[SimMessage], Optional[sim_node.SimNode]]:
+                                      rx_timeout) -> Tuple[Optional[SimMessage], Optional['sim_node.SimNode']]:
         self.mm.unregister_rx(rx_node)
         rx_start = rx_node.transform_local_to_global_timestamp(rx_start)
 
@@ -109,11 +109,11 @@ class SimMessageChannel:
                             interfering_power += np.power(10, interferer['rx_power'] / 10)
 
                     if np.power(10, candidate['rx_power'] / 10) > (
-                            interfering_power + np.power(10, RADIO_SNR[modulation])):
+                            interfering_power * np.power(10, RADIO_SNR[modulation] / 10)):
                         candidates.append(candidate)
 
                 if len(candidates) > 0:
-                    return candidates[0]['message'], candidates[0]['source']
+                    return candidates[0]['message'].copy(), candidates[0]['source']
                 else:
                     return None, None
             else:
@@ -150,7 +150,7 @@ class SimMessageChannel:
             for i in interfering_set.rx_power:
                 interfering_power += np.power(10, i / 10)
 
-        if np.power(10, rx_power / 10) > (interfering_power + np.power(10, RADIO_SNR[modulation])):
+        if np.power(10, rx_power / 10) > (interfering_power * np.power(10, RADIO_SNR[modulation] / 10)):
             return True
         else:
             return False
@@ -202,7 +202,7 @@ class SimMessageChannel:
         math = RadioMath(config)
         pl = self.calculate_path_loss(node_a, node_b)
 
-        if pl <= -math.link_budget(power=power):
+        if pl <= math.link_budget(power=power):
             return True
         else:
             return False

@@ -29,7 +29,7 @@ class SimNode:
         self.local_time_offset = 0
 
         if self.role is SimNodeRole.SENSOR:
-            service = SensorService(self, "sensor_data{}".format(self.id), 10)
+            service = SensorService(self, "sensor_data{}".format(self.id), 26)
             self.lwb.stream_manager.register_data(service.datastream)
 
     @property

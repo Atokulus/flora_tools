@@ -37,7 +37,8 @@ class LWBSlotSchedule:
         elif self.type is lwb_round.LWBRoundType.DATA:
             for i in range(self.slot_count):
                 slot = self.round.slots[i * 2 + 1]
-                self.schedule_items.append(lwb_round.LWBDataSlotItem(slot.master, slot.stream, slot.payload))
+                self.schedule_items.append(
+                    lwb_round.LWBDataSlotItem(slot.master, slot.stream, slot.payload - lwb_slot.data_header_length))
 
 
 class LWBScheduleManager:
@@ -92,12 +93,14 @@ class LWBScheduleManager:
         return self.next_rounds.copy()
 
     def register_round_schedule(self, message: 'sim_message.SimMessage'):
-        schedule: List[lwb_round.LWBRound] = message.content
+        schedule: List[lwb_round.LWBRound] = message.content.copy()
         for round in schedule:
             if round is not None:
                 layout = round.layout[0:1]
                 empty_round = lwb_round.LWBRound(round.round_marker, round.modulation, round.type, round.master, layout)
                 self.next_rounds[round.modulation] = empty_round
+
+        self.node.lwb.base = message.source
 
     def register_slot_schedule(self, message: 'sim_message.SimMessage'):
         schedule: LWBSlotSchedule = message.content
@@ -137,19 +140,28 @@ class LWBScheduleManager:
                     self.get_next_epoch(last_round), lwb_round.SLOT_COUNTS[i], i)
 
                 if len(notification_schedule):
+                    for item in notification_schedule:
+                        item.last_consumption = self.node.network.global_timestamp
+
                     round = lwb_round.LWBRound.create_notification_round(last_epoch, i, notification_schedule)
                 else:
                     data_schedule = self.node.lwb.stream_manager.schedule_data(
                         self.get_next_epoch(last_round), lwb_round.SLOT_COUNTS[i], i)
                     if len(data_schedule):
-                        round = lwb_round.LWBRound.create_data_round(data_schedule)
+                        data_slots: List[lwb_round.LWBDataSlotItem] = []
+                        for stream in data_schedule:
+                            stream.last_consumption = self.node.network.global_timestamp
+                            data_slots.append(
+                                lwb_round.LWBDataSlotItem(stream.master, None, stream.max_payload, stream))
+
+                        round = lwb_round.LWBRound.create_data_round(last_epoch, i, data_slots, self.node)
                     elif self.stream_request_layout[i] > 0:
                         round = lwb_round.LWBRound.create_stream_request_round(last_epoch, i,
                                                                                self.stream_request_layout[i], self.node)
                     else:
                         next_time = self.node.lwb.stream_manager.get_next_round_schedule_timestamp(i)
                         if next_time is not None:
-                            round = lwb_round.LWBRound.create_sync_round(next_time, i, self.node)
+                            round = lwb_round.LWBRound.create_sync_round(np.max([next_time, last_epoch]), i, self.node)
                         else:
                             if i is 0:
                                 next_sync = last_epoch + np.ceil(
@@ -163,18 +175,30 @@ class LWBScheduleManager:
                 [interfering_round for interfering_round in self.next_rounds[0:current_round.modulation] if
                  interfering_round is not None], key=lambda x: x.round_marker)
 
-            if len(interfering_rounds):
-                for interfering_round in interfering_rounds:
-                    if round.round_end_marker < interfering_round.round_marker:
-                        round.round_marker = last_epoch
-                        self.next_rounds[i] = round
-                        break
-                    else:
-                        last_epoch = interfering_round.round_end_marker
-                        round.round_marker = last_epoch
+            if round.type is not lwb_round.LWBRoundType.SYNC:
+                if len(interfering_rounds):
+                    for interfering_round in interfering_rounds:
+                        if round.round_end_marker < interfering_round.round_marker:
+                            round.round_marker = last_epoch
+                            self.next_rounds[i] = round
+                            break
+                        else:
+                            last_epoch = interfering_round.round_end_marker
+                            round.round_marker = last_epoch
 
+                else:
+                    self.next_rounds[i] = round
             else:
-                self.next_rounds[i] = round
+                if len(interfering_rounds):
+                    for interfering_round in interfering_rounds:
+                        if round.round_end_marker < interfering_round.round_marker:
+                            self.next_rounds[i] = round
+                            break
+                        else:
+                            last_epoch = interfering_round.round_end_marker
+                            round.round_marker = np.max([last_epoch, round.round_marker])
+                else:
+                    self.next_rounds[i] = round
 
             if round is not None:
                 last_round = round

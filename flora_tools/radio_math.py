@@ -160,7 +160,7 @@ class RadioMath:
 
     def link_budget(self, power=22):
         global RF_SWITCH_INSERTION_LOSS
-        return self.sensitivity - power + RF_SWITCH_INSERTION_LOSS
+        return -(self.sensitivity - power + RF_SWITCH_INSERTION_LOSS)
 
     @staticmethod
     def get_theoretical_max_distance(

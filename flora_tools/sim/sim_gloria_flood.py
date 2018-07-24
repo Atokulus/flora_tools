@@ -31,9 +31,7 @@ class SimGloriaFlood:
         self.rx_timeout_event = None
 
         slot = flood.slots[self.slot_index]
-
-        self.last_slot_marker = slot.tx_marker
-        self.last_tx_slot_marker = slot.tx_marker
+        self.last_slot = slot
 
         if init_tx_message is not None:
             self.tx_message.timestamp = slot.tx_marker
@@ -48,6 +46,9 @@ class SimGloriaFlood:
                                             self.node, sim_event_manager.SimEventType.TX_DONE,
                                             self.progress_gloria_flood)
 
+                if (self.power_increase and
+                        self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
+                    self.tx_message.power_level += 1
                 self.retransmission_count -= 1
             else:
                 self.finished_callback(None)
@@ -137,25 +138,18 @@ class SimGloriaFlood:
     def process_rx_message(self):
         slot = self.flood.slots[self.slot_index]
 
-        if self.is_initial_node:
-            self.last_tx_slot_marker = self.potential_message.timestamp
-            self.last_slot_marker = slot.tx_marker
+        if (slot.type in [gloria_flood.GloriaSlotType.RX_ACK,
+                         gloria_flood.GloriaSlotType.TX_ACK]
+                and self.potential_message.type is SimMessageType.ACK):
+            self.is_ack = True
+            self.ack_message = self.potential_message
 
-        if slot.type in [gloria_flood.GloriaSlotType.RX_ACK,
-                         gloria_flood.GloriaSlotType.TX_ACK] and self.potential_message.type is SimMessageType.ACK:
-            if self.potential_message.destination is self.node:
-                self.finished_callback(self.potential_message)
-            elif not self.is_initial_node:
-                self.ack_message = self.potential_message
-                self.process_next_ack()
-            else:
-                self.process_next_slot()
+            self.process_next_ack()
         else:
             if not self.is_initial_node:
                 self.tx_message = self.potential_message
-                self.tx_message.hop_count += 1
                 if self.update_timestamp:
-                    self.update_local_timestamp(self.potential_message.timestamp)
+                    self.update_local_timestamp(slot, self.potential_message)
 
             self.process_next_slot()
 
@@ -166,11 +160,8 @@ class SimGloriaFlood:
             slot = self.flood.slots[self.slot_index]
 
             if slot.type in [gloria_flood.GloriaSlotType.RX_ACK, gloria_flood.GloriaSlotType.TX_ACK]:
-                if self.tx_message is not None and self.tx_message.destination is self.node:
+                if self.tx_message is not None and self.tx_message.destination is self.node and self.ack_message is None:
                     self.is_ack = True
-
-                    self.last_tx_slot_marker = slot.tx_marker
-                    self.last_slot_marker = slot.tx_marker
 
                     self.ack_message = SimMessage(slot.tx_marker,
                                                   source=self.tx_message.source,
@@ -190,6 +181,20 @@ class SimGloriaFlood:
                                                 self.progress_gloria_flood)
 
                     self.ack_counter += 1
+                elif self.ack_message is not None:
+                    self.ack_message.timestamp = slot.tx_marker
+
+                    self.node.mm.tx(self.node,
+                                    self.flood.modulation,
+                                    self.flood.band,
+                                    self.ack_message)
+
+                    self.node.em.register_event(slot.tx_done_marker,
+                                                self.node, sim_event_manager.SimEventType.TX_DONE,
+                                                self.progress_gloria_flood)
+
+                    self.ack_counter += 1
+
                 else:
                     self.node.mm.register_rx(self.node,
                                              slot.rx_marker,
@@ -201,16 +206,9 @@ class SimGloriaFlood:
                                                                         self.node,
                                                                         sim_event_manager.SimEventType.RX_TIMEOUT,
                                                                         self.progress_gloria_flood)
-            elif self.tx_message:
+            elif self.tx_message and self.retransmission_count > 0:
 
-                if self.is_initial_node:
-                    self.last_tx_slot_marker = slot.tx_marker
-                    self.tx_message.timestamp = slot.tx_marker
-                    self.last_slot_marker = slot.tx_marker
-                else:
-                    self.tx_message.timestamp += (slot.tx_marker - self.last_slot_marker)
-                    self.last_tx_slot_marker = self.tx_message.timestamp
-                    self.last_slot_marker = slot.tx_marker
+                self.tx_message.timestamp = slot.tx_marker
 
                 self.node.mm.tx(self.node,
                                 self.flood.modulation,
@@ -221,11 +219,10 @@ class SimGloriaFlood:
                                             self.node, sim_event_manager.SimEventType.TX_DONE,
                                             self.progress_gloria_flood)
 
-                self.retransmission_count -= 1
                 if (self.power_increase and
-                        self.is_initial_node and
                         self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
                     self.tx_message.power_level += 1
+                self.retransmission_count -= 1
 
             else:
                 self.node.mm.register_rx(self.node,
@@ -245,27 +242,19 @@ class SimGloriaFlood:
     def process_next_ack(self):
         self.is_ack = True
         self.slot_index += 2
-        if self.is_not_finished() and \
-                self.flood.slots[self.slot_index].type in [gloria_flood.GloriaSlotType.RX_ACK,
-                                                           gloria_flood.GloriaSlotType.TX_ACK] and \
-                self.ack_counter < MAX_ACKS:
+        if (self.is_not_finished()
+                and self.flood.slots[self.slot_index].type in [gloria_flood.GloriaSlotType.RX_ACK,
+                                                               gloria_flood.GloriaSlotType.TX_ACK]
+                and self.ack_counter < MAX_ACKS):
 
             slot = self.flood.slots[self.slot_index]
 
-            if self.is_initial_node:
-                self.last_tx_slot_marker = slot.tx_marker
-                self.ack_message.timestamp = slot.tx_marker
-                self.last_slot_marker = slot.tx_marker
-            else:
-                self.ack_message.timestamp += slot.tx_marker - self.last_slot_marker
-                self.last_tx_slot_marker = self.ack_message.timestamp
-                self.last_slot_marker = slot.tx_marker
+            self.ack_message.timestamp = slot.tx_marker
 
             self.node.mm.tx(self.node,
                             self.flood.modulation,
                             self.flood.band,
-                            self.flood.power,
-                            slot.tx_marker)
+                            self.ack_message)
 
             self.node.em.register_event(slot.tx_done_marker,
                                         self.node, sim_event_manager.SimEventType.TX_DONE,
@@ -277,8 +266,9 @@ class SimGloriaFlood:
             self.finished_callback(self.tx_message)
 
     def is_not_finished(self):
-        if self.slot_index < len(self.flood.slots) and \
-                self.flood.slots[self.slot_index].rx_marker > self.node.local_timestamp:
+        if (self.slot_index < len(self.flood.slots)
+            and self.flood.slots[self.slot_index].rx_marker > self.node.local_timestamp) \
+                and self.ack_counter < MAX_ACKS:
             return True
         else:
             return False
@@ -292,9 +282,7 @@ class SimGloriaFlood:
     def get_slot_offset(self, count=1):
         return self.flood.slots[self.slot_index - count].tx_marker - self.flood.slots[self.slot_index - 1].tx_marker
 
-    def update_local_timestamp(self, new_timestamp):
-        correction = new_timestamp - self.last_tx_slot_marker
+    def update_local_timestamp(self, slot: 'gloria_flood.GloriaSlot', message: 'SimMessage'):
+        correction = self.node.transform_local_to_global_timestamp(slot.tx_marker) - message.tx_start
 
         self.node.local_timestamp += correction
-        self.last_tx_slot_marker = self.node.local_timestamp
-        self.last_slot_marker = self.node.local_timestamp

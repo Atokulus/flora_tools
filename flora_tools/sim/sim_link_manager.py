@@ -27,20 +27,21 @@ class LWBLinkManager:
                     self.links.loc[target_node.id, 'counter'] -= 1
 
         else:
-            self.links[target_node.id] = [modulation, power_level, UPGRADE_COUNTER, hop_count]
+            self.links.loc[target_node.id, :] = [modulation, power_level, UPGRADE_COUNTER, hop_count]
 
     def downgrade_link(self, target_node: 'sim_node.SimNode'):
-        self.links[target_node.id, 'counter'] += 1
-        if self.links[target_node.id, 'counter'] > DOWNGRADE_COUNTER:
-            if self.links[target_node.id, 'power_level'] < len(lwb_slot.POWERS) - 1:
-                self.links[target_node.id] = [self.links[target_node.id, 'modulation'],
-                                              self.links[target_node.id, 'power_level'] + 1, 0]
-            else:
-                if self.links[target_node.id, 'modulation'] < len(lwb_slot.MODULATIONS) - 1:
-                    self.links[target_node.id] = [self.links[target_node.id, 'modulation'] + 1,
+        if target_node.id in self.links.index:
+            self.links[target_node.id, 'counter'] += 1
+            if self.links[target_node.id, 'counter'] > DOWNGRADE_COUNTER:
+                if self.links[target_node.id, 'power_level'] < len(lwb_slot.POWERS) - 1:
+                    self.links[target_node.id] = [self.links[target_node.id, 'modulation'],
                                                   self.links[target_node.id, 'power_level'] + 1, 0]
                 else:
-                    self.links.drop(id)
+                    if self.links[target_node.id, 'modulation'] > 0:
+                        self.links[target_node.id] = [self.links[target_node.id, 'modulation'] - 1,
+                                                      self.links[target_node.id, 'power_level'] + 1, 0]
+                    else:
+                        self.links.drop(id)
 
     def get_link(self, target_node: 'sim_node.SimNode'):
         link = self.links.loc[target_node.id]

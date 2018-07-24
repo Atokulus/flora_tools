@@ -62,7 +62,11 @@ class SimMessage:
                              id=self.id)
 
         message.hop_count = self.hop_count
+        message.tx_start = self.tx_start
         return message
+
+    def copy(self):
+        return self.__copy__()
 
     def __str__(self):
         return "<SimMessage {:f},{:d},{:d},{},{},{},{}>".format(

@@ -14,8 +14,8 @@ from flora_tools.sim.sim_visualizer import SimVisualizer
 
 
 class SimNetwork:
-    def __init__(self, surface: cairo.SVGSurface, node_count=2, event_count: int = None,
-                 time_limit: float = None, path_loss=[110, 170], seed: int = 0):
+    def __init__(self, surface: cairo.SVGSurface = None, node_count=3, event_count: int = None,
+                 time_limit: float = None, path_loss=[90, 160], seed: int = 0):
         self.global_timestamp = 0
 
         self.visualizer = SimVisualizer(surface)
@@ -51,7 +51,7 @@ class SimNetwork:
             math = RadioMath(config)
             edges_to_remove = []
             for (u, v, pl) in H.edges.data('path_loss'):
-                if pl > -math.link_budget(power=power):
+                if pl > math.link_budget(power=power):
                     edges_to_remove.append((u, v))
 
             H.remove_edges_from(edges_to_remove)

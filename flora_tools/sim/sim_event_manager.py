@@ -44,8 +44,8 @@ class SimEventManager:
 
     def process_event(self, event):
         self.logger.info(
-            "{:12f}\t{:3d}\t{:24s}\t{:24s}\t{}".format(event['timestamp'], event['node'].id, event['type'],
-                                                       event['callback'].__qualname__, event['data']))
+            "{:12f}\t{:3d}\t{:24s}\t{:24s}".format(event['timestamp'], event['node'].id, event['type'],
+                                                       event['callback'].__qualname__))
         self.network.global_timestamp = event['timestamp']
 
         event['node'].local_timestamp = event['local_timestamp']

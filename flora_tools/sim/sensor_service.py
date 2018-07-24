@@ -5,7 +5,7 @@ from flora_tools.sim.stream import DataStream, NotificationStream
 
 
 class SensorService(Service):
-    def __init__(self, node: 'sim_node.SimNode', name, datarate, payload_size=None, period=10, priority=3,
+    def __init__(self, node: 'sim_node.SimNode', name, datarate, payload_size=None, period=10, priority=2,
                  subpriority=1):
         self.node = node
         self.name = name
@@ -20,7 +20,7 @@ class SensorService(Service):
 
         self.payload_size = payload_size
         self.accumulated_data = 0.0
-        self.last_timestamp = node.local_timestamp
+        self.last_timestamp = self.node.network.global_timestamp - self.period
 
         self.datastream = DataStream('sensor{}'.format(self.node.id), self.node, self.node, self.priority,
                                      self.subpriority, self.period, self, max_payload=self.payload_size)
@@ -30,9 +30,9 @@ class SensorService(Service):
         return data
 
     def data_available(self):
-        elapsed = self.node.network.current_timestamp - self.last_timestamp
+        elapsed = self.node.network.global_timestamp - self.last_timestamp
         self.accumulated_data += elapsed * self.datarate
-        self.last_timestamp = self.node.network.current_timestamp
+        self.last_timestamp = self.node.network.global_timestamp
 
         if self.accumulated_data >= self.payload_size:
             data = {'node': self.node, 'timestamp': self.node.local_timestamp, 'payload': self.payload_size}
