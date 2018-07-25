@@ -2,7 +2,7 @@ import logging
 
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.sim.sim_gloria_flood import SimGloriaFlood
+from flora_tools.sim.sim_gloria import SimGloriaFlood
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
 
@@ -23,7 +23,7 @@ class SimLWBSlot:
         if slot.type is lwb_slot.LWBSlotType.DATA:
             self.power_increase = False
             self.update_timestamp = False
-        elif slot.type is lwb_slot.LWBSlotType.CONTENTION:
+        elif slot.type in [lwb_slot.LWBSlotType.CONTENTION]:
             self.update_timestamp = False
 
         self.log_slot()
@@ -34,9 +34,9 @@ class SimLWBSlot:
     def log_slot(self):
         self.logger.info(
             "Marker:{:10f}\tNode:{:3d}\tMod:{:2d}\tType:{:16s}".format(self.slot.slot_marker,
-                                                                                    self.node.id,
-                                                                                    self.slot.modulation,
-                                                                                    self.slot.type))
+                                                                       self.node.id,
+                                                                       self.slot.modulation,
+                                                                       self.slot.type))
 
     def finished_flood(self, message: 'SimMessage'):
         if self.node.role is sim_node.SimNodeRole.BASE:
@@ -49,11 +49,13 @@ class SimLWBSlot:
                 if message is not None and message.type in [SimMessageType.SYNC,
                                                             SimMessageType.SLOT_SCHEDULE,
                                                             SimMessageType.ROUND_SCHEDULE]:
-                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.freeze_power_level)
+                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation,
+                                                            message.freeze_power_level)
                 elif self.master is not None:
                     self.node.lwb.link_manager.downgrade_link(self.master)
             elif self.slot.type in [lwb_slot.LWBSlotType.ACK]:
                 if message is not None:
-                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.freeze_power_level)
+                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation,
+                                                            message.freeze_power_level)
 
         self.callback(message)

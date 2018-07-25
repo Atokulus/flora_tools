@@ -39,6 +39,12 @@ class SimGloriaFlood:
 
             if self.valid_to_send():
 
+                if self.flood.lwb_slot.power_level is not None:
+                    self.tx_message.power_level = self.flood.lwb_slot.power_level
+                else:
+                    self.tx_message.power_level = lwb_slot.DEFAULT_POWER_LEVELS[
+                        lwb_slot.MODULATIONS[self.flood.lwb_slot.modulation]]
+
                 self.node.mm.tx(self.node,
                                 self.flood.modulation,
                                 self.flood.band,
@@ -72,8 +78,7 @@ class SimGloriaFlood:
                 self.process_next_ack()
             else:
                 self.slot_index += 1
-                if self.slot_index < len(self.flood.slots) and \
-                        self.flood.slots[self.slot_index].rx_marker > self.node.local_timestamp:
+                if self.is_not_finished():
 
                     slot = self.flood.slots[self.slot_index]
 
@@ -219,7 +224,8 @@ class SimGloriaFlood:
                                                                         sim_event_manager.SimEventType.RX_TIMEOUT,
                                                                         self.progress_gloria_flood)
             elif (self.tx_message and self.retransmission_count > 0 and
-                  (int((self.slot_index - self.first_rx_slot_index) / 2) % 2 if self.flood.acked else int(self.slot_index - self.first_rx_slot_index) % 2)):
+                  (int((self.slot_index - self.first_rx_slot_index) / 2) % 2 if self.flood.acked else int(
+                      self.slot_index - self.first_rx_slot_index) % 2)):
 
                 self.tx_message.timestamp = slot.tx_marker
 
@@ -280,8 +286,8 @@ class SimGloriaFlood:
 
     def is_not_finished(self):
         if (self.slot_index < len(self.flood.slots)
-            and self.flood.slots[self.slot_index].rx_marker > self.node.local_timestamp) \
-                and self.ack_counter < MAX_ACKS:
+                and self.flood.slots[self.slot_index].rx_marker > self.node.local_timestamp
+                and self.ack_counter < MAX_ACKS):
             return True
         else:
             return False

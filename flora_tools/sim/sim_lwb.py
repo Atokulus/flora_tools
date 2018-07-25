@@ -1,8 +1,8 @@
 from enum import Enum
 
 import flora_tools.sim.sim_node as sim_node
+from flora_tools.sim.cad_sync import CADSync
 from flora_tools.sim.lwb_schedule_manager import LWBScheduleManager
-from flora_tools.sim.sim_cad_sync import SimCADSync
 from flora_tools.sim.sim_link_manager import LWBLinkManager
 from flora_tools.sim.sim_lwb_round import SimLWBRound
 from flora_tools.sim.stream import LWBStreamManager
@@ -22,7 +22,7 @@ class SimLWB:
         self.link_manager = LWBLinkManager(self.node)
         self.stream_manager = LWBStreamManager(self.node)
         self.schedule_manager = LWBScheduleManager(self.node)
-        self.sync: SimCADSync = None
+        self.sync: CADSync = None
 
         if self.node.role is sim_node.SimNodeRole.BASE:
             self.base = self.node
@@ -33,7 +33,7 @@ class SimLWB:
 
     def run(self):
         if self.state is LWBState.CAD:
-            self.sync = SimCADSync(self.node)
+            self.sync = CADSync(self.node)
             self.sync.run(self.sync_callback)
         elif self.state is LWBState.ASSIGNED:
             round = self.schedule_manager.get_next_round()

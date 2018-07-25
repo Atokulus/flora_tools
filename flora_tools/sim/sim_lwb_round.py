@@ -94,8 +94,9 @@ class SimLWBRound:
                        message=None)
 
     def process_slot_schedule_slot_callback(self, message: SimMessage):
-        if self.node.role is not sim_node.SimNodeRole.BASE and \
-                message is not None and message.type is SimMessageType.SLOT_SCHEDULE:
+        if (self.node.role is not sim_node.SimNodeRole.BASE
+                and message is not None
+                and message.type is SimMessageType.SLOT_SCHEDULE):
             self.round = self.lwb.schedule_manager.register_slot_schedule(message)
 
         self.process_next_slot()
@@ -111,12 +112,6 @@ class SimLWBRound:
 
                 message.timestamp = slot.slot_marker
                 message.modulation = slot.modulation
-
-                power_level = self.lwb.link_manager.get_link(target_node=self.round.master)['power_level']
-                if power_level is None:
-                    power_level = lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]]
-
-                message.power_level = power_level
 
                 SimLWBSlot(self.node, slot, self.process_data_slot_callback, master=slot.master,
                            message=message)
@@ -153,9 +148,9 @@ class SimLWBRound:
             elif self.round.type is lwb_round.LWBRoundType.LP_NOTIFICATION:
                 stream, message = self.lwb.stream_manager.get_notification(low_power=True)
             elif self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
-                stream, message = self.lwb.stream_manager.get_stream_request(slot.modulation,
-                                                                             self.lwb.link_manager.get_link(
-                                                                                 self.round.master)['power_level'])
+                stream, message = self.lwb.stream_manager.get_stream_request(
+                    self.round, slot.modulation,
+                    self.lwb.link_manager.get_link(self.round.master)['power_level'])
             else:
                 stream = None
                 message = None

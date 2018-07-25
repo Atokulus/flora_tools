@@ -3,9 +3,9 @@ from enum import Enum
 from typing import Union
 
 import flora_tools.lwb_slot as lwb_slot
-from flora_tools.radio_configuration import RadioConfiguration
 import flora_tools.sim.sim_node as sim_node
 import flora_tools.sim.stream as stream
+from flora_tools.radio_configuration import RadioConfiguration
 
 SLOT_COUNTS = [2, 2, 4, 4, 6, 6, 16, 16, 32, 32]
 MAX_STREAM_REQUEST_LAYOUT = [2, 2, 4, 8]
@@ -36,21 +36,27 @@ class LWBSlotItemType(Enum):
 
 class LWBSlotItem:
     def __init__(self, type: LWBSlotItemType, master: 'sim_node.SimNode' = None, target: 'sim_node.SimNode' = None,
-                 payload=None, stream: 'Union[stream.DataStream, stream.NotificationStream]' = None):
+                 payload=None, stream: 'Union[stream.DataStream, stream.NotificationStream]' = None,
+                 power_level: int = None, ack_power_level: int = None):
         self.type = type
         self.master = master
         self.target = target
         self.payload = payload
         self.stream = stream
+        self.power_level = power_level
+        self.ack_power_level = ack_power_level
 
 
 class LWBDataSlotItem:
     def __init__(self, master: 'sim_node.SimNode' = None, target: 'sim_node.SimNode' = None, data_payload=None,
-                 stream: 'Union[stream.DataStream, stream.NotificationStream]' = None):
+                 stream: 'Union[stream.DataStream, stream.NotificationStream]' = None, power_level: int = None,
+                 ack_power_level: int = None):
         self.master = master
         self.target = target
         self.data_payload = data_payload
         self.stream = stream
+        self.power_level = power_level
+        self.ack_power_level = ack_power_level
 
 
 class LWBRound:
@@ -121,12 +127,15 @@ class LWBRound:
                                                                      index=index)
             elif item.type is LWBSlotItemType.DATA:
                 slot = lwb_slot.LWBSlot.create_data_slot(self, slot_offset, self.modulation, payload=item.payload,
-                                                         master=item.master, index=index)
+                                                         master=item.master, index=index, power_level=item.power_level,
+                                                         stream=item.stream)
                 self.slots.append(slot)
                 index += 1
                 slot_offset += slot.total_time
                 slot = lwb_slot.LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target,
-                                                        index=index)
+                                                        index=index, power_level=item.ack_power_level)
+            else:
+                slot = None
 
             self.slots.append(slot)
             slot_offset += slot.total_time
@@ -149,7 +158,9 @@ class LWBRound:
         item: LWBDataSlotItem
         for item in data_slots:
             layout.append(LWBSlotItem(LWBSlotItemType.DATA, master=item.master, target=item.target,
-                                      payload=item.data_payload + lwb_slot.data_header_length))
+                                      payload=item.data_payload + lwb_slot.data_header_length,
+                                      power_level=item.power_level, ack_power_level=item.ack_power_level,
+                                      stream=item.stream))
         layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))
 
         return LWBRound(round_marker, modulation, type=LWBRoundType.DATA, layout=layout, master=master)
@@ -173,7 +184,7 @@ class LWBRound:
         item: LWBDataSlotItem
         for item in data_slots:
             layout.append(LWBSlotItem(LWBSlotItemType.DATA, master=item.master, target=item.target,
-                                      payload=item.data_payload))
+                                      payload=item.data_payload, stream=item.stream))
         layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))
 
         return LWBRound(round_marker, modulation, type=LWBRoundType.NOTIFICATION, layout=layout, master=master)

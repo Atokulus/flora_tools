@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-import flora_tools.sim.sim_cad_search as sim_cad_search
+import flora_tools.sim.cad_search as sim_cad_search
 import flora_tools.sim.sim_event_manager as sim_event_manager
 import flora_tools.sim.sim_node as sim_node
 from flora_tools import lwb_slot
@@ -11,7 +11,7 @@ from flora_tools.sim.sim_message import SimMessage, SimMessageType
 MAX_BACKOFF_EXPONENT = 5  # 143.165576533 min
 
 
-class SimCADSync:
+class CADSync:
     def __init__(self, node: 'sim_node.SimNode'):
         self.logger = logging.getLogger(self.__class__.__qualname__)
 
@@ -34,7 +34,7 @@ class SimCADSync:
         self.scan()
 
     def scan(self, modulation: int = None):
-        self.cad_scanner = sim_cad_search.SimCADSearch(self.node, self.scanner_callback, start_modulation=modulation)
+        self.cad_scanner = sim_cad_search.CADSearch(self.node, self.scanner_callback, start_modulation=modulation)
 
     def scanner_callback(self, message: SimMessage):
         if message is not None:

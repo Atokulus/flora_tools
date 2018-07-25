@@ -6,13 +6,7 @@ import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_message as sim_message
 import flora_tools.sim.sim_node as sim_node
-
-
-class LWBDataSlotItem:
-    def __init__(self, master: 'sim_node.SimNode', length, stream=None):
-        self.master = master
-        self.length = length
-        self.stream = stream
+import flora_tools.sim.stream as strm
 
 
 class LWBSlotSchedule:
@@ -27,6 +21,7 @@ class LWBSlotSchedule:
         if self.type is lwb_round.LWBRoundType.NOTIFICATION:
             for i in range(self.slot_count):
                 slot = self.round.slots[i * 2 + 1]
+                slot.stream.schedule_slot(self.round_marker)
                 self.schedule_items.append(lwb_round.LWBDataSlotItem(slot.master, None, lwb_slot.gloria_header_length))
 
         elif self.type is lwb_round.LWBRoundType.STREAM_REQUEST:
@@ -37,8 +32,10 @@ class LWBSlotSchedule:
         elif self.type is lwb_round.LWBRoundType.DATA:
             for i in range(self.slot_count):
                 slot = self.round.slots[i * 2 + 1]
+                slot.stream.schedule_slot(self.round_marker)
                 self.schedule_items.append(
-                    lwb_round.LWBDataSlotItem(slot.master, slot.stream, slot.payload - lwb_slot.data_header_length))
+                    lwb_round.LWBDataSlotItem(slot.master, slot.stream, slot.payload - lwb_slot.data_header_length,
+                                              power_level=slot.power_level))
 
 
 class LWBScheduleManager:
@@ -127,12 +124,14 @@ class LWBScheduleManager:
         last_round = current_round
 
         for i in reversed(range(current_round.modulation, len(lwb_slot.MODULATIONS))):
+            condense = True
+
             last_epoch = self.get_next_epoch(last_round)
 
             if self.next_rounds[i] is not None:
-                if (self.next_rounds[i] > last_epoch
+                if (self.next_rounds[i].round_marker > last_epoch
                         and self.stream_request_layout[i] > 0):
-                    round = lwb_round.LWBRound.create_stream_request_round(last_epoch)
+                    round = lwb_round.LWBRound.create_stream_request_round(last_epoch, i, self.stream_request_layout[i])
                 else:
                     round = self.next_rounds[i]
             else:
@@ -140,27 +139,59 @@ class LWBScheduleManager:
                     self.get_next_epoch(last_round), lwb_round.SLOT_COUNTS[i], i)
 
                 if len(notification_schedule):
-                    for item in notification_schedule:
-                        item.last_consumption = self.node.network.global_timestamp
-
                     round = lwb_round.LWBRound.create_notification_round(last_epoch, i, notification_schedule)
                 else:
-                    data_schedule = self.node.lwb.stream_manager.schedule_data(
-                        self.get_next_epoch(last_round), lwb_round.SLOT_COUNTS[i], i)
+                    if len(self.node.lwb.stream_manager.datastreams):
+                        data_schedule = self.node.lwb.stream_manager.schedule_data(
+                            self.get_next_epoch(last_round), lwb_round.SLOT_COUNTS[i], i)
+                    else:
+                        data_schedule = []
+
                     if len(data_schedule):
                         data_slots: List[lwb_round.LWBDataSlotItem] = []
                         for stream in data_schedule:
                             data_slots.append(
-                                lwb_round.LWBDataSlotItem(stream.master, None, stream.max_payload, stream))
+                                lwb_round.LWBDataSlotItem(
+                                    stream.master, None,
+                                    stream.max_payload, stream,
+                                    power_level=self.node.lwb.link_manager.get_link(stream.master)['power_level'],
+                                    ack_power_level=stream.advertised_ack_power_level))
 
                         round = lwb_round.LWBRound.create_data_round(last_epoch, i, data_slots, self.node)
                     elif self.stream_request_layout[i] > 0:
                         round = lwb_round.LWBRound.create_stream_request_round(last_epoch, i,
                                                                                self.stream_request_layout[i], self.node)
                     else:
-                        next_time = self.node.lwb.stream_manager.get_next_round_schedule_timestamp(i)
+                        condense = False
+                        next_time, stream_type = self.node.lwb.stream_manager.get_next_round_schedule_timestamp(i)
                         if next_time is not None:
-                            round = lwb_round.LWBRound.create_sync_round(np.max([next_time, last_epoch]), i, self.node)
+                            if stream_type is strm.NotificationStream:
+                                notification_schedule = self.node.lwb.stream_manager.schedule_notification(
+                                    self.get_next_epoch(next_time), lwb_round.SLOT_COUNTS[i], i)
+
+                                if len(notification_schedule):
+                                    round = lwb_round.LWBRound.create_notification_round(next_time, i,
+                                                                                         notification_schedule)
+                            else:
+                                if len(self.node.lwb.stream_manager.datastreams):
+                                    data_schedule = self.node.lwb.stream_manager.schedule_data(next_time,
+                                                                                               lwb_round.SLOT_COUNTS[i],
+                                                                                               i)
+                                else:
+                                    data_schedule = []
+
+                                if len(data_schedule):
+                                    data_slots: List[lwb_round.LWBDataSlotItem] = []
+                                    for stream in data_schedule:
+                                        data_slots.append(
+                                            lwb_round.LWBDataSlotItem(
+                                                stream.master, None,
+                                                stream.max_payload, stream,
+                                                power_level=self.node.lwb.link_manager.get_link(stream.master)[
+                                                    'power_level'],
+                                                ack_power_level=stream.advertised_ack_power_level))
+
+                                    round = lwb_round.LWBRound.create_data_round(next_time, i, data_slots, self.node)
                         else:
                             if i is 0:
                                 next_sync = last_epoch + np.ceil(
@@ -174,7 +205,7 @@ class LWBScheduleManager:
                 [interfering_round for interfering_round in self.next_rounds[0:current_round.modulation] if
                  interfering_round is not None], key=lambda x: x.round_marker)
 
-            if round.type is not lwb_round.LWBRoundType.SYNC:
+            if condense:
                 if len(interfering_rounds):
                     for interfering_round in interfering_rounds:
                         if round.round_end_marker < interfering_round.round_marker:
@@ -190,11 +221,12 @@ class LWBScheduleManager:
                 if len(interfering_rounds):
                     for interfering_round in interfering_rounds:
                         if round.round_end_marker < interfering_round.round_marker:
-                            self.next_rounds[i] = round
                             break
                         else:
                             last_epoch = interfering_round.round_end_marker
                             round.round_marker = np.max([last_epoch, round.round_marker])
+
+                    self.next_rounds[i] = round
                 else:
                     self.next_rounds[i] = round
 
@@ -213,9 +245,10 @@ class LWBScheduleManager:
             slot_time = tmp_sync.slots[0].flood.slots[0].slot_time
             setup_time = tmp_sync.slots[0].flood.slots[0].tx_marker
             round_marker = message.freeze_timestamp - slot_time * (message.freeze_hop_count - 1 +
-                                                            (message.freeze_power_level - lwb_slot.DEFAULT_POWER_LEVELS[
-                                                                lwb_slot.MODULATIONS[
-                                                                    message.modulation]]) * 2) - setup_time
+                                                                   (message.freeze_power_level -
+                                                                    lwb_slot.DEFAULT_POWER_LEVELS[
+                                                                        lwb_slot.MODULATIONS[
+                                                                            message.modulation]]) * 2) - setup_time
 
             return round_marker
         else:

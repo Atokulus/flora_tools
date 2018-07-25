@@ -3,6 +3,7 @@ from typing import List, Union, Tuple, Optional
 
 import numpy as np
 
+import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.service as service
 import flora_tools.sim.sim_node as sim_node
@@ -46,6 +47,23 @@ class DataStream:
         self.last_modulation = None
         self.failed_request_counter = 0
 
+        self.advertised_ack_power_level = None  # Modulation not needed, as it is implicated by the stream request handshake
+
+    @property
+    def last_consumption(self):
+        return self._last_consumption
+
+    @last_consumption.setter
+    def last_consumption(self, value):
+        self._last_consumption = value
+
+    def schedule_slot(self, timestamp):
+        if self.current_slot < self.slot_count - 1:
+            self.current_slot += 1
+        else:
+            self.current_slot = 0
+            self.last_consumption = timestamp
+
     def check_request(self, modulation: int, power_level: int) -> bool:
         if self.last_power_level is not None and self.last_modulation is not None:
             if (modulation >= self.last_modulation) and (power_level <= self.last_power_level):
@@ -65,13 +83,6 @@ class DataStream:
             return True
 
     @property
-    def current_slot_size(self):
-        if self.current_slot < self.slot_count - 1:
-            return lwb_slot.max_data_payload
-        else:
-            return self.last_slot_size
-
-    @property
     def next_period(self):
         return self.last_consumption + self.period
 
@@ -84,15 +95,17 @@ class DataStream:
 
     def available(self, timestamp=None):
         if timestamp is None:
-            timestamp = self.service.node.network.global_timestamp
+            timestamp = self.service.node.local_timestamp
 
-        if timestamp - self.last_consumption > self.period:
+        if self.current_slot < self.slot_count:
             if self.service is not None:
                 return self.service.data_available()
+            elif timestamp - self.last_consumption > self.period:
+                return (self.slot_count - self.current_slot) * self.max_payload
             else:
-                return True
+                return 0
         else:
-            return None
+            return 0
 
     def success(self):
         self.ttl = MAX_TTL
@@ -100,9 +113,10 @@ class DataStream:
         if self.current_slot < self.slot_count - 1:
             self.current_slot += 1
         else:
-            self.last_consumption = self.node.network.global_timestamp
+
             self.current_slot = 0
             if self.service is not None:
+                self.last_consumption = self.node.local_timestamp  # Not required on BASE
                 self.service.ack_data_callback()
 
     def fail(self):
@@ -144,6 +158,8 @@ class NotificationStream:
         self.last_modulation = None
         self.failed_request_counter = 0
 
+        self.advertised_ack_power_level = None  # Modulation not needed, as it is implicated by the stream request handshake
+
     def check_request(self, modulation: int, power_level: int) -> bool:
         if self.last_power_level is not None and self.last_modulation is not None:
             if modulation >= modulation and power_level <= power_level:
@@ -170,6 +186,9 @@ class NotificationStream:
     @property
     def next_period(self):
         return self.last_consumption + self.period
+
+    def schedule_slot(self, timestamp):
+        self.last_consumption = timestamp
 
     def get(self):
         return self.service.get_notification()
@@ -223,8 +242,12 @@ class LWBStreamManager:
     def register_data(self, datastream: DataStream):
         datastream.node = self.node
         datastream.stream_manager = self
-        self.datastreams.append(datastream)
 
+        for item in self.datastreams:
+            if item.id == datastream.id:
+                self.datastreams.remove(item)
+
+        self.datastreams.append(datastream)
 
     def remove_data(self, datastream: DataStream):
         self.datastreams.remove(datastream)
@@ -232,7 +255,11 @@ class LWBStreamManager:
     def register_notification(self, notification_stream: NotificationStream):
         notification_stream.node = self.node
         notification_stream.stream_manager = self
-        self.notification_streams.append(notification_stream)
+        for item in self.notification_streams:
+            if item.id == notification_stream.id:
+                self.datastreams.remove(item)
+
+        self.datastreams.append(notification_stream)
 
     def remove_notification(self, notification_stream: NotificationStream):
         self.notification_streams.remove(notification_stream)
@@ -247,26 +274,26 @@ class LWBStreamManager:
             stream: DataStream
             for stream in selection:
                 if (stream.is_ack and stream.available(timestamp=timestamp)
-                        and stream.current_slot_size <= slot_size - lwb_slot.data_header_length):
+                        and stream.max_payload <= slot_size):
                     if best_match is None:
                         best_match = stream
                     else:
-                        if best_match.priority >= stream.priority \
-                                and best_match.subpriority >= stream.subpriority \
-                                and best_match.available(timestamp)['payload'] < stream.available(timestamp)['payload'] \
-                                and best_match.last_consumption > stream.last_consumption:
+                        if (best_match.priority >= stream.priority
+                                and best_match.subpriority >= stream.subpriority
+                                and best_match.available(timestamp) < stream.available(timestamp)
+                                and best_match.last_consumption > stream.last_consumption):
                             best_match = stream
         else:
-            stream: DataStream
+            'stream: DataStream'
             for stream in selection:
                 if stream.is_ack and stream.available(timestamp):
                     if best_match is None:
                         best_match = stream
                     else:
-                        if best_match.priority >= stream.priority \
-                                and best_match.subpriority >= stream.subpriority \
-                                and best_match.available(timestamp)['payload'] < stream.available(timestamp)['payload'] \
-                                and best_match.last_consumption > stream.last_consumption:
+                        if (best_match.priority >= stream.priority
+                                and best_match.subpriority >= stream.subpriority
+                                and best_match.available(timestamp) < stream.available(timestamp)
+                                and best_match.last_consumption > stream.last_consumption):
                             best_match = stream
         return best_match
 
@@ -343,7 +370,7 @@ class LWBStreamManager:
         if stream is not None:
             content = {'data': stream.get(), 'stream': copy(stream)}
 
-            message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
+            message = SimMessage(self.node.local_timestamp, self.node, stream.max_payload, 0,
                                  self.node.lwb.base,
                                  SimMessageType.DATA, content=content)
 
@@ -361,21 +388,26 @@ class LWBStreamManager:
 
         return stream, message
 
-    def get_stream_request(self, modulation: int, power_level: int) -> Tuple[Optional[Union[DataStream, NotificationStream]], Optional[SimMessage]]:
+    def get_stream_request(self, round: 'lwb_round.LWBRound', modulation: int, power_level: int) -> Tuple[
+        Optional[Union[DataStream, NotificationStream]], Optional[SimMessage]]:
         for stream in self.notification_streams:
             if not stream.is_ack and stream.check_request(modulation, power_level):
+                stream = copy(stream)
+                stream.advertised_ack_power_level = self.node.lwb.link_manager.get_link(round.master)['power_level']
                 message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
                                      self.node.lwb.base,
                                      SimMessageType.STREAM_REQUEST,
-                                     content={'type': 'notification', 'stream': copy(stream)})
+                                     content={'type': 'notification', 'stream': stream})
                 return stream, message
 
         for stream in self.datastreams:
             if not stream.is_ack and stream.check_request(modulation, power_level):
+                stream = copy(stream)
+                stream.advertised_ack_power_level = self.node.lwb.link_manager.get_link(round.master)['power_level']
                 message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
                                      self.node.lwb.base,
                                      SimMessageType.STREAM_REQUEST,
-                                     content={'type': 'data', 'stream': copy(stream)})
+                                     content={'type': 'data', 'stream': stream})
                 return stream, message
         return None, None
 
@@ -423,26 +455,31 @@ class LWBStreamManager:
 
     def get_next_round_schedule_timestamp(self, modulation):
         next_period: int = None
+        stream_type = None
 
         for stream in self.datastreams:
             if self.node.lwb.link_manager.get_link(stream.master)['modulation'] is modulation:
                 if next_period is None:
                     next_period = stream.next_period
+                    stream_type = type(stream)
                 elif stream.next_period < next_period:
                     next_period = stream.next_period
+                    stream_type = type(stream)
 
         for stream in self.notification_streams:
             if (not stream.low_power and
                     self.node.lwb.link_manager.get_link(stream.master)['modulation'] is modulation):
                 if next_period is None:
                     next_period = stream.next_period
+                    stream_type = type(stream)
                 elif stream.next_period < next_period:
                     next_period = stream.next_period
+                    stream_type = type(stream)
 
         if next_period is not None:
-            return np.ceil(next_period / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY
+            return np.ceil(next_period / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY, stream_type
         else:
-            return None
+            return None, None
 
     def get_next_lp_notifiaction_round_schedule_timestamp(self, modulation):
         next_period: int = None

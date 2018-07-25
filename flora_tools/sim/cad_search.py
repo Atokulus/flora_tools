@@ -9,7 +9,7 @@ from flora_tools.sim.sim_message import SimMessage
 CAD_SYMBOL_TIMEOUT = [1, 1, 1]
 
 
-class SimCADSearch:
+class CADSearch:
     def __init__(self, node: 'sim_node.SimNode', callback, start_modulation: int = None):
         self.node = node
         if start_modulation is not None:
