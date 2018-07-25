@@ -150,7 +150,6 @@ class LWBScheduleManager:
                     if len(data_schedule):
                         data_slots: List[lwb_round.LWBDataSlotItem] = []
                         for stream in data_schedule:
-                            stream.last_consumption = self.node.network.global_timestamp
                             data_slots.append(
                                 lwb_round.LWBDataSlotItem(stream.master, None, stream.max_payload, stream))
 
@@ -180,12 +179,11 @@ class LWBScheduleManager:
                     for interfering_round in interfering_rounds:
                         if round.round_end_marker < interfering_round.round_marker:
                             round.round_marker = last_epoch
-                            self.next_rounds[i] = round
                             break
                         else:
                             last_epoch = interfering_round.round_end_marker
                             round.round_marker = last_epoch
-
+                    self.next_rounds[i] = round
                 else:
                     self.next_rounds[i] = round
             else:
@@ -214,7 +212,10 @@ class LWBScheduleManager:
             tmp_sync = lwb_round.LWBRound.create_sync_round(0, message.modulation)
             slot_time = tmp_sync.slots[0].flood.slots[0].slot_time
             setup_time = tmp_sync.slots[0].flood.slots[0].tx_marker
-            round_marker = message.timestamp - slot_time * (message.hop_count) - setup_time
+            round_marker = message.freeze_timestamp - slot_time * (message.freeze_hop_count - 1 +
+                                                            (message.freeze_power_level - lwb_slot.DEFAULT_POWER_LEVELS[
+                                                                lwb_slot.MODULATIONS[
+                                                                    message.modulation]]) * 2) - setup_time
 
             return round_marker
         else:

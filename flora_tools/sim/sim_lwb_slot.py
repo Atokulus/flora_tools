@@ -41,7 +41,7 @@ class SimLWBSlot:
     def finished_flood(self, message: 'SimMessage'):
         if self.node.role is sim_node.SimNodeRole.BASE:
             if message is not None and message.source is not self.node:
-                self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
+                self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.freeze_power_level)
         else:
             if self.slot.type in [lwb_slot.LWBSlotType.SYNC,
                                   lwb_slot.LWBSlotType.SLOT_SCHEDULE,
@@ -49,11 +49,11 @@ class SimLWBSlot:
                 if message is not None and message.type in [SimMessageType.SYNC,
                                                             SimMessageType.SLOT_SCHEDULE,
                                                             SimMessageType.ROUND_SCHEDULE]:
-                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
+                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.freeze_power_level)
                 elif self.master is not None:
                     self.node.lwb.link_manager.downgrade_link(self.master)
             elif self.slot.type in [lwb_slot.LWBSlotType.ACK]:
                 if message is not None:
-                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.power_level)
+                    self.node.lwb.link_manager.upgrade_link(message.source, message.modulation, message.freeze_power_level)
 
         self.callback(message)

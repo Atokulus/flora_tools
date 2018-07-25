@@ -18,6 +18,7 @@ class SimGloriaFlood:
         self.finished_callback = callback
         self.tx_message = init_tx_message
         self.slot_index = 0
+        self.first_rx_slot_index = (-2 if self.flood.acked else -1)
         self.is_ack = False
         self.retransmission_count = flood.retransmission_count
         self.hop_count = flood.hop_count
@@ -37,6 +38,7 @@ class SimGloriaFlood:
             self.tx_message.timestamp = slot.tx_marker
 
             if self.valid_to_send():
+
                 self.node.mm.tx(self.node,
                                 self.flood.modulation,
                                 self.flood.band,
@@ -131,6 +133,10 @@ class SimGloriaFlood:
                                                                    self.node, self.potential_node):
                 self.process_rx_message()
             else:
+                if (self.power_increase and
+                        self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
+                    self.tx_message.power_level += 1
+
                 self.process_next_slot()
         else:
             self.finished_callback(self.tx_message)
@@ -139,7 +145,7 @@ class SimGloriaFlood:
         slot = self.flood.slots[self.slot_index]
 
         if (slot.type in [gloria_flood.GloriaSlotType.RX_ACK,
-                         gloria_flood.GloriaSlotType.TX_ACK]
+                          gloria_flood.GloriaSlotType.TX_ACK]
                 and self.potential_message.type is SimMessageType.ACK):
             self.is_ack = True
             self.ack_message = self.potential_message
@@ -147,7 +153,14 @@ class SimGloriaFlood:
             self.process_next_ack()
         else:
             if not self.is_initial_node:
-                self.tx_message = self.potential_message
+                if self.tx_message is None:
+                    self.tx_message = self.potential_message
+                    self.tx_message.freeze()
+                    self.first_rx_slot_index = self.slot_index
+                elif (self.power_increase
+                      and self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
+                    self.tx_message.power_level += 1
+
                 if self.update_timestamp:
                     self.update_local_timestamp(slot, self.potential_message)
 
@@ -170,7 +183,6 @@ class SimGloriaFlood:
                                                   type=SimMessageType.ACK,
                                                   power_level=self.tx_message.power_level,
                                                   modulation=self.tx_message.modulation)
-
                     self.node.mm.tx(self.node,
                                     self.flood.modulation,
                                     self.flood.band,
@@ -206,7 +218,8 @@ class SimGloriaFlood:
                                                                         self.node,
                                                                         sim_event_manager.SimEventType.RX_TIMEOUT,
                                                                         self.progress_gloria_flood)
-            elif self.tx_message and self.retransmission_count > 0:
+            elif (self.tx_message and self.retransmission_count > 0 and
+                  (int((self.slot_index - self.first_rx_slot_index) / 2) % 2 if self.flood.acked else int(self.slot_index - self.first_rx_slot_index) % 2)):
 
                 self.tx_message.timestamp = slot.tx_marker
 

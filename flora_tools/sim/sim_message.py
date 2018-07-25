@@ -49,6 +49,9 @@ class SimMessage:
                                                       preamble=(2 if self.modulation > 7 else 3))
         self.radio_math = RadioMath(self.radio_configuration)
 
+        self.freeze_hop_count = self.hop_count
+        self.freeze_power_level = self.power_level
+
     def __copy__(self):
         message = SimMessage(timestamp=self.timestamp,
                              source=self.source,
@@ -63,6 +66,8 @@ class SimMessage:
 
         message.hop_count = self.hop_count
         message.tx_start = self.tx_start
+        self.freeze_hop_count = self.hop_count
+        self.freeze_power_level = self.power_level
         return message
 
     def copy(self):
@@ -81,6 +86,11 @@ class SimMessage:
 
     def increase_timestamp(self, offset):
         self.timestamp += offset
+
+    def freeze(self):
+        self.freeze_hop_count = self.hop_count
+        self.freeze_power_level = self.power_level
+        self.freeze_timestamp = self.timestamp
 
     @property
     def tx_end(self):

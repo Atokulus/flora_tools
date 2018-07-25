@@ -41,7 +41,7 @@ class LWBLinkManager:
                         self.links[target_node.id] = [self.links[target_node.id, 'modulation'] - 1,
                                                       self.links[target_node.id, 'power_level'] + 1, 0]
                     else:
-                        self.links.drop(id)
+                        self.links = self.links.drop(id)
 
     def get_link(self, target_node: 'sim_node.SimNode'):
         link = self.links.loc[target_node.id]

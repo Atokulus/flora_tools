@@ -38,7 +38,7 @@ class DataStream:
         if max_payload is None:
             max_payload = lwb_slot.max_data_payload
 
-        self.slot_count = int(np.ceil(self.max_payload / max_payload))
+        self.slot_count = int(np.ceil(self.max_payload / lwb_slot.max_data_payload))
         self.last_slot_size = self.max_payload % max_payload
         self.current_slot = 0
 
@@ -399,7 +399,13 @@ class LWBStreamManager:
                                    'stream': copy(stream)})
 
     def tx_ack(self, stream: Union[DataStream, NotificationStream]):
-        stream.success()
+        for local_stream in self.datastreams:
+            if stream.id == local_stream.id:
+                local_stream.success()
+        for local_stream in self.notification_streams:
+            if stream.id == local_stream.id:
+                local_stream.success()
+
         return SimMessage(self.node.local_timestamp, self.node, lwb_slot.gloria_header_length, 0,
                           stream.master,
                           SimMessageType.ACK, content={'stream': copy(stream)})

@@ -77,7 +77,7 @@ class SimLWBRound:
 
     def process_sync_slot_callback(self, message: SimMessage):
         if self.node.role is not sim_node.SimNodeRole.BASE and message is not None:
-            self.lwb.schedule_manager.register_sync(message)
+            self.round = self.lwb.schedule_manager.register_sync(message)
         self.process_next_slot()
 
     def process_slot_schedule_slot(self, slot: 'lwb_slot.LWBSlot'):
@@ -131,8 +131,11 @@ class SimLWBRound:
                        message=None)
 
     def process_data_slot_callback(self, message: SimMessage):
-        if self.node.role is sim_node.SimNodeRole.BASE and self.ack_stream is not None and self.ack_stream.master is not self.node:
-            self.ack_stream.fail()
+        if (self.node.role is sim_node.SimNodeRole.BASE
+                and self.ack_stream is not None
+                and self.ack_stream.master is not self.node):
+            if message is None and self.ack_stream is not None:
+                self.ack_stream.fail()
 
         if message is not None and message.type is SimMessageType.DATA:
             self.ack_stream = message.content['stream']
