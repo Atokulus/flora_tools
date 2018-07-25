@@ -55,6 +55,15 @@ class SimNetwork:
                     edges_to_remove.append((u, v))
 
             H.remove_edges_from(edges_to_remove)
-            nx.draw(H, with_labels=True, node_size=500, node_color='black', font_color='white')
+
+            config = RadioConfiguration(modulation)
+
+            pos = nx.spring_layout(H)
+            edge_labels = dict([((u, v), "{:.2f}".format(d['path_loss'])) for u, v, d in H.edges(data=True)])
+            nx.draw(H, with_labels=True, node_size=500, node_color=config.color, font_color='white', pos=pos)
+            nx.draw_networkx_edge_labels(H, pos=pos, edge_labels=edge_labels)
         else:
-            nx.draw(self.G, with_labels=True, node_size=500, node_color='black', font_color='white')
+            pos = nx.spring_layout(H)
+            edge_labels = dict([((u, v), "{:.2f}".format(d['path_loss'])) for u, v, d in self.G.edges(data=True)])
+            nx.draw(self.G, with_labels=True, node_size=500, node_color='black', font_color='white', pos=pos)
+            nx.draw_networkx_edge_labels(self.G, pos=pos, edge_labels=edge_labels)

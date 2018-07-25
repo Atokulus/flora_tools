@@ -186,8 +186,8 @@ class SimLWBRound:
                 if message.type is SimMessageType.STREAM_REQUEST:
                     if not self.node.lwb.stream_manager.register(message.content['stream']):
                         self.ack_stream = message.content['stream']
-                    elif message.type is SimMessageType.NOTIFICATION:
-                        self.ack_stream = message.content['stream']
+                elif message.type is SimMessageType.NOTIFICATION:
+                    self.ack_stream = message.content['stream']
             elif message.type is SimMessageType.ROUND_REQUEST:
                 self.node.lwb.schedule_manager.invoke_round_request()
 
@@ -240,8 +240,11 @@ class SimLWBRound:
                 self.lwb.stream_manager.rx_ack(message)
             elif self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
                 self.lwb.stream_manager.rx_ack_stream_request(message)
-        elif self.ack_stream is not None:
+        elif self.ack_stream is not None and self.round.type is not lwb_round.LWBRoundType.STREAM_REQUEST:
             self.ack_stream.fail()
+
+        if message is not None and message.type is SimMessageType.ACK and self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST:
+            self.lwb.stream_manager.reset_request_check(self.round)
 
         self.ack_stream = None
 

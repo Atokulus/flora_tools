@@ -10,8 +10,9 @@ import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
 MAX_TTL = 3
-
-MAX_FAILED_REQUESTS = 5
+MAX_REQUEST_TRIALS = 10
+BACKDROPS = range(4)
+LARGE_BACKDROP = 100
 
 
 class DataStream:
@@ -32,7 +33,7 @@ class DataStream:
         self.needs_ack = needs_ack
 
         self.stream_manager: LWBStreamManager = None
-        self.last_consumption = self.node.local_timestamp - self.period
+        self._last_consumption = self.node.local_timestamp - self.period
         self.ttl = MAX_TTL
         self.is_ack = False
 
@@ -43,9 +44,9 @@ class DataStream:
         self.last_slot_size = self.max_payload % max_payload
         self.current_slot = 0
 
-        self.last_power_level = None
-        self.last_modulation = None
-        self.failed_request_counter = 0
+        self.trial_modulation = None
+        self.trial_counter = 0
+        self.backdrop = None
 
         self.advertised_ack_power_level = None  # Modulation not needed, as it is implicated by the stream request handshake
 
@@ -64,23 +65,40 @@ class DataStream:
             self.current_slot = 0
             self.last_consumption = timestamp
 
-    def check_request(self, modulation: int, power_level: int) -> bool:
-        if self.last_power_level is not None and self.last_modulation is not None:
-            if (modulation >= self.last_modulation) and (power_level <= self.last_power_level):
-                return True
+    def check_request(self, round: 'lwb_round.LWBRound', modulation: int) -> bool:
+        if not self.backdrop:
+            self.backdrop = np.random.choice(BACKDROPS)
+
+            if self.trial_modulation is not None:
+                self.trial_counter += 1
+
+                if self.trial_counter >= MAX_REQUEST_TRIALS:
+                    if self.trial_modulation > 0:
+                        self.trial_modulation -= 1
+                        self.trial_counter = 0
+                    else:
+                        self.trial_modulation = None
+                        self.trial_counter = 0
+                        self.backdrop = LARGE_BACKDROP
+
+                if modulation == self.trial_modulation:
+                    return True
+                else:
+                    return False
             else:
-                if self.failed_request_counter < MAX_FAILED_REQUESTS:
-                    self.failed_request_counter += 1
+                if self.node.lwb.link_manager.get_link(round.master)['modulation'] > modulation:
                     return False
                 else:
-                    self.last_power_level = power_level
-                    self.last_modulation = modulation
-                    self.failed_request_counter = 0
+                    self.trial_counter += 1
+                    self.trial_modulation = modulation
                     return True
         else:
-            self.last_power_level = power_level
-            self.last_modulation = modulation
-            return True
+            self.backdrop -= 1
+            return False
+
+    def reset_request_check(self, round: 'lwb_round.LWBRound'):
+        if self.trial_modulation == round.modulation:
+            self.trial_counter = 0
 
     @property
     def next_period(self):
@@ -109,6 +127,7 @@ class DataStream:
 
     def success(self):
         self.ttl = MAX_TTL
+        self.backdrop = 0
 
         if self.current_slot < self.slot_count - 1:
             self.current_slot += 1
@@ -122,9 +141,10 @@ class DataStream:
     def fail(self):
         self.ttl -= 1
         if self.ttl is 0:
-            self.stream_manager.remove_data(self)
-            if self.service is not None:
-                self.service.failed_datastream_callback(self)
+            if self.stream_manager is not None:
+                self.stream_manager.remove_data(self)
+                if self.service is not None:
+                    self.service.failed_datastream_callback(self)
 
     def retry(self):
         self.ttl = MAX_TTL
@@ -154,29 +174,46 @@ class NotificationStream:
         self.ttl = MAX_TTL
         self.is_ack = True
 
-        self.last_power_level = None
-        self.last_modulation = None
-        self.failed_request_counter = 0
+        self.trial_modulation = None
+        self.trial_counter = 0
+        self.backdrop = None
 
         self.advertised_ack_power_level = None  # Modulation not needed, as it is implicated by the stream request handshake
 
-    def check_request(self, modulation: int, power_level: int) -> bool:
-        if self.last_power_level is not None and self.last_modulation is not None:
-            if modulation >= modulation and power_level <= power_level:
-                return True
+    def check_request(self, round: 'lwb_round.LWBRound', modulation: int) -> bool:
+        if not self.backdrop:
+            self.backdrop = np.random.choice(BACKDROPS)
+
+            if self.trial_modulation is not None:
+                self.trial_counter += 1
+
+                if self.trial_counter >= MAX_REQUEST_TRIALS:
+                    if self.trial_modulation > 0:
+                        self.trial_modulation -= 1
+                        self.trial_counter = 0
+                    else:
+                        self.trial_modulation = None
+                        self.trial_counter = 0
+                        self.backdrop = LARGE_BACKDROP
+
+                if modulation == self.trial_modulation:
+                    return True
+                else:
+                    return False
             else:
-                if self.failed_request_counter < MAX_FAILED_REQUESTS:
-                    self.failed_request_counter += 1
+                if self.node.lwb.link_manager.get_link(round.master)['modulation'] > modulation:
                     return False
                 else:
-                    self.last_power_level = power_level
-                    self.last_modulation = modulation
-                    self.failed_request_counter = 0
+                    self.trial_counter += 1
+                    self.trial_modulation = modulation
                     return True
         else:
-            self.last_power_level = power_level
-            self.last_modulation = modulation
-            return True
+            self.backdrop -= 1
+            return False
+
+    def reset_request_check(self, round: 'lwb_round.LWBRound'):
+        if self.trial_modulation == round.modulation:
+            self.trial_counter = 0
 
     def __copy__(self):
         return NotificationStream(self.id, self.node, self.master, self.priority, self.subpriority, self.period,
@@ -321,14 +358,15 @@ class LWBStreamManager:
 
         while count < slot_count:
             stream = self.select_data(timestamp=timestamp, selection=selection)
-            if stream is not None and stream.priority <= modulation:
-                link = self.node.lwb.link_manager.get_link(stream.master)
-                if link['modulation'] >= modulation:
-                    for i in range(stream.slot_count):
-                        streams.append(stream)
-                        count += 1
-                        if count >= slot_count:
-                            break
+            if (stream is not None
+                    and self.node.lwb.link_manager.get_link(stream.master)['modulation'] == modulation
+                    and stream.priority <= modulation):
+
+                for i in range(stream.slot_count):
+                    streams.append(stream)
+                    count += 1
+                    if count >= slot_count:
+                        break
                 selection.remove(stream)
             else:
                 break
@@ -342,12 +380,12 @@ class LWBStreamManager:
 
         while count < slot_count:
             stream = self.select_notification(selection=selection)
-            if stream is not None:
-                link = self.node.lwb.link_manager.get_acknowledged_link(stream.master)
-                if link['modulation'] is modulation:
-                    if stream.priority <= modulation:
-                        streams.append(stream)
-                        count += 1
+            if (stream is not None
+                    and self.node.lwb.link_manager.get_link(stream.master)['modulation'] == modulation
+                    and stream.priority <= modulation):
+                if stream.priority <= modulation:
+                    streams.append(stream)
+                    count += 1
 
                 selection.remove(stream)
             else:
@@ -365,7 +403,7 @@ class LWBStreamManager:
             return None
 
     def get_data(self, slot_size: int) -> Tuple[DataStream, SimMessage]:
-        stream = self.select_data(slot_size=slot_size-lwb_slot.data_header_length)
+        stream = self.select_data(slot_size=slot_size - lwb_slot.data_header_length)
 
         if stream is not None:
             content = {'data': stream.get(), 'stream': copy(stream)}
@@ -401,7 +439,7 @@ class LWBStreamManager:
                 return stream, message
 
         for stream in self.datastreams:
-            if not stream.is_ack and stream.check_request(modulation, power_level):
+            if not stream.is_ack and stream.check_request(round, modulation):
                 stream = copy(stream)
                 stream.advertised_ack_power_level = self.node.lwb.link_manager.get_link(round.master)['power_level']
                 message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
@@ -500,3 +538,9 @@ class LWBStreamManager:
 
         for stream in self.notification_streams:
             stream.retry()
+
+    def reset_request_check(self, round: 'lwb_round.LWBRound'):
+        for stream in self.datastreams:
+            stream.reset_request_check(round)
+        for stream in self.notification_streams:
+            stream.reset_request_check(round)

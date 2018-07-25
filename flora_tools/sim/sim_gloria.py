@@ -122,7 +122,8 @@ class SimGloriaFlood:
                 rx_timeout=self.node.local_timestamp)
 
             if self.potential_message is not None:
-                self.node.em.register_event(np.max([self.potential_message.tx_end, slot.rx_end_marker]),
+                self.node.em.register_event(np.max(
+                    [self.node.transform_global_to_local_timestamp(self.potential_message.tx_end), slot.rx_end_marker]),
                                             self.node,
                                             sim_event_manager.SimEventType.RX_DONE,
                                             self.progress_gloria_flood)

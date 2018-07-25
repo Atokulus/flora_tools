@@ -113,7 +113,8 @@ class SimMessageChannel:
                         candidates.append(candidate)
 
                 if len(candidates) > 0:
-                    return candidates[0]['message'].copy(), candidates[0]['source']
+                    best_candidate = max(candidates, key=lambda candidate: candidate['rx_power'])
+                    return best_candidate['message'].copy(), best_candidate['source']
                 else:
                     return None, None
             else:
