@@ -138,7 +138,7 @@ class SimGloriaFlood:
                                                                    self.node, self.potential_node):
                 self.process_rx_message()
             else:
-                if (self.power_increase and
+                if (self.power_increase and self.tx_message is not None and
                         self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
                     self.tx_message.power_level += 1
 

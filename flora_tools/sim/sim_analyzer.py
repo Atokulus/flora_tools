@@ -1,8 +1,9 @@
 import cairo
-import flora_tools.sim.sim_network as sim_network
+
 import flora_tools.lwb_round as lwb_round
 
-class SimVisualizer:
+
+class SimAnalyzer:
     def __init__(self, surface: cairo.SVGSurface):
         self.surface = surface
 

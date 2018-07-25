@@ -49,7 +49,7 @@ class LWBScheduleManager:
         self.data_slot_count = lwb_round.SLOT_COUNTS
         self.notification_slot_count = lwb_round.SLOT_COUNTS
 
-        self.stream_request_layout = lwb_round.INITIAL_STREAM_REQUEST_LAYOUT
+        self.stream_request_layout = lwb_round.INITIAL_STREAM_REQUEST_LAYOUT.copy()
 
         if self.node.role is sim_node.SimNodeRole.BASE:
             self.generate_initial_schedule()
@@ -238,6 +238,9 @@ class LWBScheduleManager:
             return 0
         else:
             return np.ceil(round.round_end_marker / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY
+
+    def invoke_round_request(self):
+        self.stream_request_layout = lwb_round.INITIAL_STREAM_REQUEST_LAYOUT.copy()
 
     def calculate_sync_round_marker(self, message: 'sim_message.SimMessage'):
         if message.type is sim_message.SimMessageType.SYNC:

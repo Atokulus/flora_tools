@@ -8,17 +8,17 @@ import flora_tools.sim.sim_event_manager as sim_event_manager
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
+from flora_tools.sim.sim_analyzer import SimAnalyzer
 from flora_tools.sim.sim_message_channel import SimMessageChannel
 from flora_tools.sim.sim_message_manager import SimMessageManager
-from flora_tools.sim.sim_visualizer import SimVisualizer
 
 
 class SimNetwork:
-    def __init__(self, surface: cairo.SVGSurface = None, node_count=3, event_count: int = None,
-                 time_limit: float = None, path_loss=[90, 160], seed: int = 0):
+    def __init__(self, surface: cairo.SVGSurface = None, node_count=5, event_count: int = None,
+                 time_limit: float = None, path_loss=[90, 140], seed: int = 0):
         self.global_timestamp = 0
 
-        self.visualizer = SimVisualizer(surface)
+        self.visualizer = SimAnalyzer(surface)
 
         self.mm = SimMessageManager(self)
         self.mc = SimMessageChannel(self)
@@ -55,6 +55,6 @@ class SimNetwork:
                     edges_to_remove.append((u, v))
 
             H.remove_edges_from(edges_to_remove)
-            nx.draw(H, with_labels=True, font_weight='bold')
+            nx.draw(H, with_labels=True, node_size=500, node_color='black', font_color='white')
         else:
-            nx.draw(self.G, with_labels=True, font_weight='bold')
+            nx.draw(self.G, with_labels=True, node_size=500, node_color='black', font_color='white')

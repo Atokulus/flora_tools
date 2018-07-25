@@ -189,7 +189,7 @@ class SimLWBRound:
                     elif message.type is SimMessageType.NOTIFICATION:
                         self.ack_stream = message.content['stream']
             elif message.type is SimMessageType.ROUND_REQUEST:
-                self.node.lwb.lwb_schedule_manager.round_request(message.content)
+                self.node.lwb.schedule_manager.invoke_round_request()
 
         if self.round.type is lwb_round.LWBRoundType.STREAM_REQUEST and self.node.role is sim_node.SimNodeRole.BASE:
             if message is None:
