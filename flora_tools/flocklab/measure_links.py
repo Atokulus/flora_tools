@@ -1,20 +1,30 @@
+import logging
 import time
 
 from flora_tools.node import Node
 
-from flora_tools.lwb_slot import POWERS, MODULATIONS
+import flora_tools.lwb_slot as lwb_slot
 from flora_tools.radio_configuration import RadioConfiguration
+from flora_tools.radio_math import RadioMath
 
-TARGET_ID_LIST = [
-    1, 3, 4, 7, 8, 10, 11, 13, 15, 20, 22, 23, 24, 25, 26, 28, 32, 33
+FLOCKLAB_TARGET_ID_LIST = [
+    1, 3, 4, 8, 10, 13, 15, 20, 22, 23, 24, 25, 26, 28, 32, 33  # 11, 7 not working?
 ]
 
 ITERATIONS = 5
+
+FLOCKLAB_TARGET_POSITIONS = {
+    1: (110, 149), 3: (188, 359), 4: (171, 182), 7: (778, 237), 8: (166, 248), 10: (457, 323),
+    11: (657, 240), 13: (711, 423), 15: (216, 246), 20: (579, 441), 22: (257, 461), 23: (397, 420),
+    24: (424, 512), 25: (682, 353), 26: (538, 334), 28: (240, 425), 32: (289, 318), 33: (163, 306)
+}
 
 
 class MeasureLinksExperiment:
     def __init__(self):
         self.nodes = None
+        self.logger = logging.getLogger('flocklab_link_measurement')
+
 
     def run(self):
         self.connect_nodes()
@@ -25,7 +35,7 @@ class MeasureLinksExperiment:
         self.disconnect_nodes()
 
     def connect_nodes(self):
-        self.nodes = [Node(flocklab=True, id=id) for id in TARGET_ID_LIST]
+        self.nodes = [Node(flocklab=True, id=id) for id in FLOCKLAB_TARGET_ID_LIST]
 
         for node in self.nodes:
             node.interactive_mode(False)  # Enable single-line JSON Output
@@ -37,14 +47,20 @@ class MeasureLinksExperiment:
 
     def iterate_from_node(self, tx_node):
         for i in range(ITERATIONS):
-            for modulation in MODULATIONS:
-                for power in POWERS:
+            for modulation in lwb_slot.MODULATIONS:
+                for power in lwb_slot.POWERS:
+                    self.logger("Running Mod: {}, Power: {}")
+
+                    config = RadioConfiguration(modulation)
+                    math = RadioMath(config)
+
                     for node in self.nodes:
                         self.configure_node(node, (node.id == tx_node.id), modulation, power)
                         if node.id != tx_node.id:
                             self.receive(node)
                     time.sleep(0.2)
                     self.send(tx_node)
+                    time.sleep(math.get_message_toa(len("Hello World!") + 1) * 3 + 1.0)
 
     @staticmethod
     def configure_node(node, tx: bool, modulation, power):
@@ -53,8 +69,8 @@ class MeasureLinksExperiment:
 
     @staticmethod
     def receive(node):
-        node.cmd(b'radio receive')
+        node.cmd('radio receive')
 
     @staticmethod
     def send(node):
-        node.cmd(b'radio send "Hello World!"')
+        node.cmd('radio send "Hello World!"')

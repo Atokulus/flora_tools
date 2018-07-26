@@ -5,7 +5,7 @@ from multiprocessing import Pool
 import serial
 import serial.tools.list_ports
 
-FLOCKLAB = "flocklab.ethz.ch"
+FLOCKLAB = "whymper.ee.ethz.ch"
 FLOCKLAB_SERIAL_PORT_BASE = 50100
 
 
@@ -21,15 +21,15 @@ class Node:
             self.open()
 
             if test:
-                self.s.send(b"\x1b[3~\r\n")
+                self.interactive_mode()
+                self.cmd("\x1b[3~\r\n")
+
                 time.sleep(0.1)
 
             try:
                 if b"flora" in self.s.recv(1024):
                     self.port = port
-                    self.close()
                     print("Initialized flora node on FlockLab with target id {}".format(self.id))
-
                 else:
                     self.close()
                     raise ValueError("FlockLab target ID {} is NOT a flora node with CLI".format(self.id))

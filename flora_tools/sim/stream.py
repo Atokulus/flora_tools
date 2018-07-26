@@ -48,6 +48,8 @@ class DataStream:
         self.trial_counter = 0
         self.backdrop = None
 
+        # TODO Exponential backdrop and Contracts
+
         self.advertised_ack_power_level = None  # Modulation not needed, as it is implicated by the stream request handshake
 
     @property
