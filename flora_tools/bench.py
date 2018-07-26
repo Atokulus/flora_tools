@@ -25,7 +25,7 @@ class TimingBench:
     def __enter__(self, devkit_count=2):
         devkits = []
         for i in range(self.devkit_count):
-            devkit = Node(Node.get_port(DEVKIT_PORTS[i]))
+            devkit = Node(Node.get_serial_port(DEVKIT_PORTS[i]))
             devkit.open()
             devkit.reset()
             devkit.cmd("led blink")

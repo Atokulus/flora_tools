@@ -2,6 +2,7 @@ import argparse
 import sys
 from multiprocessing import Pool
 
+from flora_tools.flocklab.measure_links import MeasureLinksExperiment
 from flora_tools.sim.sim import Sim
 from flora_tools.toolchain.bootloader import Bootloader
 from flora_tools.toolchain.eclipse_patcher import EclipsePatcher
@@ -37,6 +38,11 @@ def run_simulation(output_path, event_count: int = None, time_limit: float = Non
     sim.run()
 
 
+def flocklab_measure_links(output_path):
+    measure_links_experiment = MeasureLinksExperiment()
+    measure_links_experiment.run()
+
+
 def generate_code(flora_path):
     pass
 
@@ -44,7 +50,8 @@ def generate_code(flora_path):
 def main():
     parser = argparse.ArgumentParser(description='Executable flora_tools utilities', prog='flora_tools')
     parser.add_argument('command', help='Execute given command',
-                        choices=['program', 'program_all', 'patch_eclipse', 'run_simulation', 'generate_code'])
+                        choices=['program', 'program_all', 'patch_eclipse', 'run_simulation', 'flocklab_measure_links',
+                                 'generate_code'])
     parser.add_argument('path', help='Set the path to the Flora main repository folder or .hex/.binary file')
     parser.add_argument('-p', '--port', help='Set the serial port (e.g. "COM5" or "/dev/ttyUSB0")')
     parser.add_argument('-t', '--time', type=float,
@@ -66,6 +73,8 @@ def main():
         patch_eclipse(args.path)
     elif args.command == 'run_simulation':
         run_simulation(args.path, event_count=args.event_count, time_limit=args.time, seed=args.seed)
+    elif args.command == 'flocklab_measure_links':
+        flocklab_measure_links(args.path)
     elif args.command == 'generate_code':
         generate_code(args.path)
 
