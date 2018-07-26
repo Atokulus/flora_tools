@@ -11,7 +11,7 @@ FLOCKLAB_TARGET_ID_LIST = [
     1, 3, 4, 8, 10, 13, 15, 20, 22, 23, 24, 25, 26, 28, 32, 33  # 11, 7 not working?
 ]
 
-ITERATIONS = 5
+ITERATIONS = 50
 
 FLOCKLAB_TARGET_POSITIONS = {
     1: (110, 149), 3: (188, 359), 4: (171, 182), 7: (778, 237), 8: (166, 248), 10: (457, 323),
@@ -24,7 +24,6 @@ class MeasureLinksExperiment:
     def __init__(self):
         self.nodes = None
         self.logger = logging.getLogger('flocklab_link_measurement')
-
 
     def run(self):
         self.connect_nodes()
@@ -48,8 +47,8 @@ class MeasureLinksExperiment:
     def iterate_from_node(self, tx_node):
         for i in range(ITERATIONS):
             for modulation in lwb_slot.MODULATIONS:
-                for power in lwb_slot.POWERS:
-                    self.logger("Running Mod: {}, Power: {}")
+                for power in [0, 10, 22]:  # lwb_slot.POWERS:
+                    self.logger.info("Running Tx on Node: {}, Mod: {}, Power: {}".format(tx_node.id, modulation, power))
 
                     config = RadioConfiguration(modulation)
                     math = RadioMath(config)
@@ -60,7 +59,7 @@ class MeasureLinksExperiment:
                             self.receive(node)
                     time.sleep(0.2)
                     self.send(tx_node)
-                    time.sleep(math.get_message_toa(len("Hello World!") + 1) * 3 + 1.0)
+                    time.sleep(math.get_message_toa(len("Hello World!") + 1) * 2 + 0.1)
 
     @staticmethod
     def configure_node(node, tx: bool, modulation, power):
