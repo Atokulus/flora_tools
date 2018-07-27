@@ -8,6 +8,7 @@ import flora_tools.sim.sim_lwb as sim_lwb_manager
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.sim_lwb_slot import SimLWBSlot
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
+from flora_tools.sim.sim_tracer import LWBRoundActivity
 
 
 class SimLWBRound:
@@ -25,6 +26,12 @@ class SimLWBRound:
         self.ack_stream = None
 
         self.log_round()
+
+        self.node.network.tracer.log_activity(
+            LWBRoundActivity(round.round_marker, round.round_end_marker, self.node,
+                             self.round.type, self.round.modulation)
+        )
+
         self.process_slot()
 
     def log_round(self):
@@ -83,7 +90,7 @@ class SimLWBRound:
     def process_slot_schedule_slot(self, slot: 'lwb_slot.LWBSlot'):
         if self.node.role is sim_node.SimNodeRole.BASE:
             slot_schedule = self.lwb.schedule_manager.get_slot_schedule(self.round)
-            message = SimMessage(slot.slot_marker, self.node, slot.payload,
+            message = SimMessage(slot.slot_marker, self.node, slot_schedule.payload,
                                  modulation=slot.modulation, destination=None, type=SimMessageType.SLOT_SCHEDULE,
                                  content=slot_schedule, power_level=slot.power_level)
             SimLWBSlot(self.node, slot, self.process_slot_schedule_slot_callback, master=self.node,

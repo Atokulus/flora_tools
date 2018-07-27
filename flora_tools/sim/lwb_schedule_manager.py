@@ -37,6 +37,9 @@ class LWBSlotSchedule:
                     lwb_round.LWBDataSlotItem(slot.master, slot.stream, slot.payload - lwb_slot.data_header_length,
                                               power_level=slot.power_level))
 
+        self.payload = lwb_slot.slot_schedule_header_length + len(
+            self.schedule_items) * lwb_slot.slot_schedule_item_length
+
 
 class LWBScheduleManager:
     def __init__(self, node: 'sim_node.SimNode'):

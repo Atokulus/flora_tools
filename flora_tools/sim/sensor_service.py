@@ -1,5 +1,5 @@
-import flora_tools.sim.sim_node as sim_node
 import flora_tools.lwb_slot as lwb_slot
+import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.service import Service
 from flora_tools.sim.stream import DataStream, NotificationStream
 

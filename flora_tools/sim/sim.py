@@ -1,7 +1,3 @@
-import os
-
-import cairo
-
 from flora_tools.sim.sim_network import SimNetwork
 
 
@@ -10,8 +6,8 @@ class Sim:
         if event_count is None and time_limit is None:
             event_count = 1000
 
-        with cairo.SVGSurface(os.path.join(output_path, "simulation_plot.svg"), 200, 200) as surface:
-            self.network = SimNetwork(event_count=event_count, time_limit=time_limit, surface=surface, seed=seed)
+        self.network = SimNetwork(output_path, event_count=event_count, time_limit=time_limit, seed=seed)
 
     def run(self):
         self.network.run()
+        self.network.tracer.store()

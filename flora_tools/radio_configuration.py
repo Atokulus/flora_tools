@@ -1,4 +1,5 @@
 import matplotlib
+import matplotlib.cm
 import numpy as np
 
 BAND_FREQUENCIES = [
@@ -69,6 +70,10 @@ FSK_BANDWIDTHS = [
     467000,
 ]
 
+VOLTAGE = 3.3
+PROC_POWER = 48 * 120E-3 * VOLTAGE  # Based on ST application note regarding STM32L4 power modes
+RX_POWER = 5.5 * VOLTAGE
+
 
 class RadioConfiguration:
     def __init__(self, modulation=0, band=48, power=0, bandwidth=None, tx=True, crc=True, implicit=0, irq_direct=False,
@@ -129,9 +134,9 @@ class RadioConfiguration:
     @property
     def explicit_header(self):
         if self.modem == 'LoRa':
-            return (not self.implicit)
+            return not self.implicit
         else:
-            return (not self.implicit)
+            return not self.implicit
 
     @property
     def low_data_rate(self):
@@ -206,14 +211,14 @@ class RadioConfiguration:
 
     @property
     def modem(self):
-        if self.modulation >= 0 and self.modulation < 8:
+        if 0 <= self.modulation < 8:
             return 'LoRa'
-        if self.modulation >= 8 and self.modulation < 10:
+        elif 8 <= self.modulation < 10:
             return 'FSK'
 
     @property
     def sf(self):
-        if self.modulation >= 0 and self.modulation < 8:
+        if self.modem == "LoRa":
             return 12 - self.modulation
         else:
             return 0
@@ -221,17 +226,17 @@ class RadioConfiguration:
     @property
     def modulation_name(self, short=True):
         if short:
-            if self.modulation >= 0 and self.modulation < 8:
+            if self.modem == "LoRa":
                 return "SF{}".format(12 - self.modulation)
-            if self.modulation >= 8 and self.modulation < 10:
+            elif self.modem == "FSK":
                 if self.modulation == 8:
                     return "FSK\n{}".format("125k")
                 if self.modulation == 9:
                     return "FSK\n{}".format("200k")
         else:
-            if self.modulation >= 0 and self.modulation < 8:
+            if self.modem == "LoRa":
                 return "LoRa SF{}@{}".format(12 - self.modulation, "125kHz")
-            if self.modulation >= 8 and self.modulation < 10:
+            elif self.modem == "FSK":
                 if self.modulation == 8:
                     return "GFSK {}@{} (h={})".format("125kBit/s", "250kHz", "2.0")
                 if self.modulation == 9:
@@ -243,23 +248,23 @@ class RadioConfiguration:
 
     @property
     def coderate(self):
-        if self.modulation >= 0 and self.modulation < 8:
+        if self.modem == "LoRa":
             return 5
-        if self.modulation >= 8 and self.modulation < 10:
+        elif self.modem == "FSK":
             return 0
 
     @property
     def sync_word_length(self):
-        if self.modulation >= 0 and self.modulation < 8:
+        if self.modem == "LoRa":
             return 0
-        if self.modulation >= 8 and self.modulation < 10:
+        elif self.modem == "FSK":
             return 3
 
     @property
     def coderate_name(self):
-        if self.modulation >= 0 and self.modulation < 9:
+        if self.modem == "LoRa":
             return "4/5"
-        if self.modulation >= 9 and self.modulation < 11:
+        elif self.modem == "FSK":
             return "N/A"
 
     @staticmethod
@@ -352,4 +357,12 @@ class RadioConfiguration:
 
     @property
     def modulation_index(self):
-        return (2 * self.freq_deviation / self.bitrate)
+        return 2 * self.freq_deviation / self.bitrate
+
+    @staticmethod
+    def rx_energy(duration):
+        return RX_POWER * duration
+
+    @staticmethod
+    def tx_energy(power, duration):
+        return (8 * VOLTAGE + np.log10(np.power(10, power / 10) * 3)) * duration  # 8 mA floor, 33% efficiency

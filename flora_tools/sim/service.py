@@ -1,6 +1,5 @@
 import abc
 
-from flora_tools.sim.sim_message import SimMessage
 import flora_tools.sim.sim_node as sim_node
 import flora_tools.sim.stream as stream
 

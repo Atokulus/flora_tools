@@ -1,27 +1,27 @@
 from itertools import combinations
 from typing import List
 
-import cairo
 import networkx as nx
 import numpy as np
 
+import flora_tools.flocklab.measure_links as fl
 import flora_tools.sim.sim_event_manager as sim_event_manager
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
-from flora_tools.sim.sim_analyzer import SimAnalyzer
 from flora_tools.sim.sim_message_channel import SimMessageChannel
 from flora_tools.sim.sim_message_manager import SimMessageManager
-import flora_tools.flocklab.measure_links as fl
+from flora_tools.sim.sim_tracer import SimTracer
 
 FLOCKLAB_BASE = 31
 
+
 class SimNetwork:
-    def __init__(self, surface: cairo.SVGSurface = None, node_count=5, event_count: int = None,
-                 time_limit: float = None, path_loss=[90, 140], seed: int = 0, flocklab:bool = False):
+    def __init__(self, output_path, node_count=5, event_count: int = None,
+                 time_limit: float = None, path_loss=[90, 140], seed: int = 0, flocklab: bool = False):
         self.global_timestamp = 0
 
-        self.visualizer = SimAnalyzer(surface)
+        self.tracer = SimTracer(self, output_path)
 
         self.mm = SimMessageManager(self)
         self.mc = SimMessageChannel(self)
@@ -29,6 +29,7 @@ class SimNetwork:
 
         self.nodes: List[sim_node.SimNode] = []
         self.G: nx.Graph = None
+        self.pos = None
 
         self.flocklab = flocklab
         if flocklab:
@@ -56,12 +57,19 @@ class SimNetwork:
 
             config = RadioConfiguration(modulation)
 
-            pos = nx.spring_layout(H)
+            if self.pos is None:
+                pos = nx.spring_layout(H)
+            else:
+                pos = self.pos
             edge_labels = dict([((u, v), "{:.2f}".format(d['path_loss'])) for u, v, d in H.edges(data=True)])
             nx.draw(H, with_labels=True, node_size=500, node_color=config.color, font_color='white', pos=pos)
             nx.draw_networkx_edge_labels(H, pos=pos, edge_labels=edge_labels)
         else:
-            pos = nx.spring_layout(H)
+            if self.pos is None:
+                pos = nx.spring_layout(self.G)
+            else:
+                pos = self.pos
+
             edge_labels = dict([((u, v), "{:.2f}".format(d['path_loss'])) for u, v, d in self.G.edges(data=True)])
             nx.draw(self.G, with_labels=True, node_size=500, node_color='black', font_color='white', pos=pos)
             nx.draw_networkx_edge_labels(self.G, pos=pos, edge_labels=edge_labels)

@@ -8,7 +8,7 @@ pyserial
 pyvisa
 intelhex
 coloredlogs
-pycairo
+flask
 
  # requirements.txt
  #

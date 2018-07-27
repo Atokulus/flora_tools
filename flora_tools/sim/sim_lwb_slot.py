@@ -4,6 +4,7 @@ import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.sim_gloria import SimGloriaFlood
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
+from flora_tools.sim.sim_tracer import LWBSlotActivity
 
 
 class SimLWBSlot:
@@ -25,6 +26,11 @@ class SimLWBSlot:
             self.update_timestamp = False
         elif slot.type in [lwb_slot.LWBSlotType.CONTENTION]:
             self.update_timestamp = False
+
+        self.node.network.tracer.log_activity(
+            LWBSlotActivity(slot.slot_marker, slot.slot_end_marker, self.node,
+                            slot.type, slot.modulation)
+        )
 
         self.log_slot()
 

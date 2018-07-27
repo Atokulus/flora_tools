@@ -9,6 +9,7 @@ import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath, RADIO_SNR
 from flora_tools.sim.sim_message import SimMessage
+from flora_tools.sim.sim_tracer import CADActivity, RxActivity
 
 
 class SimMessageChannel:
@@ -54,6 +55,13 @@ class SimMessageChannel:
 
         if np.power(10, rx_power / 10) > (interfering_power * np.power(10, RADIO_SNR[modulation])):
             rx_node.mm.unregister_rx(rx_node)
+
+            self.network.tracer.log_activity(
+                RxActivity(rx_start, self.network.global_timestamp, rx_node,
+                           RadioConfiguration.rx_energy(self.network.global_timestamp - rx_start),
+                           modulation, True)
+            )
+
             return message.copy(), transmission['source']
         else:
             return None, None
@@ -116,10 +124,31 @@ class SimMessageChannel:
                     best_candidate = max(candidates, key=lambda candidate: candidate['rx_power'])
                     return best_candidate['message'].copy(), best_candidate['source']
                 else:
+
+                    self.network.tracer.log_activity(
+                        RxActivity(rx_start, self.network.global_timestamp, rx_node,
+                                   RadioConfiguration.rx_energy(self.network.global_timestamp - rx_start),
+                                   modulation, False)
+                    )
+
                     return None, None
             else:
+
+                self.network.tracer.log_activity(
+                    RxActivity(rx_start, self.network.global_timestamp, rx_node,
+                               RadioConfiguration.rx_energy(self.network.global_timestamp - rx_start),
+                               modulation, False)
+                )
+
                 return None, None
         else:
+
+            self.network.tracer.log_activity(
+                RxActivity(rx_start, self.network.global_timestamp, rx_node,
+                           RadioConfiguration.rx_energy(self.network.global_timestamp - rx_start),
+                           modulation, False)
+            )
+
             return None, None
 
     def check_if_successfully_received(self, modulation, band, potential_message: 'SimMessage', rx_start: float,
@@ -152,8 +181,22 @@ class SimMessageChannel:
                 interfering_power += np.power(10, i / 10)
 
         if np.power(10, rx_power / 10) > (interfering_power * np.power(10, RADIO_SNR[modulation] / 10)):
+
+            self.network.tracer.log_activity(
+                RxActivity(rx_start, potential_message.tx_end, rx_node,
+                           RadioConfiguration.rx_energy(potential_message.tx_end - rx_start),
+                           modulation, True),
+            )
+
             return True
         else:
+
+            self.network.tracer.log_activity(
+                RxActivity(rx_start, self.network.global_timestamp, rx_node,
+                           RadioConfiguration.rx_energy(self.network.global_timestamp - rx_start),
+                           modulation, False),
+            )
+
             return False
 
     def cad_process(self, timestamp, rx_node: 'sim_node.SimNode', modulation, band):
@@ -185,11 +228,28 @@ class SimMessageChannel:
             if len(subset):
                 subset.loc[:, 'rx_power'] = subset.apply(calc_power_message, axis=1)
 
+                self.network.tracer.log_activity(
+                    CADActivity(cad_start, timestamp, rx_node, RadioConfiguration.rx_energy(timestamp - cad_start),
+                                modulation, True),
+                )
+
                 return subset.rx_power.max()
 
             else:
+
+                self.network.tracer.log_activity(
+                    CADActivity(cad_start, timestamp, rx_node, RadioConfiguration.rx_energy(timestamp - cad_start),
+                                modulation, False),
+                )
+
                 return None
         else:
+
+            self.network.tracer.log_activity(
+                CADActivity(cad_start, timestamp, rx_node, RadioConfiguration.rx_energy(timestamp - cad_start),
+                            modulation, False),
+            )
+
             return None
 
     def calculate_path_loss(self, node_a: 'sim_node.SimNode', node_b: 'sim_node.SimNode'):

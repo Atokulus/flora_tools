@@ -27,7 +27,7 @@ setup(
         'pyvisa',
         'intelhex',
         'coloredlogs',
-        'pycairo'
+        'flask',
     ],
     classifiers=(
         "Programming Language :: Python :: 3",

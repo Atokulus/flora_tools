@@ -1,17 +1,16 @@
 import logging
 import time
 
-from flora_tools.node import Node
-
 import flora_tools.lwb_slot as lwb_slot
+from flora_tools.node import Node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
+
+ITERATIONS = 5
 
 FLOCKLAB_TARGET_ID_LIST = [
     1, 3, 4, 8, 10, 13, 15, 20, 22, 23, 24, 25, 26, 28, 32, 33  # 11, 7 not working?
 ]
-
-ITERATIONS = 50
 
 FLOCKLAB_TARGET_POSITIONS = {
     1: (110, 149), 3: (188, 359), 4: (171, 182), 7: (778, 237), 8: (166, 248), 10: (457, 323),

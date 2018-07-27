@@ -1,0 +1,52 @@
+html {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+
+    font-family: "Open Sans", Arial, Helvetica, Sans-Serif;
+}
+
+#container {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    z-index: 5;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#dragndrop_hint {
+
+    padding: 10vmin;
+
+    text-align: center;
+
+    border: rgba(0, 0, 0, 0.1) 10px dotted;
+    border-radius: 3vmin;
+
+    max-font-size: 20px;
+    font-size: 3vmin;
+}
+
+#svg {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    margin: 0;
+    padding: 0;
+}

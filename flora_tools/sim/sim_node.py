@@ -1,16 +1,19 @@
 from enum import Enum
 
-from flora_tools.sim.sensor_service import SensorService
 import flora_tools.sim.sim_event_manager as sim_event_manager
+import flora_tools.sim.sim_network as sim_network
+from flora_tools.sim.sensor_service import SensorService
 from flora_tools.sim.sim_lwb import SimLWB
 from flora_tools.sim.sim_message_manager import SimMessageManager
-import flora_tools.sim.sim_network as sim_network
 
 
 class SimNodeRole(Enum):
     BASE = 1
     RELAY = 2
     SENSOR = 3
+
+    def __str__(self):
+        return '{0}'.format(self.name)
 
 
 class SimNode:

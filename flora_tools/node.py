@@ -26,31 +26,32 @@ class Node:
 
                 time.sleep(0.1)
 
-            try:
-                if b"flora" in self.s.recv(1024):
-                    self.port = port
-                    print("Initialized flora node on FlockLab with target id {}".format(self.id))
-                else:
+                try:
+                    if b"flora" in self.s.recv(1024):
+                        print("Initialized flora node on FlockLab with target id {}".format(self.id))
+                    else:
+                        self.close()
+                        raise ValueError("FlockLab target ID {} is NOT a flora node with CLI".format(self.id))
+                except socket.timeout:
                     self.close()
-                    raise ValueError("FlockLab target ID {} is NOT a flora node with CLI".format(self.id))
-            except socket.timeout:
-                self.close()
-                raise ValueError("FlockLab target ID {} is NOT responding".format(self.id))
+                    raise ValueError("FlockLab target ID {} is NOT responding".format(self.id))
+            else:
+                print("Initialized flora node on FlockLab with target id {}".format(self.id))
 
         else:
             try:
                 self.ser = serial.Serial(port=port.device, baudrate=115200, parity=serial.PARITY_NONE,
                                          stopbits=serial.STOPBITS_ONE, timeout=0.1)
 
-                if test:
-                    self.ser.write(b"\x1b[3~\r\n")
-                    time.sleep(0.1)
+                self.ser.write(b"\x1b[3~\r\n")
+                self.interactive_mode(True)
+                time.sleep(0.1)
 
+                if test:
                     if b"flora" in self.ser.read_all():
                         self.port = port
                         self.close()
                         print("Initialized flora node on serial port {}".format(port.device))
-
                     else:
                         self.close()
                         raise ValueError("Serial port {} is NOT a flora node with CLI".format(port.device))
