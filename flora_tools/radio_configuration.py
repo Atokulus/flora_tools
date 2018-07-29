@@ -365,4 +365,4 @@ class RadioConfiguration:
 
     @staticmethod
     def tx_energy(power, duration):
-        return (8 * VOLTAGE + np.log10(np.power(10, power / 10) * 3)) * duration  # 8 mA floor, 33% efficiency
+        return (8 * VOLTAGE + np.power(10, power / 10) * 3) * duration  # 8 mA floor, 33% efficiency

@@ -44,7 +44,11 @@ html, body {
     height: 100%;
 
     margin: 0;
-    padding: 0 0 20px 0;
+    padding: 0 0 40px 0;
+
+    user-select: none;
+    cursor: crosshair;
+    overflow: visible;
 }
 
 .btn-file {
