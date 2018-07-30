@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 
 import flora_tools.lwb_slot as lwb_slot
-from flora_tools.radio_configuration import RadioConfiguration
+from flora_tools.radio_configuration import RadioConfiguration, PROC_POWER
 from flora_tools.radio_math import RadioMath
 
 BANDS = [48]
@@ -35,13 +35,7 @@ tx_time_offsets = [
     [0.000274632, 5.29E-07],
 ]
 
-voltage = 3.3
-proc_power = 48 * 120E-3 * voltage  # Based on ST application note regarding STM32L4 power modes
-rx_power = 5.5 * voltage
-
-
-def tx_power(power):
-    return 8 * voltage + np.log10(np.power(10, power / 10) * 3)
+DEFAULT_BAND = 48
 
 
 gap = 50E-6
@@ -134,11 +128,11 @@ class GloriaSlot:
     @property
     def energy(self):
         if self.type is GloriaSlotType.TX or self.type is GloriaSlotType.TX_ACK:
-            return self.active_time * tx_power(self.power) + (
-                    self.flood.gloria_timings.tx_setup_time + self.flood.gloria_timings.tx_irq_time) * proc_power
+            return RadioConfiguration(self.flood.modulation).tx_energy(self.power, self.active_time) + (
+                    self.flood.gloria_timings.tx_setup_time + self.flood.gloria_timings.tx_irq_time) * PROC_POWER
         else:
-            return self.active_time * rx_power + (
-                    self.flood.gloria_timings.rx_setup_time + self.flood.gloria_timings.rx_irq_time) * proc_power
+            return RadioConfiguration(self.flood.modulation).rx_energy(self.active_time) + (
+                    self.flood.gloria_timings.rx_setup_time + self.flood.gloria_timings.rx_irq_time) * PROC_POWER
 
     @property
     def slot_time(self):
@@ -239,7 +233,7 @@ class GloriaFlood:
 
     @property
     def energy(self):
-        energy = self.overhead * proc_power
+        energy = self.overhead * PROC_POWER
         for slot in self.slots:
             energy += slot.energy
 
@@ -322,4 +316,4 @@ class GloriaTimings:
 
     @property
     def preamble_len(self):
-        return 2 if self.modulation > 7 else 3
+        return self.radio_config.preamble_len

@@ -17,6 +17,7 @@
     <option name="TEMPLATE_FOLDERS">
       <list>
         <option value="$MODULE_DIR$/flora_tools/trace_visualizer/templates" />
+        <option value="$MODULE_DIR$/flora_tools/codegen/templates" />
       </list>
     </option>
   </component>
