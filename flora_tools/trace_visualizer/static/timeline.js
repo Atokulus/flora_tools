@@ -8,7 +8,8 @@ const slot_colors = {
 };
 
 export class Timeline {
-    constructor(svg, trace) {
+    constructor(svg, trace, selectionCallback) {
+        this.selectionCallback = selectionCallback;
         this.svg = svg;
         this.$svg = $(svg);
 
@@ -408,7 +409,7 @@ export class Timeline {
             let yPos = 0;
 
             if (activity.activity_type === "LWBRoundActivity") {
-                text = activity.details.round_type;
+                text = `${activity.details.round_type} @ ${this.modulations[activity.details.modulation].name}`;
                 yPos -= 0.3;
             }
 
@@ -542,6 +543,8 @@ export class Timeline {
             }, 0);
 
             console.log(`Node ${i} energy: ${energy}`);
+
+            selectionCallback
         }
     }
 

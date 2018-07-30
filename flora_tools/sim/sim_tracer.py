@@ -89,7 +89,9 @@ class SimTracer:
 
         return {
             'modulations': [{'modulation': modulation, 'gloria_modulation': lwb_slot.MODULATIONS[modulation],
-                             'color': RadioConfiguration(lwb_slot.MODULATIONS[modulation]).color} for modulation in
+                             'color': RadioConfiguration(lwb_slot.MODULATIONS[modulation]).color,
+                             'name': RadioConfiguration(lwb_slot.MODULATIONS[modulation]).modulation_name} for
+                            modulation in
                             range(len(lwb_slot.MODULATIONS))],
             'nodes': [{'id': node.id, 'role': str(node.role)} for node in self.network.nodes],
             'edges': edges,
