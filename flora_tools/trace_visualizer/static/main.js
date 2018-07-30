@@ -34,10 +34,9 @@ function handleFileSelect(evt) {
         reader.onload = (function (theFile) {
             return function (e) {
                 let trace = JSON.parse(e.target.result);
-                let svg = $().get();
-                let $hint = $('#visualization.visualization .dragndrop_hint');
+                let $hint = $('#visualization.visualization > .file_hint');
                 $hint.hide();
-                new Timeline('#visualization .timeline', trace);
+                new Timeline('#visualization .timeline', trace, renderStat);
             };
         })(f);
 
@@ -65,10 +64,9 @@ function handleJSONDrop(evt) {
         reader.onload = (function (theFile) {
             return function (e) {
                 let trace = JSON.parse(e.target.result);
-                let svg = $().get();
-                let $hint = $('#visualization.visualization .dragndrop_hint');
+                let $hint = $('#visualization.visualization .file_hint');
                 $hint.hide();
-                new Timeline('#visualization .timeline', trace);
+                new Timeline('#visualization .timeline', trace, renderStat);
             };
         })(f);
 
@@ -83,4 +81,87 @@ function handleDragOver(evt) {
 }
 
 
+function renderStat(selection) {
+    let $stats = $('.stats');
+    $stats.empty();
 
+    if (selection.start !== null && selection.stop !== null && selection.activities.length) {
+
+
+        for (let i = 0; i < selection.nodeCount; i++) {
+
+            $stats.removeClass('no_selection');
+
+            let nodeActivities = selection.activities.filter(element => {
+                return (element.node === i);
+            });
+
+            let txEnergy = nodeActivities.reduce((accumulator, element) => {
+                if (element.energy !== null && element.activity_type === 'TxActivity') {
+                    return accumulator + element.energy;
+                }
+                else {
+                    return accumulator;
+                }
+            }, 0);
+
+            let rxEnergy = nodeActivities.reduce((accumulator, element) => {
+                if (element.energy !== null && ['RxActivity', 'CADActivity'].includes((element.activity_type))) {
+                    return accumulator + element.energy;
+                }
+                else {
+                    return accumulator;
+                }
+            }, 0);
+
+            if (txEnergy || rxEnergy) {
+
+                let data = {
+                    datasets: [{
+                        data: [txEnergy, rxEnergy],
+                        backgroundColor: ['crimson', 'cornflowerblue']
+                    }],
+                    labels: ['Tx', 'Rx']
+                };
+
+                let $nodeStat = $('<div>').attr({class: 'node_stat'}).css({height: $('.visualization .timeline').height() / selection.nodeCount});
+                $stats.append($nodeStat);
+
+                let $chartContainer = $('<div>').attr({class: 'chart_container'});
+                $nodeStat.append($chartContainer);
+
+
+                let $canvas = $('<canvas>').attr({width: $chartContainer.width(), height: $chartContainer.height()});
+                $chartContainer.append($canvas);
+
+                let ctx = $canvas.get(0).getContext('2d');
+
+                let pieChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: data,
+                    options: {
+                        legend: {
+                            display: false
+                        },
+                    }
+                });
+
+                let $statDetails = $('<div>').attr({class: 'stat_details'});
+                $statDetails.html($(`<h3>${i.toString()} (${(txEnergy + rxEnergy).toPrecision(2)} mJ)</h3><p><span class="badge badge-danger">Tx</span>: ${txEnergy.toPrecision(6)} mJ<br /><span class="badge badge-info">Rx</span>: ${rxEnergy.toPrecision(6)} mJ</p>`));
+                $nodeStat.append($statDetails)
+
+
+            }
+            else {
+                let $nodeStat = $('<div>').attr({class: 'node_stat'}).css({height: $('.visualization .timeline').height() / selection.nodeCount});
+                $nodeStat.text("(No energy)");
+                $stats.append($nodeStat);
+            }
+        }
+    }
+    else {
+        $stats.addClass('no_selection');
+        $stats.append($('<p>No selection<p>'));
+    }
+
+}

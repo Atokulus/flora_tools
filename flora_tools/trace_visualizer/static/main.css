@@ -1,9 +1,6 @@
 html, body {
     height: 100%;
     width: 100%;
-
-    padding-top: 10px;
-    padding-bottom: 10px;
 }
 
 html {
@@ -25,16 +22,22 @@ html {
     align-items: center;
 }
 
-.visualization > .dragndrop_hint {
-
-    padding: 10vmin;
-
+.visualization > .file_hint {
+    padding: 3vmin;
     text-align: center;
-
-    border: rgba(255,255,255,0.2) 0.5vmin dotted;
-    border-radius: 2vmin;
-
     max-font-size: 20px;
+}
+
+.visualization > .file_hint > .dragndrop_hint {
+    padding: 5vmin;
+    text-align: center;
+    border: rgba(255, 255, 255, 0.2) 0.5vmin dotted;
+    border-radius: 2vmin;
+    margin-bottom: 3vmin;
+}
+
+.visualization > .file_hint > .dragndrop_hint > p {
+    margin: 0;
 }
 
 .visualization > .timeline {
@@ -51,7 +54,9 @@ html {
 
     user-select: none;
     cursor: crosshair;
-    overflow: visible;
+    overflow-y: visible;
+    padding-bottom: 80px;
+    box-sizing: border-box;
 
     font-size: 16px;
 }
@@ -74,4 +79,45 @@ html {
     background: white;
     cursor: inherit;
     display: block;
+}
+
+.stats {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #eeeeee !important;
+    color: #303030;
+    border-left: #303030 1px solid;
+    font-size: 20px;
+    padding: 0px 20px;
+    width: 600px;
+}
+
+.stats.no_selection {
+    justify-content: center;
+}
+
+.stats canvas {
+    display: block;
+}
+
+.stats .node_stat {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.stats .chart_container {
+    width: 50%;
+    height: 100%;
+}
+
+.stats .stat_details {
+    padding: 10px;
+}
+
+.stats .stat_details h3 {
+    font-size: 28px;
 }

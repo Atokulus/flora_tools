@@ -18,6 +18,11 @@ export class Timeline {
         console.log(this.trace);
 
         this.s = Snap(svg);
+        this.s.clear();
+        this.background = this.s.rect(0, 0, 0, 0).attr({fill: '#303030'});
+        let backgroundGroup = this.s.group().attr({class: 'background'});
+        backgroundGroup.add(this.background);
+        this.s.append(backgroundGroup);
 
         this.modulations = this.trace.network.modulations;
         this.modulationsColors = this.modulations.map(modulation => {
@@ -96,7 +101,13 @@ export class Timeline {
                 }
 
                 this.updateViewbox();
-                this.getActivitiesInSelection();
+                let selectedActivities = this.getActivitiesInSelection();
+                this.selectionCallback({
+                    nodeCount: this.nodeCount,
+                    activities: selectedActivities,
+                    start: this.selection.start,
+                    stop: this.selection.stop
+                });
             }
             else {
                 isPanning = false;
@@ -128,7 +139,7 @@ export class Timeline {
             event.stopPropagation();
         });
 
-        $('body').resize(event => {
+        this.$svg.on('resize', event => {
             this.updateViewbox();
         });
 
@@ -161,6 +172,8 @@ export class Timeline {
 
         let svg_width = this.$svg.width();
         let svg_height = this.$svg.height();
+
+        this.background.attr({width: svg_width, height: svg_height});
 
         let matrix = new Snap.Matrix();
 
@@ -208,6 +221,7 @@ export class Timeline {
 
     updateMarkers() {
         let magnitude = Math.floor(Math.log10(this.zoom));
+        let svg_width = this.$svg.width();
 
         let bigStep = Math.pow(10, magnitude);
         let step = Math.pow(10, magnitude - 1);
@@ -216,16 +230,23 @@ export class Timeline {
         for (let i = 0; i < this.markerCount; i++) {
             let pos = this.calculateDisplayCoordinate(offset, this.nodeCount);
 
-            let matrix = new Snap.Matrix();
-            matrix.translate(pos.x, pos.y);
+            if (pos.x <= svg_width) {
+                let matrix = new Snap.Matrix();
+                matrix.translate(pos.x, pos.y);
 
-            this.markers[i].transform(matrix);
+                this.markers[i].attr({visibility: 'visible'});
+                this.markers[i].transform(matrix);
 
-            if (!(i % 10)) {
-                this.markers[i].select('text').attr({text: offset.toFixed(Math.max(-magnitude, 0))});
+
+                if (!(i % 10)) {
+                    this.markers[i].select('text').attr({text: offset.toFixed(Math.max(-magnitude, 0))});
+                }
+
+                offset += step;
             }
-
-            offset += step;
+            else {
+                this.markers[i].attr({visibility: 'hidden'});
+            }
         }
     }
 
@@ -368,7 +389,7 @@ export class Timeline {
     }
 
     initDescriptors() {
-        this.descriptorCount = 200;
+        this.descriptorCount = 100;
 
         this.gDescriptors = this.s.group().attr({class: 'descriptors'});
         this.descriptors = [];
@@ -418,12 +439,12 @@ export class Timeline {
             }
 
             else if (activity.activity_type === "CADActivity") {
-                text = 'CAD' + (activity.details.success ? '(✓)' : "(✗)");
+                text = `CAD ${activity.details.success ? '(✓)' : '(✗)'}`;
                 yPos += 0.3;
             }
 
             else if (activity.activity_type === "RxActivity") {
-                text = 'Rx' + (activity.details.success ? '(✓)' : "(✗)");
+                text = `Rx ${activity.details.success ? '(✓)' : '(✗)'}`;
                 yPos += 0.3;
             }
 
@@ -522,30 +543,9 @@ export class Timeline {
             this.selection.stop = tmp;
         }
 
-        let selectedActivities = this.trace.activities.filter(element => {
+        return this.trace.activities.filter(element => {
             return (element.start >= this.selection.start && element.end <= this.selection.stop)
         });
-
-        console.log(selectedActivities);
-
-        for (let i = 0; i < this.nodeCount; i++) {
-            let nodeActivities = selectedActivities.filter(element => {
-                return (element.node === i);
-            });
-
-            let energy = nodeActivities.reduce((accumulator, element) => {
-                if (element.energy !== null) {
-                    return accumulator + element.energy;
-                }
-                else {
-                    return accumulator;
-                }
-            }, 0);
-
-            console.log(`Node ${i} energy: ${energy}`);
-
-            selectionCallback
-        }
     }
 
     sortTraceByStart() {
@@ -601,20 +601,7 @@ export class Timeline {
             }
         };
 
-        let index = binarySearch(range);
-
-        /*
-        while (index > 0) {
-            if (this.trace.activities[index - 1].end > this.position - this.zoom) {
-                index -= 1;
-            }
-            else {
-                break;
-            }
-        }
-        */
-
-        return index;
+        return binarySearch(range);
     }
 }
 
