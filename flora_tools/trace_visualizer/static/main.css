@@ -6,6 +6,10 @@ html, body {
     padding-bottom: 10px;
 }
 
+html {
+    font-size: 3vmin;
+}
+
 
 #visualization {
     position: relative;
@@ -31,7 +35,6 @@ html, body {
     border-radius: 2vmin;
 
     max-font-size: 20px;
-    font-size: 3vmin;
 }
 
 .visualization > .timeline {
@@ -49,6 +52,8 @@ html, body {
     user-select: none;
     cursor: crosshair;
     overflow: visible;
+
+    font-size: 16px;
 }
 
 .btn-file {

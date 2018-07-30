@@ -13,6 +13,7 @@ export class Timeline {
         this.$svg = $(svg);
 
         this.trace = trace;
+        this.sortTrace();
         console.log(this.trace);
 
         this.s = Snap(svg);
@@ -23,11 +24,14 @@ export class Timeline {
         });
 
         this.selection = {start: null, stop: null};
+        this.nodeCount = this.trace.network.nodes.length;
 
         this.initActivities();
         this.drawActivities();
 
         this.initSelection();
+        this.initNodeMarker();
+        this.initDescriptors();
 
         this.initMarkers();
         this.initBoundaries();
@@ -107,7 +111,7 @@ export class Timeline {
             let fixedX = (event.pageX - this.$svg.offset().left) / this.$svg.width();
             let fixedPosition = this.position - (0.5 - fixedX) * this.zoom;
 
-            if (this.zoom > 0.0001 || dZoom >= 1) {
+            if (this.zoom > 0.001 || dZoom >= 1) {
                 this.position = fixedPosition + this.zoom * dZoom * (0.5 - fixedX);
                 this.zoom *= dZoom;
             }
@@ -121,20 +125,25 @@ export class Timeline {
             event.stopPropagation();
         });
 
-        $('body').resize(vent => {
+        $('body').resize(event => {
             this.updateViewbox();
         });
+
+        $(document).keydown(event => {
+            if (event.which === 36) { // Home Key
+                this.initBoundaries();
+            }
+        })
     }
 
     initBoundaries() {
         this.s.attr({'preserveAspectRatio': 'none'});
 
-        this.nodeCount = this.trace.network.nodes.length;
         this.begin = this.trace.activities[0].start;
         this.end = this.trace.activities[this.trace.activities.length - 1].end;
 
         this.position = (this.begin + this.end) / 2;
-        this.zoom = (this.end - this.begin);
+        this.zoom = (this.end - this.begin) * 1.1;
 
         this.updateViewbox();
     }
@@ -158,8 +167,9 @@ export class Timeline {
         this.activities.transform(matrix);
 
         this.updateMarkers();
-
         this.updateSelectionRect();
+        this.updateNodeMarker();
+        this.updateDescriptors();
     }
 
     initActivities() {
@@ -297,9 +307,147 @@ export class Timeline {
         else {
             this.selectionRect.attr({visibility: 'hidden'});
         }
-
     }
 
+    initNodeMarker() {
+        this.gNodeMarkers = this.s.group().attr({class: 'node_markers'});
+        this.nodeMarkers = [];
+
+
+        for (let i = 0; i < this.nodeCount; i++) {
+            let rect = this.s.rect(-12.5, -12.5, 25, 25).attr({fill: 'white', opacity: 0.8});
+            let text = this.s.text(0, 0, i.toString()).attr({
+                color: '#333',
+                textAnchor: 'middle',
+                alignmentBaseline: 'middle'
+            });
+
+            let roundText = this.s.text(40, 0, 'round').attr({
+                class: 'round',
+                fill: 'lightgray',
+                alignmentBaseline: 'middle',
+                fontSize: '12px'
+            });
+            let slotText = this.s.text(40, 0, 'slot').attr({
+                class: 'slot',
+                fill: 'lightgray',
+                alignmentBaseline: 'middle',
+                fontSize: '12px'
+            });
+            let gloriaText = this.s.text(40, 0, 'gloria').attr({
+                class: 'gloria',
+                fill: 'lightgray',
+                alignmentBaseline: 'middle',
+                fontSize: '12px'
+            });
+
+            let group = this.s.group();
+            group.add(rect, text, roundText, slotText, gloriaText);
+
+            this.nodeMarkers.push(group);
+            this.gNodeMarkers.add(group);
+        }
+
+        this.s.append(this.gNodeMarkers);
+    }
+
+    updateNodeMarker() {
+        let svg_height = this.$svg.height();
+
+        for (let i = 0; i < this.nodeMarkers.length; i++) {
+            let matrix = new Snap.Matrix();
+            matrix.translate(20, (i + 0.45) / this.nodeCount * svg_height);
+            this.nodeMarkers[i].transform(matrix);
+
+            this.nodeMarkers[i].select('.round').attr({y: -svg_height / this.nodeCount * 0.3});
+            this.nodeMarkers[i].select('.gloria').attr({y: svg_height / this.nodeCount * 0.3});
+        }
+    }
+
+    initDescriptors() {
+        this.descriptorCount = 200;
+
+        this.gDescriptors = this.s.group().attr({class: 'descriptors'});
+        this.descriptors = [];
+
+        for (let i = 0; i < this.descriptorCount; i++) {
+            let descriptor = this.s.text(0, 0, "").attr({
+                fill: 'white',
+                alignmentBaseline: 'middle',
+                textAnchor: 'middle',
+                fontSize: '12px',
+                visibility: 'hidden'
+            });
+
+            this.descriptors.push(descriptor);
+            this.gDescriptors.add(descriptor);
+        }
+        this.s.append(this.gNodeMarkers);
+    }
+
+    updateDescriptors() {
+        let svg_width = this.$svg.width();
+        let svg_height = this.$svg.height();
+        let descriptorIndex = 0;
+        let activityIndex = this.getActivityIndexLeft(this.position - this.zoom / 2, false);
+
+        while (activityIndex < this.trace.activities.length && descriptorIndex < this.descriptorCount) {
+            let activity = this.trace.activities[activityIndex];
+
+            let start = Math.max(this.position + -this.zoom / 2, activity.start);
+            let end = Math.min(this.position + this.zoom / 2, activity.end);
+
+            if ((end - start) / this.zoom * svg_width < 12) {
+                activityIndex += 1;
+                continue;
+            }
+
+            let text = "";
+            let yPos = 0;
+
+            if (activity.activity_type === "LWBRoundActivity") {
+                text = activity.details.round_type;
+                yPos -= 0.3;
+            }
+
+            else if (activity.activity_type === "LWBSlotActivity") {
+                text = activity.details.slot_type;
+            }
+
+            else if (activity.activity_type === "CADActivity") {
+                text = 'CAD' + (activity.details.success ? '(✓)' : "(✗)");
+                yPos += 0.3;
+            }
+
+            else if (activity.activity_type === "RxActivity") {
+                text = 'Rx' + (activity.details.success ? '(✓)' : "(✗)");
+                yPos += 0.3;
+            }
+
+            else if (activity.activity_type === "TxActivity") {
+                text = 'Tx';
+                yPos += 0.3;
+            }
+
+            if ((end - start) / this.zoom * svg_width >= 12 * text.length) {
+                yPos += activity.node + 0.45;
+                yPos *= svg_height / this.nodeCount;
+
+                let xPos = (start + end) / 2;
+                xPos = this.calculateDisplayCoordinate(xPos).x;
+
+                this.descriptors[descriptorIndex].attr({x: xPos, y: yPos, text: text, visibility: 'visible'});
+
+                descriptorIndex += 1;
+            }
+
+            activityIndex += 1;
+        }
+
+        for (let i = descriptorIndex; i < this.descriptorCount; i++) {
+            this.descriptors[i].attr({'visibility': 'hidden'});
+        }
+    }
 
     drawActivities() {
         this.$svg.empty();
@@ -372,13 +520,7 @@ export class Timeline {
         }
 
         let selectedActivities = this.trace.activities.filter(element => {
-
-            if (element.start >= this.selection.start && element.end <= this.selection.stop) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return (element.start >= this.selection.start && element.end <= this.selection.stop)
         });
 
         console.log(selectedActivities);
@@ -401,6 +543,47 @@ export class Timeline {
         }
     }
 
+    sortTrace() {
+        this.trace.activities.sort((a, b) => {
+            if (a.start < b.start) {
+                return -1;
+            }
+            else if (a.start > b.start) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        });
+    }
+
+    getActivityIndexLeft(position) {
+        let range = [0, this.trace.activities.length];
+        let mid = (range) => {
+            return range[0] + Math.floor((range[1] - range[0]) / 2);
+        };
+
+        let binarySearch = (range) => {
+            let value = this.trace.activities[mid(range)].start;
+            let nextRange = [];
+
+            if (value > position) {
+                nextRange = [range[0], mid(range) - 1];
+            }
+            else {
+                nextRange = [mid(range), range[1]];
+            }
+
+            if (nextRange[0] === nextRange[1]) {
+                return nextRange[0];
+            }
+            else {
+                return binarySearch(nextRange);
+            }
+        };
+
+        return binarySearch(range);
+    }
 }
 
 
