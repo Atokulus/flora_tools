@@ -9,7 +9,7 @@ from flora_tools.sim.sim_tracer import LWBSlotActivity
 
 class SimLWBSlot:
     def __init__(self, node: 'sim_node.SimNode', slot: 'lwb_slot.LWBSlot', callback, master: 'sim_node.SimNode' = None,
-                 message=None):
+                 message: 'SimMessage' = None):
         self.logger = logging.getLogger(self.__class__.__qualname__)
 
         self.node = node
@@ -29,7 +29,7 @@ class SimLWBSlot:
 
         self.node.network.tracer.log_activity(
             LWBSlotActivity(slot.slot_marker, slot.slot_end_marker, self.node,
-                            slot.type, slot.modulation)
+                            slot.type, slot.modulation, payload=(message.payload if message is not None else 0))
         )
 
         self.log_slot()

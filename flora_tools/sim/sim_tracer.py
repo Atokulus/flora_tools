@@ -60,9 +60,9 @@ class CADActivity(Activity):
 
 
 class LWBSlotActivity(Activity):
-    def __init__(self, start, end, node, slot_type, energy=None):
+    def __init__(self, start, end, node, slot_type, energy=None, payload=0):
         super(LWBSlotActivity, self).__init__(type(self), start, end, node, energy=energy,
-                                              details={'slot_type': str(slot_type)})
+                                              details={'slot_type': str(slot_type), 'payload': payload})
 
 
 class LWBRoundActivity(Activity):

@@ -424,7 +424,8 @@ class LWBStreamManager:
         if stream is not None:
             content = {'data': stream.get(), 'stream': copy(stream)}
 
-            message = SimMessage(self.node.local_timestamp, self.node, stream.max_payload, 0,
+            message = SimMessage(self.node.local_timestamp, self.node, stream.max_payload + lwb_slot.data_header_length,
+                                 0,
                                  self.node.lwb.base,
                                  SimMessageType.DATA, content=content)
 

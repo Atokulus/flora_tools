@@ -86,8 +86,6 @@ function renderStat(selection) {
     $stats.empty();
 
     if (selection.start !== null && selection.stop !== null && selection.activities.length) {
-
-
         for (let i = 0; i < selection.nodeCount; i++) {
 
             $stats.removeClass('no_selection');
@@ -108,6 +106,15 @@ function renderStat(selection) {
             let rxEnergy = nodeActivities.reduce((accumulator, element) => {
                 if (element.energy !== null && ['RxActivity', 'CADActivity'].includes((element.activity_type))) {
                     return accumulator + element.energy;
+                }
+                else {
+                    return accumulator;
+                }
+            }, 0);
+
+            let dataAmount = nodeActivities.reduce((accumulator, element) => {
+                if (element.activity_type === 'LWBSlotActivity' && element.details.slot_type === 'DATA') {
+                    return accumulator + element.details.payload;
                 }
                 else {
                     return accumulator;
@@ -147,7 +154,16 @@ function renderStat(selection) {
                 });
 
                 let $statDetails = $('<div>').attr({class: 'stat_details'});
-                $statDetails.html($(`<h3>${i.toString()} (${(txEnergy + rxEnergy).toPrecision(2)} mJ)</h3><p><span class="badge badge-danger">Tx</span>: ${txEnergy.toPrecision(6)} mJ<br /><span class="badge badge-info">Rx</span>: ${rxEnergy.toPrecision(6)} mJ</p>`));
+                $statDetails.html($(
+                    `<h3>${i.toString()} (${(txEnergy + rxEnergy).toPrecision(2)} mJ)</h3>
+                    <p>
+                        <span class="badge badge-danger">Tx</span>: ${txEnergy.toPrecision(6)} mJ<br />
+                        <span class="badge badge-info">Rx</span>: ${rxEnergy.toPrecision(6)} mJ
+                    </p>
+                    <p>
+                        <span class="badge badge-info">Data</span>: ${dataAmount} Bytes
+                    </p>
+                `));
                 $nodeStat.append($statDetails)
 
 
@@ -158,6 +174,10 @@ function renderStat(selection) {
                 $stats.append($nodeStat);
             }
         }
+
+        let $selectionRange = $('<div>').attr({class: 'selection_range'});
+        $selectionRange.html(`<strong>${selection.start.toPrecision(6)} s</strong> to <strong>${selection.stop.toPrecision(6)} s</strong> (<strong>${(selection.stop - selection.start).toPrecision(6)} s</strong>)`);
+        $stats.append($selectionRange);
     }
     else {
         $stats.addClass('no_selection');

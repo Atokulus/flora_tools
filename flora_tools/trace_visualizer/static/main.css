@@ -90,7 +90,7 @@ html {
     color: #303030;
     border-left: #303030 1px solid;
     font-size: 20px;
-    padding: 0px 20px;
+    padding: 0px 50px;
     width: 600px;
 }
 
@@ -110,14 +110,24 @@ html {
 }
 
 .stats .chart_container {
-    width: 50%;
+    width: 40%;
     height: 100%;
 }
 
 .stats .stat_details {
+    width: 60%;
     padding: 10px;
 }
 
 .stats .stat_details h3 {
     font-size: 28px;
+}
+
+.stats .stat_details p:last-child {
+    margin: 0px;
+}
+
+.stats .selection_range {
+    text-align: center;
+    padding: 50px 0;
 }
