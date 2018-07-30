@@ -13,7 +13,7 @@ export class Timeline {
         this.$svg = $(svg);
 
         this.trace = trace;
-        this.sortTrace();
+        this.sortTraceByStart();
         console.log(this.trace);
 
         this.s = Snap(svg);
@@ -28,6 +28,8 @@ export class Timeline {
 
         this.initActivities();
         this.drawActivities();
+
+        this.sortTraceByEnd();
 
         this.initSelection();
         this.initNodeMarker();
@@ -389,7 +391,7 @@ export class Timeline {
         let svg_width = this.$svg.width();
         let svg_height = this.$svg.height();
         let descriptorIndex = 0;
-        let activityIndex = this.getActivityIndexLeft(this.position - this.zoom / 2, false);
+        let activityIndex = this.getFirstActivityOnDisplay(this.position - this.zoom / 2, false);
 
         while (activityIndex < this.trace.activities.length && descriptorIndex < this.descriptorCount) {
             let activity = this.trace.activities[activityIndex];
@@ -543,7 +545,7 @@ export class Timeline {
         }
     }
 
-    sortTrace() {
+    sortTraceByStart() {
         this.trace.activities.sort((a, b) => {
             if (a.start < b.start) {
                 return -1;
@@ -557,14 +559,28 @@ export class Timeline {
         });
     }
 
-    getActivityIndexLeft(position) {
-        let range = [0, this.trace.activities.length];
+    sortTraceByEnd() {
+        this.trace.activities.sort((a, b) => {
+            if (a.end < b.end) {
+                return -1;
+            }
+            else if (a.end > b.end) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        });
+    }
+
+    getFirstActivityOnDisplay(position) {
+        let range = [0, this.trace.activities.length - 1];
         let mid = (range) => {
-            return range[0] + Math.floor((range[1] - range[0]) / 2);
+            return range[0] + Math.ceil((range[1] - range[0]) / 2);
         };
 
         let binarySearch = (range) => {
-            let value = this.trace.activities[mid(range)].start;
+            let value = this.trace.activities[mid(range)].end;
             let nextRange = [];
 
             if (value > position) {
@@ -582,7 +598,20 @@ export class Timeline {
             }
         };
 
-        return binarySearch(range);
+        let index = binarySearch(range);
+
+        /*
+        while (index > 0) {
+            if (this.trace.activities[index - 1].end > this.position - this.zoom) {
+                index -= 1;
+            }
+            else {
+                break;
+            }
+        }
+        */
+
+        return index;
     }
 }
 
