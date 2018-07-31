@@ -7,7 +7,7 @@ import flora_tools.lwb_slot as lwb_slot
 from flora_tools.radio_configuration import RadioConfiguration, PROC_POWER
 from flora_tools.radio_math import RadioMath
 
-BANDS = [48]
+TIMER_FREQUENCY = 8E6  # 0.125 us
 
 rx_time_offsets = [
     [0.359425231, 0.080458787],
@@ -35,8 +35,21 @@ tx_time_offsets = [
     [0.000274632, 5.29E-07],
 ]
 
-DEFAULT_BAND = 48
+rx2rf = [8.52937941e-05, 5.45332554e-08]
 
+tx2rf = 0.000126195
+tx2sync = [  # Explicit Header mode, CRC, 4/5, Preamble Length 2 (LoRa) and 3 (FSK)
+    0.759868118,
+    0.379071358,
+    0.188429554,
+    0.094311664,
+    0.047281829,
+    0.023714271,
+    0.01403183,
+    0.00717021,
+    0.000906055,
+    0.00062468,
+]
 
 gap = 50E-6
 
@@ -197,7 +210,7 @@ class GloriaFlood:
         self.overhead = (self.gloria_timings.wakeup_time +
                          self.gloria_timings.payload_set_time +
                          np.max([self.gloria_timings.tx_setup_time, self.gloria_timings.rx_setup_time]) +
-                         8.52937941e-05 + 5.45332554e-08 * self.safety_factor +
+                         rx2rf[0] + rx2rf[1] * self.safety_factor +
                          temp_slot.rx_offset +
                          self.gloria_timings.payload_get_time +
                          self.gloria_timings.sleep_time)
@@ -209,7 +222,7 @@ class GloriaFlood:
         offset = (self.gloria_timings.wakeup_time +
                   self.gloria_timings.payload_set_time +
                   np.max([self.gloria_timings.tx_setup_time, self.gloria_timings.rx_setup_time]) +
-                  8.52937941e-05 + 5.45332554e-08 * self.safety_factor +
+                  rx2rf[0] + rx2rf[1] * self.safety_factor +
                   temp_slot.rx_offset)
 
         for i in range(self.slot_count):
@@ -317,3 +330,34 @@ class GloriaTimings:
     @property
     def preamble_len(self):
         return self.radio_config.preamble_len
+
+    def get_timings(self):
+        return {
+            'slot_overhead':
+                GloriaTimings.timerTicks(
+                tx_time_offsets[self.modulation][0] + tx_time_offsets[self.modulation][1] * self.safety_factor
+                + self.tx_irq_time + self.rx_setup_time + self.radio_math.get_preamble_time() * preamble_pre_listening
+                + gap),
+            'slot_ack_overhead':
+                GloriaTimings.timerTicks(
+                self.radio_math.get_preamble_time() * preamble_pre_listening
+                + rx_time_offsets[self.modulation][0] + rx_time_offsets[self.modulation][1] * self.safety_factor
+                + self.rx_irq_time + self.rx_setup_time
+                + gap),
+            'flood_init_overhead':
+                GloriaTimings.timerTicks(
+                self.wakeup_time +
+                self.payload_set_time +
+                np.max([self.tx_setup_time, self.rx_setup_time]) +
+                rx2rf[0] + rx2rf[1] * self.safety_factor +
+                self.radio_math.get_preamble_time() * preamble_pre_listening),
+            'flood_finish_overhead': GloriaTimings.timerTicks(self.payload_get_time + self.sleep_time),
+            'rx_offset': GloriaTimings.timerTicks(self.radio_math.get_preamble_time() * preamble_pre_listening),
+            'rx_trigger_delay': GloriaTimings.timerTicks(rx2rf[0]),
+            'tx_trigger_delay': GloriaTimings.timerTicks(tx2rf),
+            'tx_sync': GloriaTimings.timerTicks(tx2sync[self.modulation]),
+        }
+
+    @staticmethod
+    def timerTicks(time: float) -> int:
+        return int(np.round(time * TIMER_FREQUENCY))

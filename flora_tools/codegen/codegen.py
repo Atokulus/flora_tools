@@ -2,6 +2,7 @@ import os
 
 from jinja2 import Environment, PackageLoader
 
+from gloria import GloriaTimings
 from radio_configuration import RadioConfiguration, RADIO_CONFIGURATIONS, RadioModem, BAND_FREQUENCIES, BAND_GROUPS, \
     BAND_FREQUENCIES_US915, BAND_GROUPS_US915
 
@@ -27,6 +28,7 @@ class CodeGen:
 
     def generate_all(self):
         self.generate_radio_constants()
+        self.generate_gloria_constants()
 
     def generate_radio_constants(self):
         target_radio_constants_c = './lib/radio/radio_constants.c'
@@ -50,9 +52,28 @@ class CodeGen:
                            }
                            ) for config in RADIO_CONFIGURATIONS]
 
-        print(radio_constants_c.render(configurations=configurations, bands=BAND_FREQUENCIES, band_groups=BAND_GROUPS,
-                                 bands_us915=BAND_FREQUENCIES_US915, band_groups_us915=BAND_GROUPS_US915))
+        rendered = radio_constants_c.render(configurations=configurations, bands=BAND_FREQUENCIES, band_groups=BAND_GROUPS,
+                                 bands_us915=BAND_FREQUENCIES_US915, band_groups_us915=BAND_GROUPS_US915)
+
+        self.write_render_to_file(rendered, target_radio_constants_c)
+
+    def generate_gloria_constants(self):
+        target_gloria_constants_c = './lib/radio/gloria_constants.c'
+        self.create_folder(target_gloria_constants_c)
+
+        gloria_constants_c = self.env.get_template('gloria_constants.c')
+        gloria_timings = [GloriaTimings(modulation).get_timings() for modulation in range(10)]
+
+        rendered = gloria_constants_c.render(gloria_timings=gloria_timings)
+
+        self.write_render_to_file(rendered, target_gloria_constants_c)
 
     def create_folder(self, file):
         if not os.path.exists(os.path.join(self.path, os.path.dirname(file))):
             os.makedirs(os.path.join(self.path, os.path.dirname(file)))
+
+    def write_render_to_file(self, render, file):
+        with open(os.path.join(self.path, file), "w") as fh:
+            fh.write(render)
+            print("Written {}".format(file))
+
