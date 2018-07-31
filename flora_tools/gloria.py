@@ -249,7 +249,7 @@ class GloriaTimings:
         self.modulation = modulation
         self.safety_factor = safety_factor
 
-        self.radio_config = RadioConfiguration(self.modulation, preamble=self.preamble_len)
+        self.radio_config = RadioConfiguration(self.modulation)
         self.radio_math = RadioMath(self.radio_config)
 
     @property

@@ -161,7 +161,7 @@ function renderStat(selection) {
                         <span class="badge badge-info">Rx</span>: ${rxEnergy.toPrecision(6)} mJ
                     </p>
                     <p>
-                        <span class="badge badge-info">Data</span>: ${dataAmount} Bytes
+                        <span class="badge badge-success">Data</span>: ${dataAmount} Bytes
                     </p>
                 `));
                 $nodeStat.append($statDetails)

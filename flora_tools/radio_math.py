@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from flora_tools.radio_configuration import RadioConfiguration
+from flora_tools.radio_configuration import RadioConfiguration, RadioModem
 
 LORA_SYMB_TIMES = [  # in ms
     [32.768, 16.384, 8.192, 4.096, 2.048, 1.024, 0.512, 0.256],  # 125 kHz
@@ -12,7 +12,7 @@ LORA_SYMB_TIMES = [  # in ms
 NOISE_FLOOR = -174.0
 LORA_NOISE_FIGURE = 6  # Between 5-8 dB (based on SX1276 datasheet interpolation)
 
-PATH_LOSS_CORRECTION_FACTOR = 1.5
+PATH_LOSS_EXPONENT_FACTOR = 1.5  # Cubic loss
 
 RADIO_SNR = [  # Based on http://www.rfwireless-world.com/calculators/LoRa-Sensitivity-Calculator.html
     -20.0,
@@ -76,17 +76,19 @@ class RadioMath:
         self.configuration = configuration
 
     def get_symbol_time(self):
-        if self.configuration.modem is 'LoRa':
+        if self.configuration.modem is RadioModem.LORA:
             ts = LORA_SYMB_TIMES[self.configuration.bandwidth][int(self.configuration.modulation)] / 1000.0
-        elif self.configuration.modem is 'FSK':
+        elif self.configuration.modem is RadioModem.FSK:
             ts = 8 / self.configuration.bitrate
+        else:
+            ts = None
         return ts
 
     def get_preamble_time(self, preamble_length=0):
         if not preamble_length:
             preamble_length = self.configuration.preamble_len
         ts = self.get_symbol_time()
-        if self.configuration.modem is 'LoRa':
+        if self.configuration.modem is RadioModem.LORA:
             time_preamble = ts * (preamble_length + (6.25 if self.configuration.sf in [6, 5] else 4.25))
         else:
             time_preamble = ts * preamble_length
@@ -94,12 +96,10 @@ class RadioMath:
         return time_preamble
 
     def get_message_toa(self, payload_size=0, preamble_length=0, sync=False):
-        global LORA_SYMB_TIMES
-
         if not preamble_length:
             preamble_length = self.configuration.preamble_len
 
-        if self.configuration.modem == "LoRa":
+        if self.configuration.modem is RadioModem.LORA:
             ts = self.get_symbol_time()
             tPreamble = self.get_preamble_time(preamble_length)
             tmp = np.ceil(
@@ -124,7 +124,7 @@ class RadioMath:
         else:
             return (8 * (
                     preamble_length +
-                    (self.configuration.sync_word_length) +
+                    self.configuration.sync_word_length +
                     (1.0 if self.configuration.explicit_header else 0.0) +
                     payload_size +
                     (2.0 if self.configuration.crc and not sync else 0.0))
@@ -144,10 +144,7 @@ class RadioMath:
     @property
     def sensitivity(self):
         global SENSITIVITIES
-        if self.configuration.modem is 'LoRa':
-            # global LORA_NOISE_FIGURE, LORA_SNR, RF_SWITCH_INSERTION_LOSS, NOISE_FLOOR
-            # return NOISE_FLOOR + 10 * np.log10(self.configuration.real_bandwidth) + LORA_NOISE_FIGURE + LORA_SNR[self.configuration.sf] + RF_SWITCH_INSERTION_LOSS
-
+        if self.configuration.modem is RadioModem.LORA:
             df = pd.DataFrame(SENSITIVITIES)
             sensitivity = df[(df.sf == self.configuration.sf) & (
                     df.bandwidth == self.configuration.real_bandwidth)].sensitivity.sort_values().iloc[0]
@@ -165,19 +162,19 @@ class RadioMath:
     @staticmethod
     def get_theoretical_max_distance(
             modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
-        global RF_SWITCH_INSERTION_LOSS, PATH_LOSS_CORRECTION_FACTOR
+        global RF_SWITCH_INSERTION_LOSS, PATH_LOSS_EXPONENT_FACTOR
         MAX_POWER = 22  # dBm
         WAVELENGTH = 1.0 / 868E6 * 300E6
         # ESTIMATED_LOSS = 20.0
         # MARGIN = 20.0
         link_budget = modulation.sensitivity - 30.0 - MAX_POWER
-        distance = np.power(10, -link_budget / 20.0 / PATH_LOSS_CORRECTION_FACTOR) / (4 * np.pi) * WAVELENGTH
+        distance = np.power(10, -link_budget / 20.0 / PATH_LOSS_EXPONENT_FACTOR) / (4 * np.pi) * WAVELENGTH
         return distance
 
     @staticmethod
     def get_bitrate(
             modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
-        if modulation.modem == 'LoRa':
+        if modulation.modem is RadioModem.LORA:
 
             if modulation.bandwidth == 125000:
                 bandwidth = 0
@@ -198,7 +195,7 @@ class RadioMath:
             modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
         MAX_PACKET = 255 * 8
 
-        if modulation.modem == 'LoRa':
+        if modulation.modem is RadioModem.LORA:
 
             if modulation.bandwidth == 125000:
                 bandwidth = 0

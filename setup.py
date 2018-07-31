@@ -18,7 +18,9 @@ def package_files(directory):
 data_files = [('data', ['data/*.csv']),
               ('doc/img', ['doc/img/*']),
               ('flora_tools/flocklab', ['flora_tools/flocklab/*.xml', 'flora_tools/flocklab/*.png']),
-              ('flora_tools/analysis', ['flora_tools/analysis/*.ipynb'])]
+              ('flora_tools/analysis', ['flora_tools/analysis/*.ipynb']),
+              ('flora_tools/codegen/templates', ['flora_tools/codegen/templates/*']),
+              ('flora_tools/trace_visualizer/templates', ['flora_tools/trace_visualizer/templates']),]
 
 package_data = {'': package_files('flora_tools/trace_visualizer/static')}
 

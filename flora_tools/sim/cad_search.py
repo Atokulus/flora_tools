@@ -2,7 +2,7 @@ import flora_tools.gloria as gloria
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_event_manager as sim_event_manager
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.radio_configuration import RadioConfiguration
+from flora_tools.radio_configuration import RadioConfiguration, RadioModem
 from flora_tools.radio_math import RadioMath
 from flora_tools.sim.sim_message import SimMessage
 
@@ -39,7 +39,7 @@ class CADSearch:
             self.radio_config = RadioConfiguration(modulation=lwb_slot.MODULATIONS[self.current_modulation])
             self.radio_math = RadioMath(self.radio_config)
 
-            if self.radio_config.modem is 'FSK':
+            if self.radio_config.modem is RadioModem.FSK:
                 self.process_rx()
             else:
                 self.process_lora_cad()

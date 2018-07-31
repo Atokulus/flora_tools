@@ -2,6 +2,7 @@ import argparse
 import sys
 from multiprocessing import Pool
 
+from codegen.codegen import CodeGen
 from flora_tools.flocklab.measure_links import MeasureLinksExperiment
 from flora_tools.sim.sim import Sim
 from flora_tools.toolchain.bootloader import Bootloader
@@ -49,7 +50,7 @@ def start_server():
 
 
 def generate_code(flora_path):
-    pass
+    code_gen = CodeGen(flora_path)
 
 
 def main():
@@ -90,7 +91,10 @@ def main():
     elif args.command == 'flocklab_measure_links':
         flocklab_measure_links()
     elif args.command == 'generate_code':
-        generate_code(args.path)
+        if args.path is None:
+            parser.error("generate_code requires --path of Flora project.")
+        else:
+            generate_code(args.path)
     elif args.command == 'start_server':
         start_server()
 

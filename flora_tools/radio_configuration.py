@@ -1,3 +1,5 @@
+from enum import Enum
+
 import matplotlib
 import matplotlib.cm
 import numpy as np
@@ -102,6 +104,32 @@ PROC_POWER = 48 * 120E-3 * VOLTAGE  # Based on ST application note regarding STM
 RX_POWER = 5.5 * VOLTAGE
 
 
+class RadioModem(Enum):
+    LORA = 1
+    FSK = 2
+
+    @property
+    def c_name(self):
+        if self is RadioModem.LORA:
+            return 'MODEM_LORA'
+        elif self is RadioModem.FSK:
+            return 'MODEM_FSK'
+
+
+RADIO_CONFIGURATIONS = [
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 12, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 11, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 10, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 9, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 8, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 7, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 6, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 5, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.FSK, 'bandwidth': 234300, 'datarate': 125000, 'preamble_len': 2, 'fdev': 50000},
+    {'modem': RadioModem.FSK, 'bandwidth': 234300, 'datarate': 200000, 'preamble_len': 2, 'fdev': 10000},
+]
+
+
 class RadioConfiguration:
     def __init__(self, modulation=0, band=48, power=0, bandwidth=None, tx=True, crc=True, implicit=0, irq_direct=False,
                  preamble=None, bitrate=None):
@@ -160,14 +188,14 @@ class RadioConfiguration:
 
     @property
     def explicit_header(self):
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             return not self.implicit
         else:
             return not self.implicit
 
     @property
     def low_data_rate(self):
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             if self.bandwidth == 0 and (self.sf == 11 or self.sf == 12):
                 return True
             elif self.bandwidth == 1 and (self.sf == 11 or self.sf == 12):
@@ -182,92 +210,69 @@ class RadioConfiguration:
         if self.preamble:
             return self.preamble
         else:
-            if self.modem == 'LoRa':
-                if self.sf == 6 or self.sf == 5:
-                    return 12
-                else:
-                    return 10
-            else:
-                return 8
+            return RADIO_CONFIGURATIONS[self.modulation]['preamble_len']
 
     @property
     def header_len(self):
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             return 8
         else:
             return 3
 
     @property
     def bitrate(self):
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             return self.symbol_rate * (self.sf - (2 if self.low_data_rate else 0)) * (4 / (self.coderate % 4 + 4))
         else:
             if self.custom_bitrate:
                 return self.custom_bitrate
             else:
-                if self.modulation == 8:
-                    return 125000
-                if self.modulation == 9:
-                    return 200000
+                return RADIO_CONFIGURATIONS[self.modulation]['datarate']
 
     @property
     def bandwidth(self):
 
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             if self.custom_bandwidth is None:
-                return 0
+                return RADIO_CONFIGURATIONS[self.modulation]['bandwidth']
             else:
                 return int(self.custom_bandwidth)
-        elif self.modem == 'FSK':
+        elif self.modem is RadioModem.FSK:
             if self.custom_bandwidth is None:
-                if self.modulation == 8:
-                    return 250000
-                if self.modulation == 9:
-                    return 250000
+                return RADIO_CONFIGURATIONS[self.modulation]['bandwidth']
             else:
                 return self.custom_bandwidth
 
     @property
     def real_bandwidth(self):
-        global LORA_BANDWIDTHS
-
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             return float(LORA_BANDWIDTHS[self.bandwidth])
-        elif self.modem == 'FSK':
+        elif self.modem is RadioModem.FSK:
             return float(self.bandwidth)
 
     @property
     def modem(self):
-        if 0 <= self.modulation < 8:
-            return 'LoRa'
-        elif 8 <= self.modulation < 10:
-            return 'FSK'
+        return RADIO_CONFIGURATIONS[self.modulation]['modem']
 
     @property
     def sf(self):
-        if self.modem == "LoRa":
-            return 12 - self.modulation
+        if self.modem is RadioModem.LORA:
+            return RADIO_CONFIGURATIONS[self.modulation]['datarate']
         else:
-            return 0
+            return None
 
     @property
     def modulation_name(self, short=True):
         if short:
-            if self.modem == "LoRa":
-                return "SF{}".format(12 - self.modulation)
-            elif self.modem == "FSK":
-                if self.modulation == 8:
-                    return "FSK\n{}".format("125k")
-                if self.modulation == 9:
-                    return "FSK\n{}".format("200k")
+            if self.modem is RadioModem.LORA:
+                return "SF{}".format(self.sf)
+            elif self.modem is RadioModem.FSK:
+                return "FSK\n{}k".format(self.bitrate / 1000)
         else:
-            if self.modem == "LoRa":
-                return "LoRa SF{}@{}".format(12 - self.modulation, "125kHz")
-            elif self.modem == "FSK":
-                if self.modulation == 8:
-                    return "GFSK {}@{} (h={})".format("125kBit/s", "250kHz", "2.0")
-                if self.modulation == 9:
-                    return "GFSK {}@{} (h={})".format("200kBit/s", "250kHz", "1.0")
+            if self.modem is RadioModem.LORA:
+                return "LoRa SF{}@{}kHz".format(self.sf, self.real_bandwidth / 1000)
+            elif self.modem is RadioModem.FSK:
+                return "FSK {}kBit/s@{}kHz".format(self.bitrate, self.real_bandwidth / 1000)
 
     @staticmethod
     def get_modulation_name(modulation, short=True):
@@ -275,23 +280,23 @@ class RadioConfiguration:
 
     @property
     def coderate(self):
-        if self.modem == "LoRa":
-            return 5
-        elif self.modem == "FSK":
-            return 0
+        if self.modem is RadioModem.LORA:
+            return RADIO_CONFIGURATIONS[self.modulation]['coderate']
+        else:
+            return None
 
     @property
     def sync_word_length(self):
-        if self.modem == "LoRa":
-            return 0
-        elif self.modem == "FSK":
+        if self.modem is RadioModem.LORA:
+            return None
+        elif self.modem is RadioModem.FSK:
             return 3
 
     @property
     def coderate_name(self):
-        if self.modem == "LoRa":
-            return "4/5"
-        elif self.modem == "FSK":
+        if self.modem is RadioModem.LORA:
+            return "4/{}".format(RADIO_CONFIGURATIONS[self.modulation]['coderate'])
+        else:
             return "N/A"
 
     @staticmethod
@@ -318,15 +323,15 @@ class RadioConfiguration:
         power = np.random.choice(power)
 
         if preamble is True:
-            if RadioConfiguration(modulation).modem == 'LoRa':
+            if RadioConfiguration(modulation).modem is RadioModem.LORA:
                 preamble = np.random.randint(3, 13)
             else:
                 preamble = np.random.randint(2, 13)
 
         if bandwidth is True:
-            if RadioConfiguration(modulation).modem == 'LoRa':
+            if RadioConfiguration(modulation).modem is RadioModem.LORA:
                 bandwidth = np.random.choice(np.arange(0, 3))
-            elif RadioConfiguration(modulation).modem == 'FSK':
+            elif RadioConfiguration(modulation).modem is RadioModem.FSK:
                 bandwidth = np.random.choice(FSK_BANDWIDTHS)
 
         return RadioConfiguration(modulation, band, power, bandwidth=bandwidth, tx=tx, crc=crc, implicit=implicit,
@@ -334,7 +339,7 @@ class RadioConfiguration:
 
     @property
     def color(self):
-        if self.modem == "LoRa":
+        if self.modem is RadioModem.LORA:
             cmap = matplotlib.cm.get_cmap('plasma')
             return cmap(self.modulation / 12)
         else:
@@ -353,34 +358,31 @@ class RadioConfiguration:
 
     @property
     def chirp_rate(self):
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             return np.square(self.real_bandwidth) / np.exp2(self.sf)
         else:
             return np.nan
 
     @property
     def symbol_rate(self):
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             return self.real_bandwidth / np.exp2(self.sf)
         else:
             return self.bitrate / 8.0
 
     @property
     def chips_per_symbol(self):
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             return np.exp2(self.sf)
         else:
             return np.nan
 
     @property
     def freq_deviation(self):
-        if self.modem == 'LoRa':
+        if self.modem is RadioModem.LORA:
             return np.nan
         else:
-            if self.modulation == 8:
-                return 50000.0
-            else:
-                return 10000.0
+            return RADIO_CONFIGURATIONS[self.modulation]['fdev']
 
     @property
     def modulation_index(self):
