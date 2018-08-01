@@ -14,7 +14,7 @@ export class Timeline {
         this.$svg = $(svg);
 
         this.trace = trace;
-        this.sortTraceByStart();
+        //this.sortTraceByStart();
         console.log(this.trace);
 
         this.s = Snap(svg);
