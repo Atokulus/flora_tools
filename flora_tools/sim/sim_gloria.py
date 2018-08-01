@@ -42,8 +42,8 @@ class SimGloriaFlood:
                 if self.flood.lwb_slot.power_level is not None:
                     self.tx_message.power_level = self.flood.lwb_slot.power_level
                 else:
-                    self.tx_message.power_level = lwb_slot.DEFAULT_POWER_LEVELS[
-                        lwb_slot.MODULATIONS[self.flood.lwb_slot.modulation]]
+                    self.tx_message.power_level = lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[
+                        lwb_slot.RADIO_MODULATIONS[self.flood.lwb_slot.modulation]]
 
                 self.node.mm.tx(self.node,
                                 self.flood.modulation,
@@ -55,7 +55,7 @@ class SimGloriaFlood:
                                             self.progress_gloria_flood)
 
                 if (self.power_increase and
-                        self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
+                        self.tx_message.power_level < len(lwb_slot.RADIO_POWERS) - 1):
                     self.tx_message.power_level += 1
                 self.retransmission_count -= 1
             else:
@@ -140,7 +140,7 @@ class SimGloriaFlood:
                 self.process_rx_message()
             else:
                 if (self.power_increase and self.tx_message is not None and
-                        self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
+                        self.tx_message.power_level < len(lwb_slot.RADIO_POWERS) - 1):
                     self.tx_message.power_level += 1
 
                 self.process_next_slot()
@@ -164,7 +164,7 @@ class SimGloriaFlood:
                     self.tx_message.freeze()
                     self.first_rx_slot_index = self.slot_index
                 elif (self.power_increase
-                      and self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
+                      and self.tx_message.power_level < len(lwb_slot.RADIO_POWERS) - 1):
                     self.tx_message.power_level += 1
 
                 if self.update_timestamp:
@@ -184,7 +184,7 @@ class SimGloriaFlood:
 
                     self.ack_message = SimMessage(slot.tx_marker,
                                                   source=self.tx_message.source,
-                                                  payload=lwb_slot.gloria_header_length,
+                                                  payload=lwb_slot.GLORIA_HEADER_LENGTH,
                                                   destination=self.tx_message.source,
                                                   type=SimMessageType.ACK,
                                                   power_level=self.tx_message.power_level,
@@ -240,7 +240,7 @@ class SimGloriaFlood:
                                             self.progress_gloria_flood)
 
                 if (self.power_increase and
-                        self.tx_message.power_level < len(lwb_slot.POWERS) - 1):
+                        self.tx_message.power_level < len(lwb_slot.RADIO_POWERS) - 1):
                     self.tx_message.power_level += 1
                 self.retransmission_count -= 1
 

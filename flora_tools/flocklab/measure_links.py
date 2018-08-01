@@ -45,7 +45,7 @@ class MeasureLinksExperiment:
 
     def iterate_from_node(self, tx_node):
         for i in range(ITERATIONS):
-            for modulation in lwb_slot.MODULATIONS:
+            for modulation in lwb_slot.RADIO_MODULATIONS:
                 for power in [0, 10, 22]:  # lwb_slot.POWERS:
                     self.logger.info("Running Tx on Node: {}, Mod: {}, Power: {}".format(tx_node.id, modulation, power))
 

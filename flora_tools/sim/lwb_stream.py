@@ -5,14 +5,15 @@ import numpy as np
 
 import flora_tools.lwb_round as lwb_round
 import flora_tools.lwb_slot as lwb_slot
-import flora_tools.sim.service as service
+import flora_tools.sim.lwb_service as service
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
-MAX_TTL = 3
-MAX_REQUEST_TRIALS = 10
-DEACTIVATION_BACKDROP = 100
-MAX_BACKDROP_RANGE = 16
+LWB_STREAM_MAX_TTL = 3
+LWB_STREAM_MAX_REQUEST_TRIALS = 10
+LWB_STREAM_DEACTIVATION_BACKDROP = 100
+LWB_STREAM_MAX_BACKDROP_RANGE = 16
+LWB_STREAM_INITIAL_BACKDROP_RANGE = 4
 
 
 class DataStream:
@@ -34,20 +35,20 @@ class DataStream:
 
         self.stream_manager: LWBStreamManager = None
         self._last_consumption = self.node.local_timestamp - self.period
-        self.ttl = MAX_TTL
+        self.ttl = LWB_STREAM_MAX_TTL
         self.is_ack = False
 
         if max_payload is None:
-            max_payload = lwb_slot.max_data_payload
+            max_payload = lwb_slot.LWB_MAX_DATA_PAYLOAD
 
-        self.slot_count = int(np.ceil(self.max_payload / lwb_slot.max_data_payload))
+        self.slot_count = int(np.ceil(self.max_payload / lwb_slot.LWB_MAX_DATA_PAYLOAD))
         self.last_slot_size = self.max_payload % max_payload
         self.current_slot = 0
 
         self.trial_modulation = None
         self.trial_counter = 0
         self.backdrop = 0
-        self.backdrop_range = 4
+        self.backdrop_range = LWB_STREAM_INITIAL_BACKDROP_RANGE
 
         # TODO Contracts
 
@@ -72,20 +73,20 @@ class DataStream:
         if not self.backdrop:
             self.backdrop = np.random.choice(range(self.backdrop_range))
             self.backdrop_range *= 2
-            if self.backdrop_range > MAX_BACKDROP_RANGE:
-                self.backdrop_range = MAX_BACKDROP_RANGE
+            if self.backdrop_range > LWB_STREAM_MAX_BACKDROP_RANGE:
+                self.backdrop_range = LWB_STREAM_MAX_BACKDROP_RANGE
 
             if self.trial_modulation is not None:
                 self.trial_counter += 1
 
-                if self.trial_counter >= MAX_REQUEST_TRIALS:
+                if self.trial_counter >= LWB_STREAM_MAX_REQUEST_TRIALS:
                     if self.trial_modulation > 0:
                         self.trial_modulation -= 1
                         self.trial_counter = 0
                     else:
                         self.trial_modulation = None
                         self.trial_counter = 0
-                        self.backdrop = DEACTIVATION_BACKDROP
+                        self.backdrop = LWB_STREAM_DEACTIVATION_BACKDROP
 
                 if modulation == self.trial_modulation:
                     return True
@@ -106,7 +107,7 @@ class DataStream:
         if self.trial_modulation == round.modulation:
             self.trial_counter = 0
             self.backdrop = 0
-            self.backdrop_range = 4
+            self.backdrop_range = LWB_STREAM_INITIAL_BACKDROP_RANGE
 
     @property
     def next_period(self):
@@ -134,9 +135,9 @@ class DataStream:
             return 0
 
     def success(self):
-        self.ttl = MAX_TTL
+        self.ttl = LWB_STREAM_MAX_TTL
         self.backdrop = 0
-        self.backdrop_range = 4
+        self.backdrop_range = LWB_STREAM_INITIAL_BACKDROP_RANGE
         self.trial_counter = 0
 
         if self.current_slot < self.slot_count - 1:
@@ -157,7 +158,7 @@ class DataStream:
                     self.service.failed_datastream_callback(self)
 
     def retry(self):
-        self.ttl = MAX_TTL
+        self.ttl = LWB_STREAM_MAX_TTL
         self.is_ack = False
         self.stream_manager.register_data(self)
 
@@ -181,13 +182,13 @@ class NotificationStream:
 
         self.stream_manager: LWBStreamManager = None
         self.last_consumption = self.node.local_timestamp - self.period
-        self.ttl = MAX_TTL
+        self.ttl = LWB_STREAM_MAX_TTL
         self.is_ack = True
 
         self.trial_modulation = None
         self.trial_counter = 0
         self.backdrop = None
-        self.backdrop_range = 4
+        self.backdrop_range = LWB_STREAM_INITIAL_BACKDROP_RANGE
 
         self.advertised_ack_power_level = None  # Modulation not needed, as it is implicated by the stream request handshake
 
@@ -195,20 +196,20 @@ class NotificationStream:
         if not self.backdrop:
             self.backdrop = np.random.choice(range(self.backdrop_range))
             self.backdrop_range *= 2
-            if self.backdrop_range > MAX_BACKDROP_RANGE:
-                self.backdrop_range = MAX_BACKDROP_RANGE
+            if self.backdrop_range > LWB_STREAM_MAX_BACKDROP_RANGE:
+                self.backdrop_range = LWB_STREAM_MAX_BACKDROP_RANGE
 
             if self.trial_modulation is not None:
                 self.trial_counter += 1
 
-                if self.trial_counter >= MAX_REQUEST_TRIALS:
+                if self.trial_counter >= LWB_STREAM_MAX_REQUEST_TRIALS:
                     if self.trial_modulation > 0:
                         self.trial_modulation -= 1
                         self.trial_counter = 0
                     else:
                         self.trial_modulation = None
                         self.trial_counter = 0
-                        self.backdrop = DEACTIVATION_BACKDROP
+                        self.backdrop = LWB_STREAM_DEACTIVATION_BACKDROP
 
                 if modulation == self.trial_modulation:
                     return True
@@ -229,7 +230,7 @@ class NotificationStream:
         if self.trial_modulation == round.modulation:
             self.trial_counter = 0
             self.backdrop = 0
-            self.backdrop_range = 4
+            self.backdrop_range = LWB_STREAM_INITIAL_BACKDROP_RANGE
 
     def __copy__(self):
         return NotificationStream(self.id, self.node, self.master, self.priority, self.subpriority, self.period,
@@ -259,7 +260,7 @@ class NotificationStream:
             return None
 
     def success(self):
-        self.ttl = MAX_TTL
+        self.ttl = LWB_STREAM_MAX_TTL
         self.last_consumption = self.stream_manager.node.local_timestamp
         if self.service is not None:
             self.service.ack_notification_callback()
@@ -272,7 +273,7 @@ class NotificationStream:
                 self.service.failed_notification_callback(self)
 
     def retry(self):
-        self.ttl = MAX_TTL
+        self.ttl = LWB_STREAM_MAX_TTL
         self.is_ack = False
         self.stream_manager.register_notification(self)
 
@@ -412,19 +413,19 @@ class LWBStreamManager:
     def get_round_request(self):
         if (not all([stream.is_ack for stream in self.notification_streams])
                 or not all([stream.is_ack for stream in self.datastreams])):
-            return SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
+            return SimMessage(self.node.local_timestamp, self.node, lwb_slot.LWB_CONTENTION_HEADER_LENGTH, 0,
                               self.node.lwb.base,
                               SimMessageType.ROUND_REQUEST)
         else:
             return None
 
     def get_data(self, slot_size: int) -> Tuple[DataStream, SimMessage]:
-        stream = self.select_data(slot_size=slot_size - lwb_slot.data_header_length)
+        stream = self.select_data(slot_size=slot_size - lwb_slot.LWB_DATA_HEADER_LENGTH)
 
         if stream is not None:
             content = {'data': stream.get(), 'stream': copy(stream)}
 
-            message = SimMessage(self.node.local_timestamp, self.node, stream.max_payload + lwb_slot.data_header_length,
+            message = SimMessage(self.node.local_timestamp, self.node, stream.max_payload + lwb_slot.LWB_DATA_HEADER_LENGTH,
                                  0,
                                  self.node.lwb.base,
                                  SimMessageType.DATA, content=content)
@@ -437,7 +438,7 @@ class LWBStreamManager:
         stream = self.select_notification(low_power=low_power)
         content = {'notification': stream.get(), 'stream': stream}
 
-        message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
+        message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.LWB_CONTENTION_HEADER_LENGTH, 0,
                              self.node.lwb.base,
                              SimMessageType.NOTIFICATION, content=content)
 
@@ -449,7 +450,7 @@ class LWBStreamManager:
             if not stream.is_ack and stream.check_request(modulation, power_level):
                 stream = copy(stream)
                 stream.advertised_ack_power_level = self.node.lwb.link_manager.get_link(round.master)['power_level']
-                message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
+                message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.LWB_CONTENTION_HEADER_LENGTH, 0,
                                      self.node.lwb.base,
                                      SimMessageType.STREAM_REQUEST,
                                      content={'type': 'notification', 'stream': stream})
@@ -459,7 +460,7 @@ class LWBStreamManager:
             if not stream.is_ack and stream.check_request(round, modulation):
                 stream = copy(stream)
                 stream.advertised_ack_power_level = self.node.lwb.link_manager.get_link(round.master)['power_level']
-                message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.contention_header_length, 0,
+                message = SimMessage(self.node.local_timestamp, self.node, lwb_slot.LWB_CONTENTION_HEADER_LENGTH, 0,
                                      self.node.lwb.base,
                                      SimMessageType.STREAM_REQUEST,
                                      content={'type': 'data', 'stream': stream})
@@ -479,7 +480,7 @@ class LWBStreamManager:
                     break
 
     def tx_ack_stream_request(self, stream: Union[DataStream, NotificationStream]):
-        return SimMessage(self.node.local_timestamp, self.node, lwb_slot.gloria_header_length, 0,
+        return SimMessage(self.node.local_timestamp, self.node, lwb_slot.GLORIA_HEADER_LENGTH, 0,
                           stream.master,
                           SimMessageType.ACK,
                           content={'type': ('data' if type(stream) is DataStream else 'notification'),
@@ -493,7 +494,7 @@ class LWBStreamManager:
             if stream.id == local_stream.id:
                 local_stream.success()
 
-        return SimMessage(self.node.local_timestamp, self.node, lwb_slot.gloria_header_length, 0,
+        return SimMessage(self.node.local_timestamp, self.node, lwb_slot.GLORIA_HEADER_LENGTH, 0,
                           stream.master,
                           SimMessageType.ACK, content={'stream': copy(stream)})
 
@@ -532,7 +533,7 @@ class LWBStreamManager:
                     stream_type = type(stream)
 
         if next_period is not None:
-            return np.ceil(next_period / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY, stream_type
+            return np.ceil(next_period / lwb_slot.LWB_SCHEDULE_GRANULARITY) * lwb_slot.LWB_SCHEDULE_GRANULARITY, stream_type
         else:
             return None, None
 
@@ -547,7 +548,7 @@ class LWBStreamManager:
                 elif stream.next_period < next_period:
                     next_period = stream.next_period
 
-        return np.ceil(next_period / lwb_slot.SCHEDULE_GRANULARITY) * lwb_slot.SCHEDULE_GRANULARITY
+        return np.ceil(next_period / lwb_slot.LWB_SCHEDULE_GRANULARITY) * lwb_slot.LWB_SCHEDULE_GRANULARITY
 
     def retry_all_streams(self):
         for stream in self.datastreams:

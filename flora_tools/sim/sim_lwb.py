@@ -3,9 +3,9 @@ from enum import Enum
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.sim.cad_sync import CADSync
 from flora_tools.sim.lwb_schedule_manager import LWBScheduleManager
-from flora_tools.sim.sim_link_manager import LWBLinkManager
+from flora_tools.sim.lwb_link_manager import LWBLinkManager
 from flora_tools.sim.sim_lwb_round import SimLWBRound
-from flora_tools.sim.stream import LWBStreamManager
+from flora_tools.sim.lwb_stream import LWBStreamManager
 
 
 class LWBState(Enum):

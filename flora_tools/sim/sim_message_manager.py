@@ -20,7 +20,7 @@ class SimMessageManager:
             columns=['rx_node', 'modulation', 'band', 'rx_start', 'callback'])
 
     def tx(self, source: 'sim_node.SimNode', modulation, band, message: SimMessage):
-        power = lwb_slot.POWERS[message.power_level]
+        power = lwb_slot.RADIO_POWERS[message.power_level]
 
         message = copy(message)
         message.hop_count += 1

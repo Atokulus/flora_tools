@@ -1,7 +1,7 @@
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_node as sim_node
-from flora_tools.sim.service import Service
-from flora_tools.sim.stream import DataStream, NotificationStream
+from flora_tools.sim.lwb_service import Service
+from flora_tools.sim.lwb_stream import DataStream, NotificationStream
 
 
 class SensorService(Service):
@@ -16,7 +16,7 @@ class SensorService(Service):
         self.subpriority = subpriority
 
         if payload_size is None:
-            payload_size = lwb_slot.max_data_payload
+            payload_size = lwb_slot.LWB_MAX_DATA_PAYLOAD
 
         self.payload_size = payload_size
         self.accumulated_data = datarate * period

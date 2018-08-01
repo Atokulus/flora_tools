@@ -4,15 +4,15 @@
 
 gloria_timings_t gloria_timings[] = {
     <%- for timing in gloria_timings %>
-    { // %%loop.index-1%%
-        .slotOverhead = %%timing.slot_overhead%%,
-        .slotAckOverhead = %%timing.slot_ack_overhead%%,
-        .floodInitOverhead = %%timing.flood_init_overhead%%,
-        .floodFinishOverhead = %%timing.flood_finish_overhead%%,
-        .rxOffset = %%timing.rx_offset%%,
-        .rxTriggerDelay = %%timing.rx_trigger_delay%%,
-        .txTriggerDelay = %%timing.tx_trigger_delay%%,
-        .txSync = %%timing.tx_sync%%,
+    { // %%loop.index-1%% (%%modulation_name(loop.index-1)%%)
+        .slotOverhead = %%timing.slot_overhead%%, // %%human_time(timing.slot_overhead)%%
+        .slotAckOverhead = %%timing.slot_ack_overhead%%, // %%human_time(timing.slot_ack_overhead)%%
+        .floodInitOverhead = %%timing.flood_init_overhead%%, // %%human_time(timing.flood_init_overhead)%%
+        .floodFinishOverhead = %%timing.flood_finish_overhead%%, // %%human_time(timing.flood_finish_overhead)%%
+        .rxOffset = %%timing.rx_offset%%, // %%human_time(timing.rx_offset)%%
+        .rxTriggerDelay = %%timing.rx_trigger_delay%%, // %%human_time(timing.rx_trigger_delay)%%
+        .txTriggerDelay = %%timing.tx_trigger_delay%%, // %%human_time(timing.tx_trigger_delay)%%
+        .txSync = %%timing.tx_sync%%, // %%human_time(timing.tx_sync)%%
     },
     <%- endfor %>
 }

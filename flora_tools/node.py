@@ -5,8 +5,8 @@ from multiprocessing import Pool
 import serial
 import serial.tools.list_ports
 
-FLOCKLAB = "whymper.ee.ethz.ch"
-FLOCKLAB_SERIAL_PORT_BASE = 50100
+FLOCKLAB_ADDRESS = "whymper.ee.ethz.ch"
+FLOCKLAB_SERIAL_BASE_PORT = 50100
 
 
 class Node:
@@ -62,7 +62,7 @@ class Node:
 
     def open(self):
         if self.flocklab:
-            self.s.connect((FLOCKLAB, FLOCKLAB_SERIAL_PORT_BASE + self.id))
+            self.s.connect((FLOCKLAB_ADDRESS, FLOCKLAB_SERIAL_BASE_PORT + self.id))
         else:
             self.ser.open()
 

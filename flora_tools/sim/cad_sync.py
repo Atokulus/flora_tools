@@ -8,7 +8,7 @@ import flora_tools.sim.sim_node as sim_node
 from flora_tools import lwb_slot
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
-MAX_BACKOFF_EXPONENT = 5  # 143.165576533 min
+CAD_SYNC_MAX_BACKOFF_EXPONENT = 5  # 143.165576533 min
 
 
 class CADSync:
@@ -24,7 +24,7 @@ class CADSync:
 
     @property
     def backoff_period(self):
-        return lwb_slot.SYNC_PERIOD
+        return lwb_slot.LWB_SYNC_PERIOD
 
     def run(self, callback):
         self.start = self.node.local_timestamp
@@ -67,7 +67,7 @@ class CADSync:
             elapsed = self.node.local_timestamp - self.start
 
             if elapsed > self.backoff_period:
-                if self.backoff_counter < MAX_BACKOFF_EXPONENT - 1:
+                if self.backoff_counter < CAD_SYNC_MAX_BACKOFF_EXPONENT - 1:
                     self.backoff_counter += 1
                 self.node.em.register_event(
                     self.node.local_timestamp + self.backoff_period * np.exp2(self.backoff_counter), self.node,

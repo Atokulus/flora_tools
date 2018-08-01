@@ -1,7 +1,7 @@
 import abc
 
 import flora_tools.sim.sim_node as sim_node
-import flora_tools.sim.stream as stream
+import flora_tools.sim.lwb_stream as stream
 
 
 class Service:

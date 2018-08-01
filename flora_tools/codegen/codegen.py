@@ -1,10 +1,15 @@
 import os
 
+import numpy as np
 from jinja2 import Environment, PackageLoader
 
+import gloria
+import lwb_round
+import lwb_slot
 from gloria import GloriaTimings
-from radio_configuration import RadioConfiguration, RADIO_CONFIGURATIONS, RadioModem, BAND_FREQUENCIES, BAND_GROUPS, \
-    BAND_FREQUENCIES_US915, BAND_GROUPS_US915
+from radio_configuration import RADIO_CONFIGURATIONS, RadioModem, BAND_FREQUENCIES, BAND_GROUPS, \
+    BAND_FREQUENCIES_US915, BAND_GROUPS_US915, RadioConfiguration
+from sim import lwb_link_manager, lwb_stream, cad_sync
 
 
 class CodeGen:
@@ -24,17 +29,21 @@ class CodeGen:
             comment_end_string='#>',
         )
 
+        self.env.globals.update(human_time=self.human_time, modulation_name=self.modulation_name)
+
         self.generate_all()
 
     def generate_all(self):
         self.generate_radio_constants()
         self.generate_gloria_constants()
+        self.generate_lwb_constants()
+        self.generate_lwb_round_constants()
 
     def generate_radio_constants(self):
-        target_radio_constants_c = './lib/radio/radio_constants.c'
-        self.create_folder(target_radio_constants_c)
+        target = './lib/radio/radio_constants.c'
+        self.create_folder(target)
 
-        radio_constants_c = self.env.get_template('radio_constants.c')
+        template = self.env.get_template('radio_constants.c')
 
         configurations = [({
                                'modem': config['modem'].c_name,
@@ -52,21 +61,92 @@ class CodeGen:
                            }
                            ) for config in RADIO_CONFIGURATIONS]
 
-        rendered = radio_constants_c.render(configurations=configurations, bands=BAND_FREQUENCIES, band_groups=BAND_GROUPS,
-                                 bands_us915=BAND_FREQUENCIES_US915, band_groups_us915=BAND_GROUPS_US915)
+        rendered = template.render(configurations=configurations, bands=BAND_FREQUENCIES, band_groups=BAND_GROUPS,
+                                   bands_us915=BAND_FREQUENCIES_US915, band_groups_us915=BAND_GROUPS_US915)
 
-        self.write_render_to_file(rendered, target_radio_constants_c)
+        self.write_render_to_file(rendered, target)
 
     def generate_gloria_constants(self):
-        target_gloria_constants_c = './lib/radio/gloria_constants.c'
-        self.create_folder(target_gloria_constants_c)
+        target = './lib/protocol/gloria/gloria_constants.c'
+        self.create_folder(target)
 
-        gloria_constants_c = self.env.get_template('gloria_constants.c')
+        template = self.env.get_template('gloria_constants.c')
         gloria_timings = [GloriaTimings(modulation).get_timings() for modulation in range(10)]
 
-        rendered = gloria_constants_c.render(gloria_timings=gloria_timings)
+        rendered = template.render(gloria_timings=gloria_timings)
 
-        self.write_render_to_file(rendered, target_gloria_constants_c)
+        self.write_render_to_file(rendered, target)
+
+    def generate_lwb_constants(self):
+        target = './lib/protocol/lwb/lwb_constants.h'
+        self.create_folder(target)
+        template = self.env.get_template('lwb_constants.h')
+        lwb_constants = {
+            'LWB_SCHEDULE_GRANULARITY': GloriaTimings.timerTicks(lwb_slot.LWB_SCHEDULE_GRANULARITY),
+            'LWB_SYNC_PERIOD': GloriaTimings.timerTicks(lwb_slot.LWB_SYNC_PERIOD),
+            'GLORIA_HEADER_LENGTH': lwb_slot.GLORIA_HEADER_LENGTH,
+            'LWB_CONTENTION_HEADER_LENGTH': lwb_slot.LWB_CONTENTION_HEADER_LENGTH,
+            'LWB_DATA_HEADER_LENGTH': lwb_slot.LWB_DATA_HEADER_LENGTH,
+            'LWB_MAX_DATA_PAYLOAD': lwb_slot.LWB_MAX_DATA_PAYLOAD,
+            'LWB_SLOT_SCHEDULE_HEADER_LENGTH': lwb_slot.LWB_SLOT_SCHEDULE_HEADER_LENGTH,
+            'LWB_SLOT_SCHEDULE_ITEM_LENGTH': lwb_slot.LWB_SLOT_SCHEDULE_ITEM_LENGTH,
+            'LWB_ROUND_SCHEDULE_ITEM': lwb_slot.LWB_ROUND_SCHEDULE_ITEM,
+            'LWB_ROUND_SCHEDULE_ITEM_COUNT': lwb_slot.LWB_ROUND_SCHEDULE_ITEM_COUNT,
+            'LWB_ROUND_SCHEDULE_LENGTH': lwb_slot.LWB_ROUND_SCHEDULE_LENGTH,
+        }
+        rendered = template.render(**lwb_constants)
+        self.write_render_to_file(rendered, target)
+
+        target = './lib/protocol/lwb/lwb_constants.c'
+        self.create_folder(target)
+        template = self.env.get_template('lwb_constants.c')
+
+        lwb_constants = {
+            'gloria_default_power_levels': lwb_slot.GLORIA_DEFAULT_POWER_LEVELS,
+            'gloria_retransmission_counts': lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS,
+            'gloria_hop_counts': lwb_slot.GLORIA_HOP_COUNTS,
+            'radio_modulations': lwb_slot.RADIO_MODULATIONS,
+            'radio_powers': lwb_slot.RADIO_POWERS,
+        }
+        rendered = template.render(**lwb_constants)
+
+        self.write_render_to_file(rendered, target)
+
+    def generate_lwb_round_constants(self):
+        target = './lib/protocol/lwb/lwb_round_constants.c'
+        self.create_folder(target)
+        template = self.env.get_template('lwb_round_constants.c')
+
+        lwb_round_constants = {
+            'lwb_max_slot_count': lwb_round.LWB_MAX_SLOT_COUNT,
+            'lwb_max_stream_request_slot_count': lwb_round.LWB_MAX_STREAM_REQUEST_SLOT_COUNT,
+            'lwb_initial_stream_request_slot_count': lwb_round.LWB_INITIAL_STREAM_REQUEST_SLOT_COUNT,
+            'lwb_min_stream_request_slot_count': lwb_round.LWB_MIN_STREAM_REQUEST_SLOT_COUNT,
+        }
+
+        rendered = template.render(**lwb_round_constants)
+        self.write_render_to_file(rendered, target)
+
+
+        target = './lib/protocol/lwb/lwb_round_constants.h'
+        self.create_folder(target)
+        template = self.env.get_template('lwb_round_constants.h')
+
+        lwb_round_constants = {
+            'LWB_LINK_UPGRADE_COUNTER': lwb_link_manager.LWB_LINK_UPGRADE_COUNTER,
+            'LWB_LINK_DOWNGRADE_COUNTER': lwb_link_manager.LWB_LINK_DOWNGRADE_COUNTER,
+
+            'LWB_STREAM_MAX_TTL': lwb_stream.LWB_STREAM_MAX_TTL,
+            'LWB_STREAM_MAX_REQUEST_TRIALS': lwb_stream.LWB_STREAM_MAX_REQUEST_TRIALS,
+            'LWB_STREAM_DEACTIVATION_BACKDROP': lwb_stream.LWB_STREAM_DEACTIVATION_BACKDROP,
+            'LWB_STREAM_MAX_BACKDROP_RANGE': lwb_stream.LWB_STREAM_MAX_BACKDROP_RANGE,
+            'LWB_STREAM_INITIAL_BACKDROP_RANGE': lwb_stream.LWB_STREAM_INITIAL_BACKDROP_RANGE,
+
+            'CAD_SYNC_MAX_BACKOFF_EXPONENT': cad_sync.CAD_SYNC_MAX_BACKOFF_EXPONENT,
+        }
+
+        rendered = template.render(**lwb_round_constants)
+        self.write_render_to_file(rendered, target)
 
     def create_folder(self, file):
         if not os.path.exists(os.path.join(self.path, os.path.dirname(file))):
@@ -76,4 +156,20 @@ class CodeGen:
         with open(os.path.join(self.path, file), "w") as fh:
             fh.write(render)
             print("Written {}".format(file))
+
+    @staticmethod
+    def human_time(ticks: int) -> str:
+        PREFIXES = ['', 'm', 'µ', 'n']
+        realtime = ticks / gloria.TIMER_FREQUENCY
+        order = np.ceil(np.ceil(-np.log10(realtime)) / 3)
+        order = int(np.clip(order, 0, len(PREFIXES) - 1))
+        realtime *= np.power(10, order * 3)
+
+        formatted_time = "{:.3f} {}s".format(realtime, PREFIXES[order])
+
+        return formatted_time
+
+    @staticmethod
+    def modulation_name(index: int) -> str:
+        return RadioConfiguration(index).modulation_name
 

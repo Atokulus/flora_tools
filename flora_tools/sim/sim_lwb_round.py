@@ -168,7 +168,7 @@ class SimLWBRound:
                 power_level = self.lwb.link_manager.get_link(target_node=self.round.master)['power_level']
 
                 if np.isnan(power_level):
-                    power_level = lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]]
+                    power_level = lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[lwb_slot.RADIO_MODULATIONS[slot.modulation]]
 
                 message.power_level = power_level
 
@@ -214,7 +214,7 @@ class SimLWBRound:
                     message = self.lwb.stream_manager.tx_ack(self.ack_stream)
                     power_level = self.lwb.link_manager.get_link(message.destination)['power_level']
                     if np.isnan(power_level):
-                        power_level = lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]]
+                        power_level = lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[lwb_slot.RADIO_MODULATIONS[slot.modulation]]
                     message.power_level = power_level
                     message.modulation = slot.modulation
 
@@ -225,7 +225,7 @@ class SimLWBRound:
                     message = self.lwb.stream_manager.tx_ack_stream_request(self.ack_stream)
                     power_level = self.lwb.link_manager.get_link(message.destination)['power_level']
                     if np.isnan(power_level):
-                        power_level = lwb_slot.DEFAULT_POWER_LEVELS[lwb_slot.MODULATIONS[slot.modulation]]
+                        power_level = lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[lwb_slot.RADIO_MODULATIONS[slot.modulation]]
                     message.power_level = power_level
                     message.modulation = slot.modulation
 

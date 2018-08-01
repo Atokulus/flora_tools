@@ -15,8 +15,8 @@ class CADSearch:
         if start_modulation is not None:
             self.current_modulation = start_modulation + 1
         else:
-            self.current_modulation = len(lwb_slot.MODULATIONS)
-        self.current_band = gloria.BANDS[0]
+            self.current_modulation = len(lwb_slot.RADIO_MODULATIONS)
+        self.current_band = gloria.DEFAULT_BAND
         self.callback = callback
         self.rx_start = None
         self.potential_message: SimMessage = None
@@ -30,13 +30,13 @@ class CADSearch:
 
     @property
     def rx_symbol_timeout(self):
-        return [lwb_slot.LWBSlot.create_empty_slot(i, payload=255).total_time for i in range(len(lwb_slot.MODULATIONS))]
+        return [lwb_slot.LWBSlot.create_empty_slot(i, payload=255).total_time for i in range(len(lwb_slot.RADIO_MODULATIONS))]
 
     def process_next_mod(self):
         self.current_modulation -= 1
 
         if self.current_modulation >= 0:
-            self.radio_config = RadioConfiguration(modulation=lwb_slot.MODULATIONS[self.current_modulation])
+            self.radio_config = RadioConfiguration(modulation=lwb_slot.RADIO_MODULATIONS[self.current_modulation])
             self.radio_math = RadioMath(self.radio_config)
 
             if self.radio_config.modem is RadioModem.FSK:
@@ -48,10 +48,10 @@ class CADSearch:
 
     def process_rx(self):
         self.rx_start = self.node.local_timestamp + gloria.GloriaTimings(
-            lwb_slot.MODULATIONS[self.current_modulation]).rx_setup_time
+            lwb_slot.RADIO_MODULATIONS[self.current_modulation]).rx_setup_time
         self.node.mm.register_rx(self.node,
                                  self.rx_start,
-                                 lwb_slot.MODULATIONS[self.current_modulation],
+                                 lwb_slot.RADIO_MODULATIONS[self.current_modulation],
                                  self.current_band,
                                  self.process_tx_done_before_rx_timeout_callback)
         self.rx_timeout_event = self.node.em.register_event(
@@ -62,7 +62,7 @@ class CADSearch:
 
     def process_tx_done_before_rx_timeout_callback(self, event):
         message, node = self.node.network.mc.receive_message_on_tx_done_before_rx_timeout(self.node,
-                                                                                          lwb_slot.MODULATIONS[
+                                                                                          lwb_slot.RADIO_MODULATIONS[
                                                                                               self.current_modulation],
                                                                                           self.current_band,
                                                                                           event['data']['message'],
@@ -75,7 +75,7 @@ class CADSearch:
 
     def process_rx_timeout(self, event):
         self.potential_message, self.potential_node = self.node.network.mc.receive_message_on_rx_timeout(
-            modulation=lwb_slot.MODULATIONS[self.current_modulation],
+            modulation=lwb_slot.RADIO_MODULATIONS[self.current_modulation],
             band=self.current_band,
             rx_node=self.node,
             rx_start=self.rx_start,
@@ -107,7 +107,7 @@ class CADSearch:
                                     self.process_lora_cad_done)
 
     def process_lora_cad_done(self, event):
-        if self.node.network.mc.cad_process(modulation=lwb_slot.MODULATIONS[self.current_modulation],
+        if self.node.network.mc.cad_process(modulation=lwb_slot.RADIO_MODULATIONS[self.current_modulation],
                                             band=self.current_band,
                                             rx_node=self.node,
                                             timestamp=self.node.local_timestamp) is not None:

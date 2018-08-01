@@ -4,13 +4,13 @@ from typing import Union
 
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_node as sim_node
-import flora_tools.sim.stream as stream
+import flora_tools.sim.lwb_stream as stream
 from flora_tools.radio_configuration import RadioConfiguration
 
-SLOT_COUNTS = [2, 2, 4, 4, 6, 6, 16, 16, 32, 32]
-MAX_STREAM_REQUEST_LAYOUT = [2, 2, 4, 8]
-INITIAL_STREAM_REQUEST_LAYOUT = [1, 1, 1, 8]
-MIN_STREAM_REQUEST_LAYOUT = [0, 0, 0, 0]
+LWB_MAX_SLOT_COUNT = [2, 2, 4, 4, 6, 6, 16, 16, 32, 32]
+LWB_MAX_STREAM_REQUEST_SLOT_COUNT = [2, 2, 4, 8]
+LWB_INITIAL_STREAM_REQUEST_SLOT_COUNT = [1, 1, 1, 8]
+LWB_MIN_STREAM_REQUEST_SLOT_COUNT = [0, 0, 0, 0]
 
 
 class LWBRoundType(Enum):
@@ -64,7 +64,7 @@ class LWBRound:
                  master: 'sim_node.SimNode' = None, layout: typing.List[LWBSlotItem] = []):
         self.round_marker = round_marker
         self.modulation = modulation
-        self.gloria_modulation = lwb_slot.MODULATIONS[self.modulation]
+        self.gloria_modulation = lwb_slot.RADIO_MODULATIONS[self.modulation]
         self.radio_configuration = RadioConfiguration(self.gloria_modulation)
         self.type = type
         self.master = master
@@ -158,7 +158,7 @@ class LWBRound:
         item: LWBDataSlotItem
         for item in data_slots:
             layout.append(LWBSlotItem(LWBSlotItemType.DATA, master=item.master, target=item.target,
-                                      payload=item.data_payload + lwb_slot.data_header_length,
+                                      payload=item.data_payload + lwb_slot.LWB_DATA_HEADER_LENGTH,
                                       power_level=item.power_level, ack_power_level=item.ack_power_level,
                                       stream=item.stream))
         layout.append(LWBSlotItem(LWBSlotItemType.ROUND_SCHEDULE, master=master))

@@ -23,7 +23,7 @@ class SimMessageChannel:
             rx_start: float, tx_start: float, transmission
     ) -> Tuple[Optional[SimMessage], Optional['sim_node.SimNode']]:
         if not self.is_reachable(modulation, rx_node, message.source,
-                                 lwb_slot.POWERS[message.power_level]):
+                                 lwb_slot.RADIO_POWERS[message.power_level]):
             return None, None
 
         config = RadioConfiguration(modulation, preamble=gloria.GloriaTimings(modulation).preamble_len)
@@ -45,7 +45,7 @@ class SimMessageChannel:
             return -self.calculate_path_loss(rx_node, item.source) + item.power
 
         interfering_set['rx_power'] = interfering_set.apply(calc_power_message, axis=1)
-        rx_power = -self.calculate_path_loss(rx_node, message.source) + lwb_slot.POWERS[message.power_level]
+        rx_power = -self.calculate_path_loss(rx_node, message.source) + lwb_slot.RADIO_POWERS[message.power_level]
 
         interfering_power = 0
         for interferer_index, interferer in interfering_set.iterrows():
@@ -156,7 +156,7 @@ class SimMessageChannel:
         rx_start = rx_node.transform_local_to_global_timestamp(rx_start)
 
         def calc_power_message(item):
-            return -self.calculate_path_loss(rx_node, item['source']) + lwb_slot.POWERS[item['message'].power_level]
+            return -self.calculate_path_loss(rx_node, item['source']) + lwb_slot.RADIO_POWERS[item['message'].power_level]
 
         interfering_set = (self.mm.mq.loc[
             (self.mm.mq.modulation == modulation) &

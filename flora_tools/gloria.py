@@ -7,6 +7,7 @@ import flora_tools.lwb_slot as lwb_slot
 from flora_tools.radio_configuration import RadioConfiguration, PROC_POWER
 from flora_tools.radio_math import RadioMath
 
+DEFAULT_BAND = 48
 TIMER_FREQUENCY = 8E6  # 0.125 us
 
 rx_time_offsets = [
@@ -173,7 +174,7 @@ class GloriaFlood:
                  hop_count: int,
                  is_ack=False, safety_factor=2, is_master=True, power=10, band: int = None):
         if band is None:
-            band = BANDS[0]
+            band = DEFAULT_BAND
 
         self.lwb_slot = lwb_slot
         self.modulation = modulation

@@ -267,12 +267,12 @@ class RadioConfiguration:
             if self.modem is RadioModem.LORA:
                 return "SF{}".format(self.sf)
             elif self.modem is RadioModem.FSK:
-                return "FSK\n{}k".format(self.bitrate / 1000)
+                return "FSK {:d}k".format(int(self.bitrate / 1000))
         else:
             if self.modem is RadioModem.LORA:
                 return "LoRa SF{}@{}kHz".format(self.sf, self.real_bandwidth / 1000)
             elif self.modem is RadioModem.FSK:
-                return "FSK {}kBit/s@{}kHz".format(self.bitrate, self.real_bandwidth / 1000)
+                return "FSK {:d}kBit/s@{}kHz".format(int(self.bitrate / 1000), self.real_bandwidth / 1000)
 
     @staticmethod
     def get_modulation_name(modulation, short=True):

@@ -88,11 +88,11 @@ class SimTracer:
         edges = [[edge[0], edge[1]] for edge in self.network.G.edges]
 
         return {
-            'modulations': [{'modulation': modulation, 'gloria_modulation': lwb_slot.MODULATIONS[modulation],
-                             'color': RadioConfiguration(lwb_slot.MODULATIONS[modulation]).color,
-                             'name': RadioConfiguration(lwb_slot.MODULATIONS[modulation]).modulation_name} for
+            'modulations': [{'modulation': modulation, 'gloria_modulation': lwb_slot.RADIO_MODULATIONS[modulation],
+                             'color': RadioConfiguration(lwb_slot.RADIO_MODULATIONS[modulation]).color,
+                             'name': RadioConfiguration(lwb_slot.RADIO_MODULATIONS[modulation]).modulation_name} for
                             modulation in
-                            range(len(lwb_slot.MODULATIONS))],
+                            range(len(lwb_slot.RADIO_MODULATIONS))],
             'nodes': [{'id': node.id, 'role': str(node.role)} for node in self.network.nodes],
             'edges': edges,
             'pos': self.network.pos
