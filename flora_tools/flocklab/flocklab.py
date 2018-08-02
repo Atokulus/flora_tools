@@ -58,7 +58,9 @@ class FlockLab:
             raise Exception("Error. No auth information given!")
 
         if not 'USER' in self.auth or not 'PASSWORD' in self.auth:
-            raise Exception("Error. Auth information not in correct format!")
+            raise Exception("Error. Auth information not in correct format! "
+                            "You have to place the file '.flocklabauth' under your home or working directory."
+                            "See https://gitlab.ethz.ch/tec/public/flocklab/wikis/Man/Tutorials/Tutorial7")
 
     def parse_auth(self, authfile):
         envre = re.compile(r'''^([^\s=]+)=(?:[\s"']*)(.+?)(?:[\s"']*)$''')
