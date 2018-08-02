@@ -51,6 +51,7 @@ class SimMessage:
 
         self.freeze_hop_count = self.hop_count
         self.freeze_power_level = self.power_level
+        self.freeze_timestamp = None
 
     def __copy__(self):
         message = SimMessage(timestamp=self.timestamp,
