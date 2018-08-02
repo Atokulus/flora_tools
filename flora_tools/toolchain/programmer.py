@@ -3,8 +3,8 @@ import time
 
 import serial
 from intelhex import hex2bin
+from stm32loader.stm32loader import Stm32Bootloader, Stm32Loader
 
-from flora_tools.stm32loader.stm32loader import Stm32Bootloader, Stm32Loader
 from flora_tools.toolchain.bootloader import Bootloader
 from flora_tools.toolchain.platforms import *
 
