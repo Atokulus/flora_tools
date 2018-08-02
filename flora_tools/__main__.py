@@ -42,8 +42,6 @@ def run_simulation(output_path, event_count: int = None, time_limit: float = Non
 
 def flocklab_measure_links():
     measure_links_experiment = MeasureLinksExperiment()
-    measure_links_experiment.run()
-
 
 def start_server():
     VisualizationServer()

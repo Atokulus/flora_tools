@@ -1,10 +1,13 @@
 import logging
+import os
 import time
 
 import flora_tools.lwb_slot as lwb_slot
 from flora_tools.node import Node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
+
+from flora_tools.flocklab.flocklab import FlockLab
 
 ITERATIONS = 5
 
@@ -23,6 +26,10 @@ class MeasureLinksExperiment:
     def __init__(self):
         self.nodes = None
         self.logger = logging.getLogger('flocklab_link_measurement')
+
+        xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
+        flocklab = FlockLab()
+        flocklab.schedule_test(xmlfile, self.run)
 
     def run(self):
         self.connect_nodes()

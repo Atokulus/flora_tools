@@ -49,6 +49,7 @@ setup(
         'intelhex',
         'coloredlogs',
         'flask',
+        'requests',
     ],
     classifiers=(
         "Programming Language :: Python :: 3",

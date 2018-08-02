@@ -9,6 +9,7 @@ pyvisa
 intelhex
 coloredlogs
 flask
+requests
 
  # requirements.txt
  #
