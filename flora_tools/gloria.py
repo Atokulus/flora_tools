@@ -9,6 +9,7 @@ from flora_tools.radio_math import RadioMath
 
 DEFAULT_BAND = 48
 TIMER_FREQUENCY = 8E6  # 0.125 us
+GLORIA_CLOCK_DRIFT = 40E-6  # +- 20ppm
 
 BLACK_BOX_SYNC_DELAY = 1.96501309E-6
 
@@ -337,31 +338,30 @@ class GloriaTimings:
     def get_timings(self):
         return {
             'slot_overhead':
-                GloriaTimings.timerTicks(
+                GloriaTimings.timer_ticks(
                     TX_TIME_OFFSETS[self.modulation][0] + TX_TIME_OFFSETS[self.modulation][1] * self.safety_factor
                     + self.tx_irq_time + self.rx_setup_time + self.radio_math.get_preamble_time() * PREAMBLE_PRE_LISTENING
                     + GAP),
             'slot_ack_overhead':
-                GloriaTimings.timerTicks(
+                GloriaTimings.timer_ticks(
                     self.radio_math.get_preamble_time() * PREAMBLE_PRE_LISTENING
                     + RX_TIME_OFFSETS[self.modulation][0] + RX_TIME_OFFSETS[self.modulation][1] * self.safety_factor
                     + self.rx_irq_time + self.rx_setup_time
                     + GAP),
             'flood_init_overhead':
-                GloriaTimings.timerTicks(
+                GloriaTimings.timer_ticks(
                     self.wakeup_time +
                     self.payload_set_time +
                     np.max([self.tx_setup_time, self.rx_setup_time]) +
                     RX2RF[0] + RX2RF[1] * self.safety_factor +
                     self.radio_math.get_preamble_time() * PREAMBLE_PRE_LISTENING),
-            'flood_finish_overhead': GloriaTimings.timerTicks(self.payload_get_time + self.sleep_time),
-            'rx_offset': GloriaTimings.timerTicks(self.radio_math.get_preamble_time() * PREAMBLE_PRE_LISTENING),
-            'rx_trigger_delay': GloriaTimings.timerTicks(RX2RF[0]),
-            'tx_trigger_delay': GloriaTimings.timerTicks(TX2RF),
-            'tx_sync': GloriaTimings.timerTicks(TX2SYNC[self.modulation]),
-            'black_box_sync_delay': GloriaTimings.timerTicks(BLACK_BOX_SYNC_DELAY),
+            'flood_finish_overhead': GloriaTimings.timer_ticks(self.payload_get_time + self.sleep_time),
+            'rx_offset': GloriaTimings.timer_ticks(self.radio_math.get_preamble_time() * PREAMBLE_PRE_LISTENING),
+            'rx_trigger_delay': GloriaTimings.timer_ticks(RX2RF[0]),
+            'tx_trigger_delay': GloriaTimings.timer_ticks(TX2RF),
+            'tx_sync': GloriaTimings.timer_ticks(TX2SYNC[self.modulation]),
         }
 
     @staticmethod
-    def timerTicks(time: float) -> int:
+    def timer_ticks(time: float) -> int:
         return int(np.round(time * TIMER_FREQUENCY))

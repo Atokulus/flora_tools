@@ -5,7 +5,7 @@
 
 #define LWB_SCHEDULE_GRANULARITY %%LWB_SCHEDULE_GRANULARITY%% // %%human_time(LWB_SCHEDULE_GRANULARITY)%%
 #define LWB_SYNC_PERIOD %%LWB_SYNC_PERIOD%% // %%human_time(LWB_SYNC_PERIOD)%%
-#define GLORIA_HEADER_LENGTH %%GLORIA_HEADER_LENGTH%%
+
 #define LWB_CONTENTION_HEADER_LENGTH %%LWB_CONTENTION_HEADER_LENGTH%%
 #define LWB_DATA_HEADER_LENGTH %%LWB_DATA_HEADER_LENGTH%%
 #define LWB_MAX_DATA_PAYLOAD %%LWB_MAX_DATA_PAYLOAD%%
@@ -14,5 +14,11 @@
 #define LWB_ROUND_SCHEDULE_ITEM %%LWB_ROUND_SCHEDULE_ITEM%%
 #define LWB_ROUND_SCHEDULE_ITEM_COUNT %%LWB_ROUND_SCHEDULE_ITEM_COUNT%%
 #define LWB_ROUND_SCHEDULE_LENGTH %%LWB_ROUND_SCHEDULE_LENGTH%%
+
+extern uint8_t gloria_default_power_levels[];
+extern uint8_t gloria_retransmission_counts[];
+extern uint8_t gloria_hop_counts[];
+extern uint8_t lwb_modulations[];
+extern uint8_t lwb_powers[];
 
 #endif /* LWB_CONSTANTS_H */

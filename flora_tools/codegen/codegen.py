@@ -78,6 +78,24 @@ class CodeGen:
         self.write_render_to_file(rendered, target)
 
     def generate_gloria_constants(self):
+        target = './lib/protocol/gloria/gloria_constants.h'
+        self.create_folder(target)
+
+        template = self.env.get_template('gloria_constants.h')
+
+        constants = {
+            'GLORIA_HEADER_LENGTH': lwb_slot.GLORIA_HEADER_LENGTH,
+            'GLORIA_ACK_LENGTH': gloria.GLORIA_ACK_LENGTH,
+            'GLORIA_CLOCK_DRIFT': GloriaTimings.timer_ticks(gloria.GLORIA_CLOCK_DRIFT),
+            'GLORIA_CLOCK_DRIFT_PLUSMINUS': gloria.GLORIA_CLOCK_DRIFT / 2 * 1E6,
+            'TIMER_FREQUENCY': "{} MHz".format(gloria.TIMER_FREQUENCY / 1E6),
+            'GLORIA_BLACK_BOX_SYNC_DELAY': GloriaTimings.timer_ticks(gloria.BLACK_BOX_SYNC_DELAY),
+        }
+
+        rendered = template.render(**constants)
+
+        self.write_render_to_file(rendered, target)
+
         target = './lib/protocol/gloria/gloria_constants.c'
         self.create_folder(target)
 
@@ -93,8 +111,8 @@ class CodeGen:
         self.create_folder(target)
         template = self.env.get_template('lwb_constants.h')
         lwb_constants = {
-            'LWB_SCHEDULE_GRANULARITY': GloriaTimings.timerTicks(lwb_slot.LWB_SCHEDULE_GRANULARITY),
-            'LWB_SYNC_PERIOD': GloriaTimings.timerTicks(lwb_slot.LWB_SYNC_PERIOD),
+            'LWB_SCHEDULE_GRANULARITY': GloriaTimings.timer_ticks(lwb_slot.LWB_SCHEDULE_GRANULARITY),
+            'LWB_SYNC_PERIOD': GloriaTimings.timer_ticks(lwb_slot.LWB_SYNC_PERIOD),
             'GLORIA_HEADER_LENGTH': lwb_slot.GLORIA_HEADER_LENGTH,
             'LWB_CONTENTION_HEADER_LENGTH': lwb_slot.LWB_CONTENTION_HEADER_LENGTH,
             'LWB_DATA_HEADER_LENGTH': lwb_slot.LWB_DATA_HEADER_LENGTH,
