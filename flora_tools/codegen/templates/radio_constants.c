@@ -25,6 +25,7 @@ const radio_band_t radio_bands[] =
 		<%- for band in bands %>
 		    { .centerFrequency = %%band.center_frequency%%, .bandwidth = %%band.bandwidth%%, .dutyCycle = %%band.duty_cycle%%, .maxPower = %%band.max_power%% }, // %%loop.index - 1%%
 		<%- endfor %>
+};
 
 const radio_band_group_t lora_band_groups[] = {
 		<%- for band_group in band_groups %>

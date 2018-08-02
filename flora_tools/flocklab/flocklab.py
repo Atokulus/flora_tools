@@ -47,22 +47,18 @@ class FlockLab:
         self.callback = None
         self.osSleep = None
 
-        self.auth = {}
+        self.auth = self.parse_auth()
+
+    def parse_auth(self):
         home_auth = os.path.join(str(Path.home()), '.flocklabauth')
 
         if os.path.isfile('.flocklabauth'):
-            self.auth = self.parse_auth('.flocklabauth')
+            authfile = '.flocklabauth'
         elif os.path.isfile(home_auth):
-            self.auth = self.parse_auth(home_auth)
+            authfile = home_auth
         else:
             raise Exception("Error. No auth information given!")
 
-        if not 'USER' in self.auth or not 'PASSWORD' in self.auth:
-            raise Exception("Error. Auth information not in correct format! "
-                            "You have to place the file '.flocklabauth' under your home or working directory."
-                            "See https://gitlab.ethz.ch/tec/public/flocklab/wikis/Man/Tutorials/Tutorial7")
-
-    def parse_auth(self, authfile):
         envre = re.compile(r'''^([^\s=]+)=(?:[\s"']*)(.+?)(?:[\s"']*)$''')
         result = {}
         with open(authfile) as ins:
@@ -70,6 +66,12 @@ class FlockLab:
                 match = envre.match(line)
                 if match is not None:
                     result[match.group(1)] = match.group(2)
+
+        if 'USER' not in result or 'PASSWORD' not in result:
+            raise Exception("Error. Auth information not in correct format! "
+                            "You have to place the file '.flocklabauth' under your home or working directory."
+                            "See https://gitlab.ethz.ch/tec/public/flocklab/wikis/Man/Tutorials/Tutorial7")
+
         return result
 
     def schedule_test(self, xmlfile, callback=None):
@@ -98,11 +100,14 @@ class FlockLab:
                 'start_time': dateutil.parser.parse(m.group(2))
             }
 
-            print("Test successfully added to FlockLab. Test (ID {}) starts on {}".format(test['id'], test['start_time']))
+            print(
+                "Test successfully added to FlockLab. Test (ID {}) starts on {}".format(test['id'], test['start_time']))
 
             if self.callback is not None:
-                delta = test['start_time'] - datetime.datetime.now(datetime.timezone.utc) + timedelta(seconds=START_TIME_OFFSET)
-                print("Experiment callback will start in {}.".format(delta))
+                delta = test['start_time'] - datetime.datetime.now(datetime.timezone.utc) + timedelta(
+                    seconds=START_TIME_OFFSET)
+                print("Experiment callback will start in {} at {}.".format(delta, test['start_time'] + timedelta(
+                    seconds=START_TIME_OFFSET)))
 
                 self.osSleep = None
                 # in Windows, prevent the OS from sleeping while we run
@@ -110,12 +115,14 @@ class FlockLab:
                     self.osSleep = WindowsInhibitor()
                     self.osSleep.inhibit()
 
-                t = Timer(delta.seconds, self.handle_callback)
+                t = Timer(delta.seconds, self.handle_test_callback)
                 t.start()  # Start after delta time
         else:
             print(r.text)
             raise Exception("Error. Auth information wrong, file not validated or connected via IPv6!")
 
-    def handle_callback(self):
+    def handle_test_callback(self):
+        self.callback()
+
         if self.osSleep:
             self.osSleep.uninhibit()

@@ -6,6 +6,7 @@ from jinja2 import Environment, PackageLoader
 import gloria
 import lwb_round
 import lwb_slot
+import radio_configuration
 from gloria import GloriaTimings
 from radio_configuration import RADIO_CONFIGURATIONS, RadioModem, BAND_FREQUENCIES, BAND_GROUPS, \
     BAND_FREQUENCIES_US915, BAND_GROUPS_US915, RadioConfiguration
@@ -63,7 +64,17 @@ class CodeGen:
 
         rendered = template.render(configurations=configurations, bands=BAND_FREQUENCIES, band_groups=BAND_GROUPS,
                                    bands_us915=BAND_FREQUENCIES_US915, band_groups_us915=BAND_GROUPS_US915)
+        self.write_render_to_file(rendered, target)
 
+        target = './lib/radio/radio_constants.h'
+        self.create_folder(target)
+
+        template = self.env.get_template('radio_constants.h')
+
+        constants = {'RADIO_DEFAULT_BAND': radio_configuration.RADIO_DEFAULT_BAND,
+                     'RADIO_DEFAULT_BAND_US915': radio_configuration.RADIO_DEFAULT_BAND_US915}
+
+        rendered = template.render(**constants)
         self.write_render_to_file(rendered, target)
 
     def generate_gloria_constants(self):
@@ -105,8 +116,8 @@ class CodeGen:
             'gloria_default_power_levels': lwb_slot.GLORIA_DEFAULT_POWER_LEVELS,
             'gloria_retransmission_counts': lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS,
             'gloria_hop_counts': lwb_slot.GLORIA_HOP_COUNTS,
-            'radio_modulations': lwb_slot.RADIO_MODULATIONS,
-            'radio_powers': lwb_slot.RADIO_POWERS,
+            'lwb_modulations': lwb_slot.RADIO_MODULATIONS,
+            'lwb_powers': lwb_slot.RADIO_POWERS,
         }
         rendered = template.render(**lwb_constants)
 

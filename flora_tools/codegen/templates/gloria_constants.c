@@ -16,4 +16,4 @@ gloria_timings_t gloria_timings[] = {
         .blackBoxSyncDelay = %%timing.black_box_sync_delay%%, // %%human_time(timing.black_box_sync_delay)%%
     },
     <%- endfor %>
-}
+};

@@ -17,6 +17,8 @@ INCLUDE_PATHS = [
     'lib/config',
     'lib/time',
     'lib/protocol',
+    'lib/protocol/gloria',
+    'lib/protocol/lwb',
     'lib/test',
     'lib/cli/cJSON',
 ]

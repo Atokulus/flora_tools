@@ -4,6 +4,9 @@ import matplotlib
 import matplotlib.cm
 import numpy as np
 
+RADIO_DEFAULT_BAND = 48
+RADIO_DEFAULT_BAND_US915 = 0
+
 BAND_FREQUENCIES = [
     # Duty-cycle in 1/1000
     # Subband 863.0 - 865.0 MHz (0)
