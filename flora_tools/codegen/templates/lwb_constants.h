@@ -19,6 +19,6 @@ extern uint8_t gloria_default_power_levels[];
 extern uint8_t gloria_retransmission_counts[];
 extern uint8_t gloria_hop_counts[];
 extern uint8_t lwb_modulations[];
-extern uint8_t lwb_powers[];
+extern int8_t lwb_powers[];
 
 #endif /* LWB_CONSTANTS_H */

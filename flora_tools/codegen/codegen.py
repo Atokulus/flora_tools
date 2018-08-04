@@ -92,6 +92,8 @@ class CodeGen:
             'TIMER_FREQUENCY': "{} MHz".format(gloria.TIMER_FREQUENCY / 1E6),
             'GLORIA_BLACK_BOX_SYNC_DELAY': GloriaTimings.timer_ticks(gloria.BLACK_BOX_SYNC_DELAY),
             'GLORIA_MAX_ACKS': MAX_ACKS,
+            'GLORIA_RADIO_SLEEP_TIME': GloriaTimings.timer_ticks(GloriaTimings(0).sleep_time),
+            'GLORIA_RADIO_WAKEUP_TIME': GloriaTimings.timer_ticks(GloriaTimings(0).wakeup_time),
         }
 
         rendered = template.render(**constants)

@@ -38,6 +38,7 @@
 
 #define RADIO_CLOCK_DRIFT 25000 // 1/(+-20ppm)
 #define RADIO_TIMER_PERIOD_NS 15625U
+#define RADIO_TIMER_FREQUENCY 64000 // Hz
 
 typedef enum
 {
