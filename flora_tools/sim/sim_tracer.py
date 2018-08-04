@@ -42,9 +42,9 @@ class Activity:
 
 
 class TxActivity(Activity):
-    def __init__(self, start, end, node, energy, power, modulation):
+    def __init__(self, start, end, node, energy, power, modulation, ack=False):
         super(TxActivity, self).__init__(type(self), start, end, node, energy=energy,
-                                         details={'power': power, 'modulation': modulation})
+                                         details={'power': power, 'modulation': modulation, 'ack': ack})
 
 
 class RxActivity(Activity):

@@ -11,6 +11,7 @@ from gloria import GloriaTimings
 from radio_configuration import RADIO_CONFIGURATIONS, RadioModem, BAND_FREQUENCIES, BAND_GROUPS, \
     BAND_FREQUENCIES_US915, BAND_GROUPS_US915, RadioConfiguration
 from sim import lwb_link_manager, lwb_stream, cad_sync
+from sim.sim_gloria import MAX_ACKS
 
 
 class CodeGen:
@@ -90,6 +91,7 @@ class CodeGen:
             'GLORIA_CLOCK_DRIFT_PLUSMINUS': gloria.GLORIA_CLOCK_DRIFT / 2 * 1E6,
             'TIMER_FREQUENCY': "{} MHz".format(gloria.TIMER_FREQUENCY / 1E6),
             'GLORIA_BLACK_BOX_SYNC_DELAY': GloriaTimings.timer_ticks(gloria.BLACK_BOX_SYNC_DELAY),
+            'GLORIA_MAX_ACKS': MAX_ACKS,
         }
 
         rendered = template.render(**constants)

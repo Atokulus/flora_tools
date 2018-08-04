@@ -4,6 +4,8 @@ import matplotlib
 import matplotlib.cm
 import numpy as np
 
+RADIO_TIMER_PERIOD = 15.625E-6
+
 RADIO_DEFAULT_BAND = 48
 RADIO_DEFAULT_BAND_US915 = 0
 

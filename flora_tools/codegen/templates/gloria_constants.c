@@ -13,6 +13,10 @@ gloria_timings_t gloria_timings[] = {
         .rxTriggerDelay = %%timing.rx_trigger_delay%%, // %%human_time(timing.rx_trigger_delay)%%
         .txTriggerDelay = %%timing.tx_trigger_delay%%, // %%human_time(timing.tx_trigger_delay)%%
         .txSync = %%timing.tx_sync%%, // %%human_time(timing.tx_sync)%%
+        .rxSetup = %%timing.rx_setup%%, // %%human_time(timing.rx_setup)%%
+        .txSetup = %%timing.tx_setup%%, // %%human_time(timing.tx_setup)%%
+        .preambleTimeout = %%timing.preamble_timeout%%, // 15.625 µs base
+        .mcuTimeout = %%timing.mcu_timeout%%, // %%human_time(timing.mcu_timeout)%%
     },
     <%- endfor %>
 };

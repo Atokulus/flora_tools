@@ -4,6 +4,7 @@ import flora_tools.gloria as gloria_flood
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_event_manager as sim_event_manager
 import flora_tools.sim.sim_node as sim_node
+import gloria
 from flora_tools.sim.sim_message import SimMessage, SimMessageType
 
 MAX_ACKS = 1
@@ -152,7 +153,7 @@ class SimGloriaFlood:
 
         if (slot.type in [gloria_flood.GloriaSlotType.RX_ACK,
                           gloria_flood.GloriaSlotType.TX_ACK]
-                and self.potential_message.type is SimMessageType.ACK):
+                and self.potential_message.type is SimMessageType.GLORIA_ACK):
             self.is_ack = True
             self.ack_message = self.potential_message
 
@@ -184,9 +185,9 @@ class SimGloriaFlood:
 
                     self.ack_message = SimMessage(slot.tx_marker,
                                                   source=self.tx_message.source,
-                                                  payload=lwb_slot.GLORIA_HEADER_LENGTH,
+                                                  payload=gloria.GLORIA_ACK_LENGTH,
                                                   destination=self.tx_message.source,
-                                                  type=SimMessageType.ACK,
+                                                  type=SimMessageType.GLORIA_ACK,
                                                   power_level=self.tx_message.power_level,
                                                   modulation=self.tx_message.modulation)
                     self.node.mm.tx(self.node,

@@ -9,6 +9,7 @@ from flora_tools.radio_math import RadioMath
 
 
 class SimMessageType(Enum):
+    GLORIA_ACK = 0
     SYNC = 1
     ROUND_SCHEDULE = 2
     SLOT_SCHEDULE = 3

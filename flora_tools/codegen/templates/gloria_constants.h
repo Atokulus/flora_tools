@@ -9,6 +9,7 @@
 #define GLORIA_ACK_LENGTH %%GLORIA_ACK_LENGTH%%
 #define GLORIA_CLOCK_DRIFT %%GLORIA_CLOCK_DRIFT%% // +- %%GLORIA_CLOCK_DRIFT_PLUSMINUS%% ppm @ %%TIMER_FREQUENCY%%
 #define GLORIA_BLACK_BOX_SYNC_DELAY %%GLORIA_BLACK_BOX_SYNC_DELAY%% // %%human_time(GLORIA_BLACK_BOX_SYNC_DELAY)%%
+#define GLORIA_MAX_ACKS %%GLORIA_MAX_ACKS%%
 
 typedef struct {
 	uint32_t slotOverhead;
@@ -19,6 +20,10 @@ typedef struct {
 	uint32_t rxTriggerDelay;
 	uint32_t txTriggerDelay;
 	uint32_t txSync;
+	uint32_t rxSetup;
+	uint32_t txSetup;
+	uint16_t preambleTimeout;
+    uint32_t mcuTimeout;
 } gloria_timings_t;
 
 extern gloria_timings_t gloria_timings[];

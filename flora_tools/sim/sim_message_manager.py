@@ -7,7 +7,7 @@ import flora_tools.sim.sim_event_manager as sim_event_type
 import flora_tools.sim.sim_network as sim_network
 import flora_tools.sim.sim_node as sim_node
 from flora_tools.radio_configuration import RadioConfiguration
-from flora_tools.sim.sim_message import SimMessage
+from flora_tools.sim.sim_message import SimMessage, SimMessageType
 from flora_tools.sim.sim_tracer import TxActivity
 
 
@@ -37,7 +37,8 @@ class SimMessageManager:
 
         self.network.tracer.log_activity(
             TxActivity(message.tx_start, message.tx_end, source,
-                       RadioConfiguration.tx_energy(power, message.tx_end - message.tx_start), power, modulation)
+                       RadioConfiguration.tx_energy(power, message.tx_end - message.tx_start), power, modulation,
+                       ack=(message.type is SimMessageType.GLORIA_ACK))
         )
 
         for rx_node_item_index, rx_node_item in self.rxq.iterrows():

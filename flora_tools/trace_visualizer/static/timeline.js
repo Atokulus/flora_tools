@@ -521,7 +521,7 @@ export class Timeline {
 
         else if (activity.activity_type === "TxActivity") {
             let rect = this.s.rect(activity.start, (node_offset + 0.6), (activity.end - activity.start), 0.3).attr({
-                fill: 'crimson'
+                fill: (activity.details.ack ? 'limegreen' : 'crimson'),
             });
 
             this.addTooltip(rect, 'Tx');
