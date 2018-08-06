@@ -513,7 +513,7 @@ export class Timeline {
                 fill: (activity.details.ack ? 'mediumseagreen' : 'crimson'),
             });
 
-            this.addTooltip(rect, 'Tx');
+            this.addTooltip(rect, activity.details.ack ? 'Ack' : 'Tx');
             this.activities.add(rect);
         }
     }
