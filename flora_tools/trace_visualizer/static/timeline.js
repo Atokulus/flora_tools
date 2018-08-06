@@ -440,7 +440,7 @@ export class Timeline {
             }
 
             else if (activity.activity_type === "TxActivity") {
-                text = 'Tx';
+                text = activity.details.ack ? 'Ack' : 'Tx';
                 yPos += 0.3;
             }
 
@@ -510,7 +510,7 @@ export class Timeline {
 
         else if (activity.activity_type === "TxActivity") {
             let rect = this.s.rect(activity.start, (node_offset + 0.6), (activity.end - activity.start), 0.3).attr({
-                fill: (activity.details.ack ? 'limegreen' : 'crimson'),
+                fill: (activity.details.ack ? 'mediumseagreen' : 'crimson'),
             });
 
             this.addTooltip(rect, 'Tx');
