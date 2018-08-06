@@ -44,7 +44,6 @@ function handleFileSelect(evt) {
     }
 }
 
-
 function handleJSONDrop(evt) {
     evt.stopPropagation();
     evt.preventDefault();

@@ -14,15 +14,12 @@ export class Timeline {
         this.$svg = $(svg);
 
         this.trace = trace;
-        //this.sortTraceByStart();
         console.log(this.trace);
 
         this.s = Snap(svg);
         this.s.clear();
-        this.background = this.s.rect(0, 0, 0, 0).attr({fill: '#303030'});
-        let backgroundGroup = this.s.group().attr({class: 'background'});
-        backgroundGroup.add(this.background);
-        this.s.append(backgroundGroup);
+
+        this.s.attr({fill: '#303030'});
 
         this.modulations = this.trace.network.modulations;
         this.modulationsColors = this.modulations.map(modulation => {
@@ -173,8 +170,6 @@ export class Timeline {
         let svg_width = this.$svg.width();
         let svg_height = this.$svg.height();
 
-        this.background.attr({width: svg_width, height: svg_height});
-
         let matrix = new Snap.Matrix();
 
         matrix.translate(svg_width / 2 - this.position, 0);
@@ -190,13 +185,11 @@ export class Timeline {
 
     initActivities() {
         this.activities = this.s.group().attr({class: 'activities'});
-        this.s.append(this.activities);
     }
 
     initMarkers() {
         this.markers = [];
         this.gMarkers = this.s.group().attr({class: 'markers'});
-        this.s.append(this.gMarkers);
 
         this.markerCount = 110;
 
@@ -260,8 +253,6 @@ export class Timeline {
 
         let text = this.s.text(0, 40, "").attr({fill: 'white', textAnchor: 'middle'});
         this.mouseMarker.append(text);
-
-        this.s.append(this.mouseMarker);
     }
 
     updateMouseMarker(x) {
@@ -474,8 +465,6 @@ export class Timeline {
     }
 
     drawActivities() {
-        this.$svg.empty();
-
         this.trace.activities.forEach(this.drawActivity.bind(this));
         this.s.append(this.activities);
     }
@@ -512,7 +501,7 @@ export class Timeline {
 
         else if (activity.activity_type === "RxActivity") {
             let rect = this.s.rect(activity.start, (node_offset + 0.6), (activity.end - activity.start), 0.3).attr({
-                fill: 'cornflowerblue'
+                fill: activity.details.success ? 'cornflowerblue' : 'darkslategray'
             });
 
             this.addTooltip(rect, 'Rx');
