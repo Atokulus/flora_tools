@@ -176,14 +176,14 @@ class MeasureLinksExperiment:
             count = group.shape[0]
 
             if (tx_node != criteria[1]
-                    and (count / ITERATIONS <= percentage / 100.0 if iterations is not None else True)):
-                G.add_edge(criteria[0], criteria[1], color=(0, 0, 0, 1.0), weight=count / iterations * 5)
+                    and (count / iterations <= percentage / 100.0 if iterations is not None else True)):
+                G.add_edge(criteria[0], criteria[1], color=(0, 0, 0), weight=count / iterations * 5)
 
         edges = G.edges()
         colors = [G[u][v]['color'] for u, v in edges]
         weights = [G[u][v]['weight'] for u, v in edges]
 
-        nx.draw_networkx_edges(G, pos=pos, edgelist=edges, edge_color=colors, width=weights, alpha=0.3)
+        nx.draw_networkx_edges(G, pos=pos, edgelist=edges, edge_color=colors, width=weights, alpha=(0.3 if tx_node is 'all' else 0.1))
 
         if tx_node is not 'all':
             subset = df[df.tx_node == int(tx_node)]
@@ -195,15 +195,15 @@ class MeasureLinksExperiment:
             for criteria, group in groups:
                 count = group.shape[0]
 
-                if count / ITERATIONS <= percentage / 100.0 if iterations is not None else True:
-                    G.add_edge(int(tx_node), criteria[0], color=(0.1, 0.2, 0.5, 0.1), weight=count / iterations * 5)
+                if count / iterations <= percentage / 100.0 if iterations is not None else True:
+                    G.add_edge(int(tx_node), criteria[0], color=(0.1, 0.2, 0.8), weight=count / iterations * 5)
                     edges.append((int(tx_node), criteria[0]))
                     rssi.append(group['rssi'].mean())
 
             colors = [G[u][v]['color'] for u, v in edges]
             weights = [G[u][v]['weight'] for u, v in edges]
 
-            nx.draw_networkx_edges(G, pos=pos, edgelist=edges, edge_color=colors, width=weights, alpha=0.4)
+            nx.draw_networkx_edges(G, pos=pos, edgelist=edges, edge_color=colors, width=weights, alpha=0.8)
 
             edge_labels = dict([(edges[i], "{:.2f}".format(rssi[i])) for i in range(len(edges))])
             nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels, font_size=10)
