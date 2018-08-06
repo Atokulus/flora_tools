@@ -4,17 +4,21 @@ import os
 import os.path
 import re
 from datetime import timedelta
+from enum import Enum
 from pathlib import Path
 from threading import Timer
 
+import json
+
 import dateutil
+import pandas as pd
 import requests
 
 FLOCKLAB_ADDRESS = 'https://www.flocklab.ethz.ch/user'
 FLOCKLAB_SERIAL_ADDRESS = "whymper.ee.ethz.ch"
 FLOCKLAB_SERIAL_BASE_PORT = 50100
 
-START_TIME_OFFSET = 120
+START_TIME_OFFSET = 30
 
 
 class WindowsInhibitor:
@@ -32,7 +36,7 @@ class WindowsInhibitor:
         import ctypes
         print("Preventing Windows from going to sleep")
         ctypes.windll.kernel32.SetThreadExecutionState(
-            WindowsInhibitor.ES_CONTINUOUS | \
+            WindowsInhibitor.ES_CONTINUOUS |
             WindowsInhibitor.ES_SYSTEM_REQUIRED)
 
     def uninhibit(self):
@@ -126,3 +130,40 @@ class FlockLab:
 
         if self.osSleep:
             self.osSleep.uninhibit()
+
+    @staticmethod
+    def parse_serial_log(file):
+        with open(file) as f:
+            lines = f.readlines()
+
+            df = pd.DataFrame(columns=['timestamp', 'observer_id', 'node_id', 'rx', 'output'])
+
+            total_lines = len(lines)
+
+            print("# lines to process: {}".format(total_lines))
+
+            for i, line in enumerate(lines[1:-1]):
+                line = line.rstrip()
+                values = line.split(',', maxsplit=4)
+
+                if len(values) is 5:
+
+                    try:
+                        parsed_content = json.loads(values[4])
+                    except ValueError as e:
+                        parsed_content = values[4]
+
+                    parsed = [
+                        float(values[0]),
+                        int(values[1]),
+                        int(values[2]),
+                        (True if values[3] == 'r' else False),
+                        parsed_content,
+                    ]
+
+                    df.loc[i, :] = parsed
+
+                    if (i % 1000) == 0:
+                        print(i, end=',')
+
+            return df

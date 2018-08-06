@@ -49,11 +49,13 @@ class Node:
                 if test:
                     if b"flora" in self.ser.read_all():
                         self.port = port
-                        self.close()
+                        self.close()  # Cannot leave open due to thread boundaries (pyserial is not thread-safe)
                         print("Initialized flora node on serial port {}".format(port.device))
                     else:
                         self.close()
                         raise ValueError("Serial port {} is NOT a flora node with CLI".format(port.device))
+
+                self.id = self.port.device
 
             except serial.SerialException as e:
                 print(e)
@@ -125,14 +127,19 @@ class Node:
     @staticmethod
     def get_serial_all():
         ports = [port for port in serial.tools.list_ports.comports() if port[2] != 'n/a']
+        nodes = []
 
         if len(ports):
             with Pool(len(ports)) as p:
                 nodes = [node for node in p.map(Node.get_serial_node, ports) if node is not None]
+
+                for node in nodes:
+                    node.open()
             if nodes:
                 print("Flora nodes detected: {}".format([node.port.device for node in nodes]))
             else:
                 print("NO flora ports detected!")
-            return nodes
         else:
             print("NO flora ports detected!")
+
+        return nodes
