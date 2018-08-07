@@ -136,7 +136,7 @@ class FlockLab:
         with open(file) as f:
             lines = f.readlines()
 
-            df = pd.DataFrame(columns=['timestamp', 'observer_id', 'node_id', 'rx', 'output'])
+            logs = [pd.DataFrame(columns=['timestamp', 'observer_id', 'node_id', 'rx', 'output'])]
 
             total_lines = len(lines)
 
@@ -153,17 +153,18 @@ class FlockLab:
                     except ValueError as e:
                         parsed_content = values[4]
 
-                    parsed = [
-                        float(values[0]),
-                        int(values[1]),
-                        int(values[2]),
-                        (True if values[3] == 'r' else False),
-                        parsed_content,
-                    ]
+                    parsed = {
+                        'timestamp': [float(values[0])],
+                        'observer_id': [int(values[1])],
+                        'node_id': [int(values[2])],
+                        'rx': [(True if values[3] == 'r' else False)],
+                        'output': [parsed_content],
+                    }
 
-                    df.loc[i, :] = parsed
+                    logs.append(pd.DataFrame(parsed))
 
                     if (i % 1000) == 0:
                         print(i, end=',')
 
-            return df
+            print("Parsing finished!")
+            return pd.concat(logs, ignore_index=True)

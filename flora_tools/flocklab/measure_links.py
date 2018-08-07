@@ -101,9 +101,11 @@ class MeasureLinksExperiment:
 
     @staticmethod
     def reconstruct_receptions(df, csv_path):
-        receptions = pd.DataFrame(
-            columns=['tx_node', 'rx_node', 'modulation', 'power', 'preamble', 'rssi', 'snr', 'timestamp'],
-            dtype='float')
+        receptions = [
+            pd.DataFrame(
+                columns=['tx_node', 'rx_node', 'modulation', 'power', 'preamble', 'rssi', 'snr', 'timestamp'],
+                dtype='float')
+        ]
 
         nodes = df.node_id.sort_values().unique()
 
@@ -143,16 +145,18 @@ class MeasureLinksExperiment:
                                 and rx_row['output']['type'] == 'radio_rx_msg'
                                 and 'text' in rx_row['output']
                                 and rx_row['output']['text'] == message):
-                            receptions.loc[len(receptions), :] = [
-                                node,
-                                rx_row['node_id'],
-                                modulation,
-                                power,
-                                preamble,
-                                rx_row['output']['rssi'],
-                                rx_row['output']['snr'],
-                                row.timestamp,
-                            ]
+                            receptions.append(pd.DataFrame({
+                                'tx_node': [node],
+                                'rx_node': [rx_row['node_id']],
+                                'modulation': [modulation],
+                                'power': [power],
+                                'preamble': [preamble],
+                                'rssi': [rx_row['output']['rssi']],
+                                'snr': [rx_row['output']['snr']],
+                                'timestamp': [row.timestamp],
+                            }))
+
+        receptions = pd.concat(receptions, ignore_index=True)
 
         receptions.to_csv(csv_path)
         return receptions
@@ -183,7 +187,8 @@ class MeasureLinksExperiment:
         colors = [G[u][v]['color'] for u, v in edges]
         weights = [G[u][v]['weight'] for u, v in edges]
 
-        nx.draw_networkx_edges(G, pos=pos, edgelist=edges, edge_color=colors, width=weights, alpha=(0.3 if tx_node is 'all' else 0.1))
+        nx.draw_networkx_edges(G, pos=pos, edgelist=edges, edge_color=colors, width=weights,
+                               alpha=(0.3 if tx_node is 'all' else 0.1))
 
         if tx_node is not 'all':
             subset = df[df.tx_node == int(tx_node)]

@@ -1,6 +1,5 @@
 from flora_tools.experiment import *
 
-
 class MeasureTimeSweepTxTx(Experiment):
     def __init__(self):
 
@@ -70,7 +69,7 @@ class MeasureTimeSweepTxTx(Experiment):
                 dio1_indices = utilities.get_edges(wave[0])
                 # nss_rx_indices = utilities.get_edges(wave[2])
 
-                if (0 < len(dio1_indices) < 10):
+                if 0 < len(dio1_indices) < 10:
                     valid = True
                 else:
                     valid = False
