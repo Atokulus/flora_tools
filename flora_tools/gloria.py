@@ -56,7 +56,7 @@ TX2SYNC = [  # Explicit Header mode, CRC, 4/5, Preamble Length 2 (LoRa) and 3 (F
     0.000386149731,
 ]
 
-GAP = 50E-6
+GAP = 300E-6
 
 GLORIA_ACK_LENGTH = 2
 PREAMBLE_PRE_LISTENING = 0.2
