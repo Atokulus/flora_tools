@@ -15,6 +15,9 @@ import matplotlib.cm
 
 from mpl_toolkits.mplot3d import Axes3D
 
+from oscilloscope import Oscilloscope
+
+import matplotlib.gridspec as gridspec
 
 class Experiment:
     def __init__(self, description):

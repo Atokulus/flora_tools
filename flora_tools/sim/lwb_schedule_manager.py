@@ -178,7 +178,8 @@ class LWBScheduleManager:
                             else:
                                 if len(self.node.lwb.stream_manager.datastreams):
                                     data_schedule = self.node.lwb.stream_manager.schedule_data(next_time,
-                                                                                               lwb_round.LWB_MAX_SLOT_COUNT[i],
+                                                                                               lwb_round.LWB_MAX_SLOT_COUNT[
+                                                                                                   i],
                                                                                                i)
                                 else:
                                     data_schedule = []
@@ -240,7 +241,8 @@ class LWBScheduleManager:
         if round is None:
             return 0
         else:
-            return np.ceil(round.round_end_marker / lwb_slot.LWB_SCHEDULE_GRANULARITY) * lwb_slot.LWB_SCHEDULE_GRANULARITY
+            return np.ceil(
+                round.round_end_marker / lwb_slot.LWB_SCHEDULE_GRANULARITY) * lwb_slot.LWB_SCHEDULE_GRANULARITY
 
     def invoke_round_request(self):
         self.stream_request_layout = lwb_round.LWB_INITIAL_STREAM_REQUEST_SLOT_COUNT.copy()
@@ -250,11 +252,18 @@ class LWBScheduleManager:
             tmp_sync = lwb_round.LWBRound.create_sync_round(0, message.modulation)
             slot_time = tmp_sync.slots[0].flood.slots[0].slot_time
             setup_time = tmp_sync.slots[0].flood.slots[0].tx_marker
-            round_marker = message.freeze_timestamp - slot_time * (message.freeze_hop_count - 1 +
-                                                                   (message.freeze_power_level -
-                                                                    lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[
-                                                                        lwb_slot.RADIO_MODULATIONS[
-                                                                            message.modulation]]) * 2) - setup_time
+            round_marker = (
+                    message.freeze_timestamp
+                    - slot_time * (
+                            message.freeze_hop_count - 1
+                            + 2 * (
+                                    message.freeze_power_level
+                                    - lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[
+                                        lwb_slot.RADIO_MODULATIONS[message.modulation]]
+                            )
+                    )
+                    - setup_time
+            )
 
             return round_marker
         else:

@@ -101,34 +101,33 @@ class RadioMath:
 
         if self.configuration.modem is RadioModem.LORA:
             ts = self.get_symbol_time()
-            tPreamble = self.get_preamble_time(preamble_length)
-            tmp = np.ceil(
-                (
-                        8 * payload_size -
-                        4 * self.configuration.sf +
-                        28 +
-                        16 * (1 if self.configuration.crc and not sync else 0) -
-                        (0 if self.configuration.explicit_header else 20)
-                ) / (4 * (
-                        self.configuration.sf - (2 if self.configuration.low_data_rate else 0)
-                ))
-            ) * (
-                          self.configuration.coderate % 4 + 4
-                  )
+            preamble_time = self.get_preamble_time(preamble_length)
+            tmp = (
+                    np.ceil(
+                        (
+                                8 * payload_size
+                                - 4 * self.configuration.sf
+                                + 28
+                                + (16 if self.configuration.crc and not sync else 0) -
+                                - (0 if self.configuration.explicit_header else 20)
+                        )
+                        / (4 * (self.configuration.sf - (2 if self.configuration.low_data_rate else 0)))
+                    ) * (self.configuration.coderate % 4 + 4)
+            )
 
-            nPayload = (tmp if tmp > 0 else 0)
-            tPayload = nPayload * ts
-            tOnAir = tPreamble + tPayload
+            n_payload = 8 + (tmp if tmp > 0 else 0)
+            t_payload = n_payload * ts
+            time_on_air = preamble_time + t_payload
 
-            return tOnAir
+            return time_on_air
         else:
-            return (8 * (
-                    preamble_length +
-                    self.configuration.sync_word_length +
-                    (1.0 if self.configuration.explicit_header else 0.0) +
-                    payload_size +
-                    (2.0 if self.configuration.crc and not sync else 0.0))
-                    ) / self.configuration.bitrate
+            return 8 * (
+                    preamble_length
+                    + self.configuration.sync_word_length
+                    + (1.0 if self.configuration.explicit_header else 0.0)
+                    + payload_size
+                    + (2.0 if self.configuration.crc and not sync else 0.0)
+            ) / self.configuration.bitrate
 
     @property
     def sync_time(self, preamble_length=0):

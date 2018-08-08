@@ -44,16 +44,16 @@ TX_TIME_OFFSETS = [
 RX2RF = [8.52937941e-05, 5.45332554e-08]
 TX2RF = [0.000126195, 6.29292616e-07]
 TX2SYNC = [  # Explicit Header mode, CRC, 4/5, Preamble Length 2 (LoRa) and 3 (FSK)
-    0.759868118,
-    0.379071358,
-    0.188429554,
-    0.094311664,
-    0.047281829,
-    0.023714271,
-    0.01403183,
-    0.00717021,
-    0.000906055,
-    0.00062468,
+    0,
+    0,
+    0,
+    0.069923428100,
+    0,
+    0.017595454400,
+    0,
+    0.007171598320,
+    0,
+    0.000386149731,
 ]
 
 GAP = 50E-6
@@ -374,8 +374,8 @@ class GloriaTimings:
             'rx_trigger_delay': GloriaTimings.timer_ticks(RX2RF[0]),
             'tx_trigger_delay': GloriaTimings.timer_ticks(TX2RF[0]),
             'tx_sync': GloriaTimings.timer_ticks(TX2SYNC[self.modulation]),
-            'rx_setup': GloriaTimings.timer_ticks(self.rx_setup_time) + GAP,
-            'tx_setup': GloriaTimings.timer_ticks(self.tx_setup_time) + GAP,
+            'rx_setup': GloriaTimings.timer_ticks(self.rx_setup_time + GAP / 2),
+            'tx_setup': GloriaTimings.timer_ticks(self.tx_setup_time + GAP / 2),
             'preamble_timeout': GloriaTimings.radio_timer_ticks(self.radio_math.get_preamble_time()),
             'mcu_timeout': GloriaTimings.timer_ticks(
                 self.radio_math.get_sync_time(self.modulation) * GLORIA_MCU_TIMEOUT_MULTIPLE),

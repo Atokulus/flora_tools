@@ -26,7 +26,6 @@ class Programmer:
         self.loader = Stm32Loader()
         self.loader.configuration['data_file'] = DEVKIT_FIRMWARE_PATH
         self.loader.configuration['port'] = self.bootloader.port.device
-        # self.loader.configuration['family'] = "F4"
         self.loader.configuration['erase'] = True
         self.loader.configuration['write'] = True
         self.loader.configuration['verify'] = True

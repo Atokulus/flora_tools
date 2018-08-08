@@ -2,6 +2,10 @@ import typing
 from enum import Enum
 from typing import Union
 
+import numpy as np
+
+from pandas._libs.tslibs import np_datetime
+
 import flora_tools.lwb_slot as lwb_slot
 import flora_tools.sim.sim_node as sim_node
 import flora_tools.sim.lwb_stream as stream
@@ -118,7 +122,7 @@ class LWBRound:
                                                                index=index)
                 self.slots.append(slot)
                 index += 1
-                slot_offset += slot.total_time
+                slot_offset += np.ceil(slot.total_time / lwb_slot.LWB_SCHEDULE_GRANULARITY) * lwb_slot.LWB_SCHEDULE_GRANULARITY
                 slot = lwb_slot.LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target,
                                                         index=index)
             elif item.type is LWBSlotItemType.ROUND_CONTENTION:
@@ -131,14 +135,14 @@ class LWBRound:
                                                          stream=item.stream)
                 self.slots.append(slot)
                 index += 1
-                slot_offset += slot.total_time
+                slot_offset += np.ceil(slot.total_time / lwb_slot.LWB_SCHEDULE_GRANULARITY) * lwb_slot.LWB_SCHEDULE_GRANULARITY
                 slot = lwb_slot.LWBSlot.create_ack_slot(self, slot_offset, self.modulation, master=item.target,
                                                         index=index, power_level=item.ack_power_level)
             else:
                 slot = None
 
             self.slots.append(slot)
-            slot_offset += slot.total_time
+            slot_offset += np.ceil(slot.total_time / lwb_slot.LWB_SCHEDULE_GRANULARITY) * lwb_slot.LWB_SCHEDULE_GRANULARITY
             index += 1
 
     @staticmethod

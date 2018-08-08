@@ -35,6 +35,7 @@ class Node:
                     self.close()
                     raise ValueError("FlockLab target ID {} is NOT responding".format(self.id))
             else:
+                self.close()
                 print("Initialized flora node on FlockLab with target id {}".format(self.id))
 
         else:
@@ -42,11 +43,11 @@ class Node:
                 self.ser = serial.Serial(port=port.device, baudrate=115200, parity=serial.PARITY_NONE,
                                          stopbits=serial.STOPBITS_ONE, timeout=0.1)
 
-                self.ser.write(b"\x1b[3~\r\n")
-                self.interactive_mode(True)
-                time.sleep(0.1)
-
                 if test:
+                    self.ser.write(b"\x1b[3~\r\n")
+                    self.interactive_mode(True)
+                    time.sleep(0.1)
+
                     if b"flora" in self.ser.read_all():
                         self.port = port
                         self.close()  # Cannot leave open due to thread boundaries (pyserial is not thread-safe)
@@ -55,6 +56,7 @@ class Node:
                         self.close()
                         raise ValueError("Serial port {} is NOT a flora node with CLI".format(port.device))
 
+                self.port = port
                 self.id = self.port.device
 
             except serial.SerialException as e:
@@ -114,7 +116,7 @@ class Node:
         if len(ports):
             return ports[0]
         else:
-            return None
+            raise Exception("Could not find given serial port {}".format(name))
 
     @staticmethod
     def get_serial_node(port):

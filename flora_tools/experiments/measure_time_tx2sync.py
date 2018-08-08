@@ -22,30 +22,28 @@ class MeasureTimeTx2Sync(Experiment):
         for i in range(0, self.iterations):
             self.bench.devkit_a.cmd('system reset')
             self.bench.devkit_b.cmd('system reset')
-            time.sleep(0.2)
+            time.sleep(0.3)
 
-            configuration = RadioConfiguration.get_random_configuration()
+            configuration = RadioConfiguration.get_random_configuration(modulation_range=[3,5,7,9])
             configuration_rx = copy(configuration)
             configuration_rx.tx = False
 
             math = RadioMath(configuration)
-            min_window = (math.sync_time + 126e-6) * 2.0
-            min_precision = 0.1E-6
+            min_window = (math.sync_time + 126e-6) * 1.3
+            min_precision = 0.2E-6
             window, points, precision = self.bench.scope.get_next_valid_window(min_window, min_precision)
             start = 0
-
-            sample_period = window / (points - 1)
 
             self.bench.devkit_a.cmd(configuration.cmd)
             self.bench.devkit_b.cmd(configuration_rx.cmd)
 
             self.bench.devkit_b.cmd("radio receive")
 
-            text = utilities.get_random_text()
+            text = utilities.get_random_text(max_length=20)
             if text is not None:
                 text_len = (len(text) + 1)
             else:
-                txt_len = 0
+                text_len = 0
 
             if text is not None:
                 self.bench.devkit_a.cmd("radio send '" + text + "' -s")
@@ -67,7 +65,7 @@ class MeasureTimeTx2Sync(Experiment):
                 nss_digital = np.digitize(wave[0], [(nss_min + nss_max) / 2.0])
                 nss_diff = np.diff(nss_digital)
                 nss_indices = np.argwhere(nss_diff)
-                if (len(nss_indices) > 0):
+                if len(nss_indices) > 0:
                     txex2headervalid_time = nss_indices[0][0]
                 else:
                     txex2headervalid_time = np.nan
@@ -77,7 +75,7 @@ class MeasureTimeTx2Sync(Experiment):
                 dio1_digital = np.digitize(wave[1], [(dio1_min + dio1_max) / 2.0])
                 dio1_diff = np.diff(dio1_digital)
                 dio1_indices = np.argwhere(dio1_diff)
-                if len(dio1_indices) > 0 and len(dio1_indices) < 5:
+                if 0 < len(dio1_indices) < 5:
                     txex2headervalid_time = (dio1_indices[0][
                                                  0] - txex2headervalid_time) * self.bench.scope.sample_period
                 else:
@@ -101,7 +99,7 @@ class MeasureTimeTx2Sync(Experiment):
         with plt.style.context("bmh"):
             df = df.dropna()
 
-            mods = df.modulation.sort_values().unique();
+            mods = df.modulation.sort_values().unique()
 
             columns = ['modulation_name', 'sample_count', 'txex2sync', 'sync2irq', 'total', 'total_err']
             delays = pd.DataFrame(columns=columns)

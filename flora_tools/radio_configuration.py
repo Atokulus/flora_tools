@@ -4,6 +4,8 @@ import matplotlib
 import matplotlib.cm
 import numpy as np
 
+HS_TIMER_SCHEDULE_MARGIN = 800  # 100 μs
+
 RADIO_TIMER_PERIOD = 15.625E-6
 
 RADIO_DEFAULT_BAND = 48
@@ -122,14 +124,14 @@ class RadioModem(Enum):
 
 
 RADIO_CONFIGURATIONS = [
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 12, 'coderate': 5, 'preamble_len': 3},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 11, 'coderate': 5, 'preamble_len': 3},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 10, 'coderate': 5, 'preamble_len': 3},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 9, 'coderate': 5, 'preamble_len': 3},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 8, 'coderate': 5, 'preamble_len': 3},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 7, 'coderate': 5, 'preamble_len': 3},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 6, 'coderate': 5, 'preamble_len': 3},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 5, 'coderate': 5, 'preamble_len': 3},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 12, 'coderate': 5, 'preamble_len': 4},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 11, 'coderate': 5, 'preamble_len': 4},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 10, 'coderate': 5, 'preamble_len': 4},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 9, 'coderate': 5, 'preamble_len': 4},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 8, 'coderate': 5, 'preamble_len': 4},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 7, 'coderate': 5, 'preamble_len': 4},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 6, 'coderate': 5, 'preamble_len': 8},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 5, 'coderate': 5, 'preamble_len': 8},
     {'modem': RadioModem.FSK, 'bandwidth': 234300, 'datarate': 125000, 'preamble_len': 2, 'fdev': 50000},
     {'modem': RadioModem.FSK, 'bandwidth': 234300, 'datarate': 200000, 'preamble_len': 2, 'fdev': 10000},
 ]
@@ -306,7 +308,7 @@ class RadioConfiguration:
 
     @staticmethod
     def get_random_configuration(tx=True, limit=None, bandwidth=False, power=np.arange(-17, 23), crc=True, implicit=0,
-                                 modulation_range=np.arange(0, 10), irq_direct=False, preamble=False):
+                                 modulation_range=np.arange(0, 10), irq_direct=False, preamble=None):
         global FSK_BANDWIDTHS
 
         band_count = 52

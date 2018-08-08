@@ -73,7 +73,8 @@ class CodeGen:
         template = self.env.get_template('radio_constants.h')
 
         constants = {'RADIO_DEFAULT_BAND': radio_configuration.RADIO_DEFAULT_BAND,
-                     'RADIO_DEFAULT_BAND_US915': radio_configuration.RADIO_DEFAULT_BAND_US915}
+                     'RADIO_DEFAULT_BAND_US915': radio_configuration.RADIO_DEFAULT_BAND_US915,
+                     'HS_TIMER_SCHEDULE_MARGIN': radio_configuration.HS_TIMER_SCHEDULE_MARGIN}
 
         rendered = template.render(**constants)
         self.write_render_to_file(rendered, target)
@@ -160,7 +161,6 @@ class CodeGen:
         rendered = template.render(**lwb_round_constants)
         self.write_render_to_file(rendered, target)
 
-
         target = './lib/protocol/lwb/lwb_round_constants.h'
         self.create_folder(target)
         template = self.env.get_template('lwb_round_constants.h')
@@ -194,9 +194,12 @@ class CodeGen:
     def human_time(ticks: int) -> str:
         PREFIXES = ['', 'm', 'µ', 'n']
         realtime = ticks / gloria.TIMER_FREQUENCY
-        order = np.ceil(np.ceil(-np.log10(realtime)) / 3)
-        order = int(np.clip(order, 0, len(PREFIXES) - 1))
-        realtime *= np.power(10, order * 3)
+        if ticks != 0:
+            order = np.ceil(np.ceil(-np.log10(realtime)) / 3)
+            order = int(np.clip(order, 0, len(PREFIXES) - 1))
+            realtime *= np.power(10, order * 3)
+        else:
+            order = 0
 
         formatted_time = "{:.3f} {}s".format(realtime, PREFIXES[order])
 

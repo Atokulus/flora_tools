@@ -8,6 +8,8 @@
 
 #include "sx126x.h"
 
+#define HS_TIMER_SCHEDULE_MARGIN %%HS_TIMER_SCHEDULE_MARGIN%% // %%human_time(HS_TIMER_SCHEDULE_MARGIN)%%
+
 // SX1262 Timings from datasheet in µs
 #define RADIO_TIME_SLEEP_COLD_TO_STBY 3500 // cold start (no data retention)
 #define RADIO_TIME_SLEEP_WARM_TO_STBY 340 // warm start (with data retention)

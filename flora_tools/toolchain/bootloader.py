@@ -12,6 +12,8 @@ class Bootloader:
         try:
             self.node = Node(port, test=False)
             if self.node:
+                if not self.node.ser.is_open:
+                    self.node.ser.open()
                 self.node.ser.write(b"system bootloader\r\n")
                 self.node.close()
                 time.sleep(0.2)
@@ -33,7 +35,6 @@ class Bootloader:
     @staticmethod
     def get_all():
         ports = [port for port in serial.tools.list_ports.comports() if port[2] != 'n/a']
-        serial.tools.list_ports.comports()[0]
 
         if len(ports):
             with Pool(len(ports)) as p:

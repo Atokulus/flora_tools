@@ -4,8 +4,8 @@ from flora_tools.experiments.measure_time_tx2sync import MeasureTimeTx2Sync
 from flora_tools.node import Node
 from flora_tools.oscilloscope import Oscilloscope
 
-DEVKIT_A_PORT = "COM17"
-DEVKIT_B_PORT = "COM4"
+DEVKIT_A_PORT = "COM5"
+DEVKIT_B_PORT = "COM12"
 DEVKIT_C_PORT = "COM12"
 DEVKIT_D_PORT = "COM5"
 
