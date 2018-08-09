@@ -3,6 +3,7 @@ import sys
 from multiprocessing import Pool
 
 from codegen.codegen import CodeGen
+from flocklab.measure_gloria import MeasureGloriaExperiment
 from flora_tools.flocklab.measure_links import MeasureLinksExperiment
 from flora_tools.sim.sim import Sim
 from flora_tools.toolchain.bootloader import Bootloader
@@ -43,6 +44,12 @@ def run_simulation(output_path, event_count: int = None, time_limit: float = Non
 def flocklab_measure_links():
     measure_links_experiment = MeasureLinksExperiment()
 
+
+def flocklab_measure_gloria():
+    measure_gloria_experiment = MeasureGloriaExperiment(ack=False)
+    measure_gloria_experiment_ack = MeasureGloriaExperiment(ack=True)
+
+
 def start_server():
     VisualizationServer()
 
@@ -55,7 +62,7 @@ def main():
     parser = argparse.ArgumentParser(description='Executable flora_tools utilities', prog='flora_tools')
     parser.add_argument('command', help='Execute given command',
                         choices=['program', 'program_all', 'patch_eclipse', 'run_simulation', 'flocklab_measure_links',
-                                 'generate_code', 'start_server'])
+                                 'flocklab_measure_gloria', 'generate_code', 'start_server'])
     parser.add_argument('-d', '--path', help='Set the path to the Flora main repository folder or .hex/.binary file')
     parser.add_argument('-p', '--port', help='Set the serial port (e.g. "COM5" or "/dev/ttyUSB0")')
     parser.add_argument('-t', '--time', type=float,
@@ -88,6 +95,8 @@ def main():
             run_simulation(args.path, event_count=args.event_count, time_limit=args.time, seed=args.seed)
     elif args.command == 'flocklab_measure_links':
         flocklab_measure_links()
+    elif args.command == 'flocklab_measure_gloria':
+        flocklab_measure_gloria()
     elif args.command == 'generate_code':
         if args.path is None:
             parser.error("generate_code requires --path of Flora project.")

@@ -2,6 +2,8 @@ import socket
 import time
 from multiprocessing import Pool
 
+import re
+
 import serial
 import serial.tools.list_ports
 
@@ -9,7 +11,7 @@ from flocklab.flocklab import FLOCKLAB_SERIAL_ADDRESS, FLOCKLAB_SERIAL_BASE_PORT
 
 
 class Node:
-    def __init__(self, port=None, test=True, flocklab=False, id: int = None):
+    def __init__(self, port: serial.Serial=None, test=True, flocklab=False, id: int = None):
         self.flocklab = flocklab
 
         if self.flocklab:
@@ -57,7 +59,8 @@ class Node:
                         raise ValueError("Serial port {} is NOT a flora node with CLI".format(port.device))
 
                 self.port = port
-                self.id = self.port.device
+                results = re.findall(r'\d+', self.port.device)
+                self.id = int(results[0]) + 0xf00
 
             except serial.SerialException as e:
                 print(e)
@@ -80,6 +83,7 @@ class Node:
 
     def cmd(self, command):
         if self.flocklab:
+            print(self.id)
             self.s.send(bytes(command + "\r\n", encoding='ascii'))
         else:
             self.ser.write(bytes(command + "\r\n", encoding='ascii'))
