@@ -19,6 +19,9 @@ from lwb_slot import RADIO_MODULATIONS
 ITERATIONS = 50
 OFFSET = 0.2
 
+POWER_LEVELS = [0, 1]
+POWERS = [10, 22]
+
 
 class MeasureGloriaExperiment:
     def __init__(self, ack=True):
@@ -31,7 +34,7 @@ class MeasureGloriaExperiment:
         flocklab = FlockLab()
         flocklab.schedule_test(xmlfile, self.run)
 
-        #self.run()
+        # self.run()
 
     def run(self):
         self.connect_nodes()
@@ -44,9 +47,9 @@ class MeasureGloriaExperiment:
 
     def connect_nodes(self):
         self.nodes: List[Node] = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
-        #self.nodes: List[Node] = []
-        #self.serial_nodes = Node.get_serial_all()
-        #self.nodes.extend(self.serial_nodes)
+        # self.nodes: List[Node] = []
+        # self.serial_nodes = Node.get_serial_all()
+        # self.nodes.extend(self.serial_nodes)
 
         for node in self.nodes:
             node.cmd('config set uid {:d}'.format(node.id))
@@ -132,7 +135,15 @@ class MeasureGloriaExperiment:
     def reconstruct_receptions(df, csv_path):
         receptions = [
             pd.DataFrame(
-                columns=['tx_node', 'rx_node', 'modulation', 'power', 'preamble', 'rssi', 'snr', 'timestamp'],
+                columns=['tx_node',
+                         'rx_node',
+                         'modulation',
+                         'timestamp',
+                         'rx_slot',
+                         'hop_count',
+                         'power_level',
+                         'acked',
+                         ],
                 dtype='float')
         ]
 
@@ -141,57 +152,45 @@ class MeasureGloriaExperiment:
         for node in nodes:
 
             subset = df[(df.node_id == node) & (df.rx == True)]
+            counter = 0
 
             for index, row in subset.iterrows():
-                if (index % 100) == 0:
+                counter += 1
+                if (counter % 100) == 0:
                     print("{}@{}".format(index, node), end=',')
 
                 if (type(row['output']) is dict
                         and 'type' in row['output']
-                        and row['output']['type'] == 'radio_cfg'
-                        and 'power' in row['output']):
+                        and row['output']['type'] == 'gloria_flood'
+                        and row['output']['initial'] is False
+                        and 'msg_src' in row['output']):
+                    modulation = row['output']['mod']
+                    tx_node = row['msg_src']['msg_src']
 
-                    modulation = row['output']['modulation']
-                    power = row['output']['power']
-                    preamble = row['output']['preamble']
+                    message = "Hello World! from FlockLab Node {}, Mod: {}".format(
+                        tx_node, modulation)
 
-                    config = RadioConfiguration(modulation, preamble=preamble)
-                    math = RadioMath(config)
-
-                    message = "Hello World! from FlockLab Node {}: Mod: {:d}, Pow: {:d}, Prmbl: {:d}".format(
-                        node, modulation, power, preamble)
-
-                    offset = math.get_message_toa(len(message) + 1) * 1.5 + 0.3
-
-                    rx_subset = df[(df.timestamp > row.timestamp)
-                                   & (df.timestamp < (row.timestamp + offset))
-                                   & (df.node_id != node)
-                                   & (df.rx == True)]
-
-                    for rx_index, rx_row in rx_subset.iterrows():
-                        if (type(rx_row['output']) is dict
-                                and 'type' in rx_row['output']
-                                and rx_row['output']['type'] == 'radio_rx_msg'
-                                and 'text' in rx_row['output']
-                                and rx_row['output']['text'] == message):
-                            receptions.append(pd.DataFrame({
-                                'tx_node': [node],
-                                'rx_node': [rx_row['node_id']],
-                                'modulation': [modulation],
-                                'power': [power],
-                                'preamble': [preamble],
-                                'rssi': [rx_row['output']['rssi']],
-                                'snr': [rx_row['output']['snr']],
-                                'timestamp': [row.timestamp],
-                            }))
+                    receptions.append(pd.DataFrame({
+                        'tx_node': [tx_node],
+                        'rx_node': [row['node_id']],
+                        'modulation': [modulation],
+                        'timestamp': [row.timestamp],
+                        'rx_slot': [row['output']['frst_rx_idx']],
+                        'hop_count': [row['output']['msg_hop']],
+                        'power_level': [row['output']['msg_pow']],
+                        'acked': ([row['output']['acked'] if 'acked' in row['output'] else False]),
+                    }))
 
         receptions = pd.concat(receptions, ignore_index=True)
-
         receptions.to_csv(csv_path)
         return receptions
 
     @staticmethod
-    def draw_links(df, tx_node='all', percentage=None, iterations=None):
+    def draw_links(df, modulation: int, power_level: int, hop_count: int, tx_node='all', percentage=None,
+                   iterations=None):
+        if iterations is None:
+            iterations = 1
+
         nodes = FLOCKLAB_TARGET_ID_LIST
         pos = FLOCKLAB_TARGET_POSITIONS
 
@@ -203,7 +202,9 @@ class MeasureGloriaExperiment:
 
         nx.draw_networkx_nodes(G, node_size=500, node_color='black', font_color='white', pos=pos)
 
-        groups = df.groupby(['tx_node', 'rx_node', 'modulation', 'power', 'preamble'])
+        subset = df[(df.modulation == modulation) & (df.power_level == power_level) & (df.hop_count == hop_count)]
+
+        groups = subset.groupby(['tx_node', 'rx_node', 'modulation'])
 
         for criteria, group in groups:
             count = group.shape[0]
@@ -220,11 +221,11 @@ class MeasureGloriaExperiment:
                                alpha=(0.3 if tx_node is 'all' else 0.1))
 
         if tx_node is not 'all':
-            subset = df[df.tx_node == int(tx_node)]
-            groups = subset.groupby(['rx_node', 'modulation', 'power', 'preamble'])
+            subset = df[(df.tx_node == int(tx_node)) & (df.modulation == modulation) & (df.power_level == power_level)]
+            groups = subset.groupby(['tx_node', 'rx_node', 'modulation'])
 
             edges = []
-            rssi = []
+            hops = []
 
             for criteria, group in groups:
                 count = group.shape[0]
@@ -232,14 +233,14 @@ class MeasureGloriaExperiment:
                 if count / iterations <= percentage / 100.0 if iterations is not None else True:
                     G.add_edge(int(tx_node), criteria[0], color=(0.1, 0.2, 0.8), weight=count / iterations * 5)
                     edges.append((int(tx_node), criteria[0]))
-                    rssi.append(group['rssi'].mean())
+                    hops.append(group['hop_count'].mean())
 
             colors = [G[u][v]['color'] for u, v in edges]
             weights = [G[u][v]['weight'] for u, v in edges]
 
             nx.draw_networkx_edges(G, pos=pos, edgelist=edges, edge_color=colors, width=weights, alpha=0.8)
 
-            edge_labels = dict([(edges[i], "{:.2f}".format(rssi[i])) for i in range(len(edges))])
+            edge_labels = dict([(edges[i], "{:.1f}".format(hops[i])) for i in range(len(edges))])
             nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels, font_size=10)
 
         plt.axis('off')
