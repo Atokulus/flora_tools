@@ -1,8 +1,7 @@
+import re
 import socket
 import time
 from multiprocessing import Pool
-
-import re
 
 import serial
 import serial.tools.list_ports
@@ -83,7 +82,6 @@ class Node:
 
     def cmd(self, command):
         if self.flocklab:
-            print(self.id)
             self.s.send(bytes(command + "\r\n", encoding='ascii'))
         else:
             self.ser.write(bytes(command + "\r\n", encoding='ascii'))

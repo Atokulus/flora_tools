@@ -15,6 +15,8 @@
 #define GLORIA_RADIO_WAKEUP_TIME_COLD 28000 // 3.5 ms
 #define GLORIA_MAX_DRIFT 2 // 2 s
 
+#define GLORIA_POWER_LEVELS 2
+
 typedef struct {
 	uint32_t slotOverhead;
 	uint32_t slotAckOverhead;

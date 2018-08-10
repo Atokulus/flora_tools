@@ -3,12 +3,10 @@ import os
 import time
 from typing import List
 
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-
-import numpy as np
-import pandas as pd
+import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
 
 import flora_tools.lwb_slot as lwb_slot
 from flora_tools.flocklab.flocklab import FlockLab
@@ -113,9 +111,12 @@ class MeasureLinksExperiment:
 
             subset = df[(df.node_id == node) & (df.rx == True)]
 
+            counter = 0
+
             for index, row in subset.iterrows():
-                if (index % 100) == 0:
-                    print("{}@{}".format(index, node), end=',')
+                counter += 1
+                if (counter % 100) == 0:
+                    print("{}@{}".format(counter, node), end=',')
 
                 if (type(row['output']) is dict
                         and 'type' in row['output']
@@ -138,6 +139,17 @@ class MeasureLinksExperiment:
                                    & (df.timestamp < (row.timestamp + offset))
                                    & (df.node_id != node)
                                    & (df.rx == True)]
+
+                    receptions.append(pd.DataFrame({
+                        'tx_node': [node],
+                        'rx_node': [None],
+                        'modulation': [modulation],
+                        'power': [power],
+                        'preamble': [preamble],
+                        'rssi': [None],
+                        'snr': [None],
+                        'timestamp': [row.timestamp],
+                    }))
 
                     for rx_index, rx_row in rx_subset.iterrows():
                         if (type(rx_row['output']) is dict
@@ -162,7 +174,7 @@ class MeasureLinksExperiment:
         return receptions
 
     @staticmethod
-    def draw_links(df, tx_node='all', percentage=None, iterations=None):
+    def draw_links(df, tx_node='all', percentage=None):
         nodes = FLOCKLAB_TARGET_ID_LIST
         pos = FLOCKLAB_TARGET_POSITIONS
 
@@ -177,10 +189,11 @@ class MeasureLinksExperiment:
         groups = df.groupby(['tx_node', 'rx_node', 'modulation', 'power', 'preamble'])
 
         for criteria, group in groups:
+            iterations = df[df.tx_node == criteria[0]].rx_node.isnull().sum()
             count = group.shape[0]
 
             if (tx_node != criteria[1]
-                    and (count / iterations <= percentage / 100.0 if iterations is not None else True)):
+                    and count <= iterations * percentage):
                 G.add_edge(criteria[0], criteria[1], color=(0, 0, 0), weight=count / iterations * 5)
 
         edges = G.edges()
@@ -198,9 +211,10 @@ class MeasureLinksExperiment:
             rssi = []
 
             for criteria, group in groups:
+                iterations = df[df.tx_node == criteria[0]].rx_node.isnull().sum()
                 count = group.shape[0]
 
-                if count / iterations <= percentage / 100.0 if iterations is not None else True:
+                if count <= iterations * percentage:
                     G.add_edge(int(tx_node), criteria[0], color=(0.1, 0.2, 0.8), weight=count / iterations * 5)
                     edges.append((int(tx_node), criteria[0]))
                     rssi.append(group['rssi'].mean())
