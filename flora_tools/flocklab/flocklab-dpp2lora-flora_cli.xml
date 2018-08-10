@@ -6,7 +6,7 @@
         <name>DPP2 LoRa FloraCLI</name>
         <description>DPP2 LoRa Flora Command Line Interface Application</description>
         <scheduleAsap>
-            <durationSecs>1800</durationSecs>
+            <durationSecs>3600</durationSecs>
         </scheduleAsap>
 <!-- 
         <scheduleAbsolute>

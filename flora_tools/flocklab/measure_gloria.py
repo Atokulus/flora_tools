@@ -45,7 +45,7 @@ class MeasureGloriaExperiment:
         self.disconnect_nodes()
 
     def connect_nodes(self):
-        self.nodes: List[Node] = [Node(flocklab=True, id=id, test=True) for id in FLOCKLAB_TARGET_ID_LIST]
+        self.nodes: List[Node] = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
         # self.nodes: List[Node] = []
         # self.serial_nodes = Node.get_serial_all()
         # self.nodes.extend(self.serial_nodes)
@@ -164,12 +164,10 @@ class MeasureGloriaExperiment:
                 if (type(row['output']) is dict
                         and 'type' in row['output']
                         and row['output']['type'] == 'gloria_flood'
-                        and 'msg' in row['output']
-                        and 'msg_src' in row['output']
-                        and 'msg_dst' in row['output']
                         and row['output']['initial'] is False
-                        and row['output']['msg_size'] != 0
-                        and row['output']['msg_type'] != 1):
+                        and 'msg' in row['output']
+                        and 'msg_src' in row['output']):
+
                     modulation = row['output']['mod']
                     tx_node = row['output']['msg_src']
 
@@ -184,7 +182,7 @@ class MeasureGloriaExperiment:
                             'timestamp': [row.timestamp],
                             'rx_slot': [row['output']['frst_rx_idx']],
                             'hop_count': [row['output']['msg_hop']],
-                            'power_level': [row['output']['msg_pow']],
+                            'power_level': [row['output']['frst_pow']],
                             'acked': ([row['output']['acked'] if 'acked' in row['output'] else False]),
                             'initial': False,
                             'remaining_tx': [row['output']['rmn_tx']],
@@ -192,40 +190,31 @@ class MeasureGloriaExperiment:
                 elif (type(row['output']) is dict
                       and 'type' in row['output']
                       and row['output']['type'] == 'gloria_flood'
-                      and 'msg' in row['output']
-                      and 'msg_src' in row['output']
-                      and 'msg_dst' in row['output']
                       and row['output']['initial'] is True
-                      and row['output']['type'] != 1):
+                      and 'msg_src' in row['output']):
 
                     modulation = row['output']['mod']
                     tx_node = row['node_id']
 
-                    message = "Hello World! from FlockLab Node {}, Mod: {}".format(
-                        tx_node, modulation)
-
-                    if message == row['output']['msg']:
-                        receptions.append(pd.DataFrame({
-                            'tx_node': [tx_node],
-                            'rx_node': [row['output']['msg_dst']],
-                            'modulation': [modulation],
-                            'timestamp': [row.timestamp],
-                            'rx_slot': -2,
-                            'hop_count': 0,
-                            'power_level': lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[0],
-                            'acked': ([row['output']['acked'] if 'acked' in row['output'] else False]),
-                            'initial': False,
-                            'remaining_tx': [row['output']['rmn_tx']],
-                        }))
+                    receptions.append(pd.DataFrame({
+                        'tx_node': [tx_node],
+                        'rx_node': [row['output']['msg_dst']],
+                        'modulation': [modulation],
+                        'timestamp': [row.timestamp],
+                        'rx_slot': -1,
+                        'hop_count': 0,
+                        'power_level': lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[0],
+                        'acked': ([row['output']['acked'] if 'acked' in row['output'] else False]),
+                        'initial': True,
+                        'remaining_tx': [row['output']['rmn_tx']],
+                    }))
 
         receptions = pd.concat(receptions, ignore_index=True)
         receptions.to_csv(csv_path)
         return receptions
 
     @staticmethod
-    def draw_links(df, modulation: int, power_level: int, hop_count: int, tx_node='all', iterations=None):
-        if iterations is None:
-            iterations = 1
+    def draw_links(df, modulation: int, power_level: int, hop_count: int, tx_node='all'):
 
         nodes = FLOCKLAB_TARGET_ID_LIST
         pos = FLOCKLAB_TARGET_POSITIONS
@@ -238,16 +227,20 @@ class MeasureGloriaExperiment:
 
         nx.draw_networkx_nodes(G, node_size=500, node_color='black', font_color='white', pos=pos)
 
-        subset = df[(df.modulation == modulation) & (df.power_level == power_level) & (df.hop_count == hop_count)]
-        # subset = df[(df.modulation == modulation) & (df.hop_count == hop_count)]
+        subset = df[(df.modulation == modulation) & (df.hop_count == hop_count) & (df.power_level == power_level) & (
+                df.initial == False)]
 
-        groups = subset.groupby(['modulation', 'tx_node', 'rx_node'])
+        groups = subset.groupby(['tx_node', 'rx_node', 'modulation'])
 
         for criteria, group in groups:
+            iterations = df[
+                (df.tx_node == criteria[0]) & (df.modulation == modulation) & (df.initial == True)
+                ].initial.sum()
+
             count = group.shape[0]
 
-            if tx_node != criteria[1]:
-                G.add_edge(criteria[1], criteria[2], color=(0, 0, 0), weight=count / iterations * 5)
+            if tx_node != criteria[0]:
+                G.add_edge(criteria[0], criteria[1], color=(0, 0, 0), weight=count / iterations * 5)
 
         edges = G.edges()
         colors = [G[u][v]['color'] for u, v in edges]
@@ -257,14 +250,18 @@ class MeasureGloriaExperiment:
                                alpha=(0.3 if tx_node is 'all' else 0.1))
 
         if tx_node is not 'all':
-            subset = df[(df.tx_node == int(tx_node)) & (df.modulation == modulation) & (df.power_level == power_level)]
-            # subset = df[(df.tx_node == int(tx_node)) & (df.modulation == modulation)]
+            subset = df[
+                (df.tx_node == int(tx_node)) & (df.modulation == modulation) & (df.power_level == power_level) & (
+                        df.initial == False)]
             groups = subset.groupby(['tx_node', 'rx_node', 'modulation'])
 
             edges = []
             hops = []
 
             for criteria, group in groups:
+                iterations = df[
+                    (df.tx_node == int(tx_node)) & (df.modulation == modulation) & (df.initial == True)
+                    ].initial.sum()
                 count = group.shape[0]
 
                 G.add_edge(criteria[0], criteria[1], color=(0.1, 0.2, 0.8), weight=count / iterations * 5)

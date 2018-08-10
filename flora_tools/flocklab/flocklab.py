@@ -1,14 +1,12 @@
 import datetime
+import json
 import ntpath
 import os
 import os.path
 import re
 from datetime import timedelta
-from enum import Enum
 from pathlib import Path
 from threading import Timer
-
-import json
 
 import dateutil
 import pandas as pd
@@ -28,7 +26,7 @@ FLOCKLAB_TARGET_POSITIONS = {
     24: (424, -512), 25: (682, -353), 26: (538, -334), 28: (240, -425), 32: (289, -318), 33: (163, -306)
 }
 
-START_TIME_OFFSET = 30
+START_TIME_OFFSET = 60
 
 
 class WindowsInhibitor:
