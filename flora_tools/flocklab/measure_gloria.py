@@ -13,7 +13,6 @@ import lwb_slot
 from flora_tools.flocklab.flocklab import FlockLab, FLOCKLAB_TARGET_ID_LIST, FLOCKLAB_TARGET_POSITIONS
 from flora_tools.node import Node
 from flora_tools.radio_configuration import RadioConfiguration
-from flora_tools.radio_math import RadioMath
 from lwb_slot import RADIO_MODULATIONS
 
 ITERATIONS = 50
@@ -46,7 +45,7 @@ class MeasureGloriaExperiment:
         self.disconnect_nodes()
 
     def connect_nodes(self):
-        self.nodes: List[Node] = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
+        self.nodes: List[Node] = [Node(flocklab=True, id=id, test=True) for id in FLOCKLAB_TARGET_ID_LIST]
         # self.nodes: List[Node] = []
         # self.serial_nodes = Node.get_serial_all()
         # self.nodes.extend(self.serial_nodes)
@@ -143,6 +142,7 @@ class MeasureGloriaExperiment:
                          'hop_count',
                          'power_level',
                          'acked',
+                         'initial',
                          ],
                 dtype='float')
         ]
@@ -163,6 +163,7 @@ class MeasureGloriaExperiment:
                         and 'type' in row['output']
                         and row['output']['type'] == 'gloria_flood'
                         and row['output']['initial'] is False
+                        and row['output']['type'] != 1
                         and 'msg_src' in row['output']):
                     modulation = row['output']['mod']
                     tx_node = row['msg_src']['msg_src']
@@ -179,6 +180,30 @@ class MeasureGloriaExperiment:
                         'hop_count': [row['output']['msg_hop']],
                         'power_level': [row['output']['msg_pow']],
                         'acked': ([row['output']['acked'] if 'acked' in row['output'] else False]),
+                        'initial': False
+                    }))
+                elif (type(row['output']) is dict
+                      and 'type' in row['output']
+                      and row['output']['type'] == 'gloria_flood'
+                      and row['output']['initial'] is True
+                      and row['output']['type'] != 1):
+
+                    modulation = row['output']['mod']
+                    tx_node = row['node_id']
+
+                    message = "Hello World! from FlockLab Node {}, Mod: {}".format(
+                        tx_node, modulation)
+
+                    receptions.append(pd.DataFrame({
+                        'tx_node': [tx_node],
+                        'rx_node': [row['content']['msg_dst']],
+                        'modulation': [modulation],
+                        'timestamp': [row.timestamp],
+                        'rx_slot': -2,
+                        'hop_count': 0,
+                        'power_level': lwb_slot.GLORIA_DEFAULT_POWER_LEVELS[0],
+                        'acked': ([row['output']['acked'] if 'acked' in row['output'] else False]),
+                        'initial': False
                     }))
 
         receptions = pd.concat(receptions, ignore_index=True)
@@ -244,3 +269,92 @@ class MeasureGloriaExperiment:
             nx.draw_networkx_edge_labels(G, pos=pos, edge_labels=edge_labels, font_size=10)
 
         plt.axis('off')
+
+    @staticmethod
+    def analyze_tx_count(receptions_no_ack, receptions_ack):
+
+        with plt.style.context("bmh"):
+            columns = ['modulation_name', 'tx_glossy', 'tx_gloria_no_ack', 'tx_gloria_ack', 'tx_gloria_ack_acks']
+            tx_count = pd.DataFrame(columns=columns)
+            tx_count.index.name = 'modulation'
+
+            modulations = receptions_no_ack.modulation.sort_values().unique()
+
+            for modulation in modulations:
+                config = RadioConfiguration(modulation)
+
+                subset_no_ack = receptions_no_ack[(receptions_no_ack.modulation == modulation)]
+                subset_ack = receptions_ack[(receptions_ack.modulation == modulation)]
+
+                slot_count_gloria_no_ack = (2 * lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS[modulation] - 1) + (
+                        lwb_slot.GLORIA_HOP_COUNTS[modulation] - 1)
+                slot_count_gloria_ack = slot_count_gloria_no_ack * 2 - 1
+
+                tx_glossy = lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS[modulation]
+
+                tx_gloria_no_ack = np.floor((slot_count_gloria_no_ack - subset_no_ack.rx_slot) / 2)
+                tx_gloria_no_ack = np.clip(tx_gloria_no_ack, 0,
+                                           lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS[modulation]) * np.less(
+                    subset_no_ack.hop_count, lwb_slot.GLORIA_HOP_COUNTS[modulation])
+                tx_gloria_no_ack = np.mean(tx_gloria_no_ack)
+
+                tx_gloria_ack = np.floor((slot_count_gloria_ack + 1 - subset_ack.rx_slot) / 4)
+                tx_gloria_ack = np.clip(tx_gloria_ack, 0, lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS[modulation]) * np.less(
+                    subset_ack.hop_count, lwb_slot.GLORIA_HOP_COUNTS[modulation])
+                tx_gloria_ack = np.mean(tx_gloria_ack)
+
+                tx_gloria_ack_acks = np.mean(subset_ack.acked)
+
+                tx_count.loc[len(columns)] = [config.modulation_name, tx_glossy, tx_gloria_no_ack, tx_gloria_ack,
+                                              tx_gloria_ack_acks]
+
+            fig = plt.figure(figsize=(10, 8))
+
+            ax = plt.gca()
+            plt.title("Flood Tx Activity on FlockLab ({} floods)".format(receptions_no_ack.shape[0]))
+
+            glossy_rects = ax.bar(modulations - 0.3, tx_count.loc[:, 'tx_glossy'], width=0.2)
+            gloria_no_ack_rects = ax.bar(modulations - 0.1, tx_count.loc[:, 'tx_gloria_no_ack'], width=0.2)
+            gloria_acks_rects = ax.bar(modulations + 0.1, tx_count.loc[:, 'tx_gloria_ack'], width=0.2)
+            gloria_acks_ack_rects = ax.bar(modulations + 0.3, tx_count.loc[:, 'tx_gloria_ack_acks'], width=0.2)
+
+            for i, rect in zip(modulations, gloria_no_ack_rects):
+                rect.set_fc(RadioConfiguration(i).color)
+
+            rect = glossy_rects[0]
+            ax.text(rect.get_x() + rect.get_width() / 2.,
+                    rect.get_height() / 0,
+                    "Glossy Tx",
+                    rotation=90,
+                    ha='center', va='center',
+                    color='white')
+
+            rect = gloria_no_ack_rects[0]
+            ax.text(rect.get_x() + rect.get_width() / 2.,
+                    rect.get_height() / 0,
+                    "Gloria Tx without ACK",
+                    rotation=90,
+                    ha='center', va='center',
+                    color='white')
+
+            rect = gloria_acks_rects[0]
+            ax.text(rect.get_x() + rect.get_width() / 2.,
+                    rect.get_height() / 0,
+                    "Gloria Tx with ACK",
+                    rotation=90,
+                    ha='center', va='center',
+                    color='white')
+
+            rect = gloria_acks_ack_rects[0]
+            ax.text(rect.get_x() + rect.get_width() / 2.,
+                    rect.get_height() / 0,
+                    "Gloria ACKs",
+                    rotation=90,
+                    ha='center', va='center',
+                    color='white')
+
+            ax.grid(False)
+            ax.grid(which='minor', axis='y', alpha=0.2)
+            ax.grid(which='major', axis='y', alpha=0.5)
+            plt.ylabel('Average Tx count')
+            plt.xticks(modulations, map(RadioConfiguration.get_modulation_name, modulations))
