@@ -59,7 +59,8 @@ TX2SYNC = [  # Explicit Header mode, CRC, 4/5, Preamble Length 2 (LoRa) and 3 (F
 GAP = 300E-6
 
 GLORIA_ACK_LENGTH = 2
-PREAMBLE_PRE_LISTENING = 0.2
+PREAMBLE_PRE_LISTENING = [0.2, 0.2, 0.2, 0.2, 0.2, 0.4, 0.4, 0.5, 1.0, 1.0]
+PREAMBLE_POST_LISTENING = [0.2, 0.2, 0.2, 0.2, 0.2, 0.4, 0.4, 0.5, 1.0, 1.0]
 
 PREAMBLE_LENGTHS = [3, 3, 3, 3, 3, 3, 3, 3, 2, 2]
 
@@ -113,7 +114,8 @@ class GloriaSlot:
 
     @property
     def rx_timeout_marker(self):
-        return self.rx_marker + self.flood.gloria_timings.radio_math.get_preamble_time()
+        return self.tx_marker + self.flood.gloria_timings.radio_math.get_preamble_time() * (
+                    1 + PREAMBLE_POST_LISTENING[self.flood.modulation])
 
     @property
     def rx_end_marker(self):
@@ -285,7 +287,6 @@ class GloriaTimings:
         tmp = 5.92039801e-05 + 4.86421406e-07 * self.safety_factor
         return tmp
 
-
     @property
     def sleep_time(self):
         return 1.52926223e-05 + 1.82871623e-06 * self.safety_factor
@@ -314,7 +315,7 @@ class GloriaTimings:
 
     @property
     def rx_offset(self):
-        return self.radio_math.get_preamble_time() * PREAMBLE_PRE_LISTENING
+        return self.radio_math.get_preamble_time() * PREAMBLE_PRE_LISTENING[self.modulation]
 
     @property
     def rx_end_offset(self):
@@ -376,7 +377,8 @@ class GloriaTimings:
             'tx_sync': GloriaTimings.timer_ticks(TX2SYNC[self.modulation]),
             'rx_setup': GloriaTimings.timer_ticks(self.rx_setup_time + GAP / 2),
             'tx_setup': GloriaTimings.timer_ticks(self.tx_setup_time + GAP / 2),
-            'preamble_timeout': GloriaTimings.radio_timer_ticks(self.radio_math.get_preamble_time()),
+            'preamble_timeout': GloriaTimings.radio_timer_ticks(self.radio_math.get_preamble_time() * (
+                        1 + PREAMBLE_PRE_LISTENING[self.modulation] + 1 + PREAMBLE_POST_LISTENING[self.modulation])),
             'mcu_timeout': GloriaTimings.timer_ticks(
                 self.radio_math.get_sync_time(self.modulation) * GLORIA_MCU_TIMEOUT_MULTIPLE),
         }

@@ -32,7 +32,6 @@ class MeasureGloriaExperiment:
         # xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
         # flocklab = FlockLab()
         # flocklab.schedule_test(xmlfile, self.run)
-
         self.run()
 
     def run(self):
@@ -56,7 +55,7 @@ class MeasureGloriaExperiment:
             node.cmd('config store')
             node.cmd('system reset')
             node.interactive_mode(False)  # Enable single-line JSON Output
-            node.flush()
+            #node.flush()
 
         time.sleep(0.1)
 
@@ -97,7 +96,7 @@ class MeasureGloriaExperiment:
                 if not node.flocklab:
                     output = node.read()
                     if output:
-                        self.logger.debug("Node {} output: {}".format(node.id, node.read()))
+                        self.logger.info("Node {} output: {}".format(node.id, output))
 
     @staticmethod
     def sync(node: Node, tx: bool):
