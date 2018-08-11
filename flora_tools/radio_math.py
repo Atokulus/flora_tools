@@ -76,9 +76,9 @@ class RadioMath:
         self.configuration = configuration
 
     def get_symbol_time(self):
-        if self.configuration.modem is RadioModem.LORA:
+        if self.configuration.modem.value is RadioModem.LORA.value:
             ts = LORA_SYMB_TIMES[self.configuration.bandwidth][int(self.configuration.modulation)] / 1000.0
-        elif self.configuration.modem is RadioModem.FSK:
+        elif self.configuration.modem.value is RadioModem.FSK.value:
             ts = 8 / self.configuration.bitrate
         else:
             ts = None
@@ -88,7 +88,7 @@ class RadioMath:
         if not preamble_length:
             preamble_length = self.configuration.preamble_len
         ts = self.get_symbol_time()
-        if self.configuration.modem is RadioModem.LORA:
+        if self.configuration.modem.value is RadioModem.LORA.value:
             time_preamble = ts * (preamble_length + (6.25 if self.configuration.sf in [6, 5] else 4.25))
         else:
             time_preamble = ts * preamble_length
@@ -99,7 +99,7 @@ class RadioMath:
         if not preamble_length:
             preamble_length = self.configuration.preamble_len
 
-        if self.configuration.modem is RadioModem.LORA:
+        if self.configuration.modem.value is RadioModem.LORA.value:
             ts = self.get_symbol_time()
             preamble_time = self.get_preamble_time(preamble_length)
             tmp = (
@@ -143,7 +143,7 @@ class RadioMath:
     @property
     def sensitivity(self):
         global SENSITIVITIES
-        if self.configuration.modem is RadioModem.LORA:
+        if self.configuration.modem.value is RadioModem.LORA.value:
             df = pd.DataFrame(SENSITIVITIES)
             sensitivity = df[(df.sf == self.configuration.sf) & (
                     df.bandwidth == self.configuration.real_bandwidth)].sensitivity.sort_values().iloc[0]
@@ -173,7 +173,7 @@ class RadioMath:
     @staticmethod
     def get_bitrate(
             modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
-        if modulation.modem is RadioModem.LORA:
+        if modulation.modem.value is RadioModem.LORA.value:
 
             if modulation.bandwidth == 125000:
                 bandwidth = 0
@@ -194,7 +194,7 @@ class RadioMath:
             modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
         MAX_PACKET = 255 * 8
 
-        if modulation.modem is RadioModem.LORA:
+        if modulation.modem.value is RadioModem.LORA.value:
 
             if modulation.bandwidth == 125000:
                 bandwidth = 0
