@@ -16,23 +16,26 @@ from flora_tools.radio_configuration import RadioConfiguration
 from lwb_slot import RADIO_MODULATIONS
 
 ITERATIONS = 10
-OFFSET = 0.5
+OFFSET = 0.3
 
 POWER_LEVELS = [0, 1]
 POWERS = [10, 22]
 
 
 class MeasureGloriaExperiment:
-    def __init__(self, ack=True):
+    def __init__(self, ack=True, local=False):
         self.ack = ack
         self.nodes: List[Node] = None
         self.serial_nodes: List[Node] = None
         self.logger = logging.getLogger('flocklab_gloria_measurement')
+        self.local = local
 
-        # xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
-        # flocklab = FlockLab()
-        # flocklab.schedule_test(xmlfile, self.run)
-        self.run()
+        if not local:
+            xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
+            flocklab = FlockLab()
+            flocklab.schedule_test(xmlfile, self.run)
+        else:
+            self.run()
 
     def run(self):
         self.connect_nodes()
@@ -44,10 +47,12 @@ class MeasureGloriaExperiment:
         self.disconnect_nodes()
 
     def connect_nodes(self):
-        # self.nodes: List[Node] = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
-        self.nodes: List[Node] = []
-        self.serial_nodes = Node.get_serial_all()
-        self.nodes.extend(self.serial_nodes)
+        if not self.local:
+            self.nodes: List[Node] = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
+        else:
+            self.nodes: List[Node] = []
+            self.serial_nodes = Node.get_serial_all()
+            self.nodes.extend(self.serial_nodes)
 
         for node in self.nodes:
             node.cmd('config set uid {:d}'.format(node.id))
@@ -90,7 +95,7 @@ class MeasureGloriaExperiment:
                     self.receive(node, modulation, lwb_slot.GLORIA_HEADER_LENGTH + len(message) + 1, OFFSET, self.ack)
             self.send(tx_node, modulation, message, OFFSET, destination)
 
-            time.sleep(data_time + OFFSET + 0.3)
+            time.sleep(data_time + OFFSET + 0.1)
 
             for node in self.nodes:
                 if not node.flocklab:

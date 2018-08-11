@@ -59,8 +59,8 @@ TX2SYNC = [  # Explicit Header mode, CRC, 4/5, Preamble Length 2 (LoRa) and 3 (F
 GAP = 300E-6
 
 GLORIA_ACK_LENGTH = 2
-PREAMBLE_PRE_LISTENING = [0.2, 0.2, 0.2, 0.2, 0.2, 0.4, 0.4, 0.5, 1.0, 1.0]
-PREAMBLE_POST_LISTENING = [0.2, 0.2, 0.2, 0.2, 0.2, 0.4, 0.4, 0.5, 1.0, 1.0]
+PREAMBLE_PRE_LISTENING = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 4.0, 4.0]
+PREAMBLE_POST_LISTENING = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 4.0, 4.0]
 
 PREAMBLE_LENGTHS = [3, 3, 3, 3, 3, 3, 3, 3, 2, 2]
 
@@ -115,7 +115,7 @@ class GloriaSlot:
     @property
     def rx_timeout_marker(self):
         return self.tx_marker + self.flood.gloria_timings.radio_math.get_preamble_time() * (
-                    1 + PREAMBLE_POST_LISTENING[self.flood.modulation])
+                1 + PREAMBLE_POST_LISTENING[self.flood.modulation])
 
     @property
     def rx_end_marker(self):
@@ -378,9 +378,10 @@ class GloriaTimings:
             'rx_setup': GloriaTimings.timer_ticks(self.rx_setup_time + GAP / 2),
             'tx_setup': GloriaTimings.timer_ticks(self.tx_setup_time + GAP / 2),
             'preamble_timeout': GloriaTimings.radio_timer_ticks(self.radio_math.get_preamble_time() * (
-                        1 + PREAMBLE_PRE_LISTENING[self.modulation] + 1 + PREAMBLE_POST_LISTENING[self.modulation])),
+                    1 + PREAMBLE_PRE_LISTENING[self.modulation] + PREAMBLE_POST_LISTENING[self.modulation])),
             'mcu_timeout': GloriaTimings.timer_ticks(
-                self.radio_math.get_sync_time(self.modulation) * GLORIA_MCU_TIMEOUT_MULTIPLE),
+                (self.radio_math.get_sync_time(self.modulation) * (1 + PREAMBLE_PRE_LISTENING[self.modulation] +
+                 PREAMBLE_POST_LISTENING[self.modulation]))),
         }
 
     @staticmethod
