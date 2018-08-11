@@ -23,7 +23,7 @@ POWERS = [10, 22]
 
 
 class MeasureGloriaExperiment:
-    def __init__(self, ack=True, local=False):
+    def __init__(self, ack=False, local=True, register_test=False):
         self.ack = ack
         self.nodes: List[Node] = None
         self.serial_nodes: List[Node] = None
@@ -31,9 +31,12 @@ class MeasureGloriaExperiment:
         self.local = local
 
         if not local:
-            xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
-            flocklab = FlockLab()
-            flocklab.schedule_test(xmlfile, self.run)
+            if register_test:
+                xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
+                flocklab = FlockLab()
+                flocklab.schedule_test(xmlfile, self.run)
+            else:
+                self.run()
         else:
             self.run()
 
@@ -95,7 +98,7 @@ class MeasureGloriaExperiment:
                     self.receive(node, modulation, lwb_slot.GLORIA_HEADER_LENGTH + len(message) + 1, OFFSET, self.ack)
             self.send(tx_node, modulation, message, OFFSET, destination)
 
-            time.sleep(data_time + OFFSET + 0.1)
+            time.sleep(data_time + OFFSET + 0.2)
 
             for node in self.nodes:
                 if not node.flocklab:

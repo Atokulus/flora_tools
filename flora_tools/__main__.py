@@ -45,9 +45,8 @@ def flocklab_measure_links():
     measure_links_experiment = MeasureLinksExperiment()
 
 
-def flocklab_measure_gloria():
-    measure_gloria_experiment = MeasureGloriaExperiment(ack=False)
-    measure_gloria_experiment_ack = MeasureGloriaExperiment(ack=True)
+def flocklab_measure_gloria(ack, register_test, local):
+    measure_gloria_experiment = MeasureGloriaExperiment(ack=ack, local=local, register_test=register_test)
 
 
 def start_server():
@@ -71,6 +70,12 @@ def main():
                         help='Set the random number generators seed for reproducible results')
     parser.add_argument('-c', '--event_count', type=int,
                         help='Set the maximum number of events that get executed by the simulation')
+    parser.add_argument('-a', '--ack', action='store_true',
+                        help='Runs Gloria measurements with Ack enabled')
+    parser.add_argument('-r', '--register-test', action='store_true',
+                        help='Runs Gloria measurements by requesting a test slot on FlockLab')
+    parser.add_argument('-l', '--local', action='store_true',
+                        help='Runs Gloria measurements only with locally attached serial devices.')
     args = parser.parse_args()
 
     if args.command == 'program':
@@ -96,7 +101,7 @@ def main():
     elif args.command == 'flocklab_measure_links':
         flocklab_measure_links()
     elif args.command == 'flocklab_measure_gloria':
-        flocklab_measure_gloria()
+        flocklab_measure_gloria(args.ack, args.register_test, args.local)
     elif args.command == 'generate_code':
         if args.path is None:
             parser.error("generate_code requires --path of Flora project.")

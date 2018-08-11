@@ -56,13 +56,11 @@ TX2SYNC = [  # Explicit Header mode, CRC, 4/5, Preamble Length 2 (LoRa) and 3 (F
     0.000386149731,
 ]
 
-GAP = 300E-6
+GAP = 800E-6
 
 GLORIA_ACK_LENGTH = 2
-PREAMBLE_PRE_LISTENING = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 4.0, 4.0]
-PREAMBLE_POST_LISTENING = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 4.0, 4.0]
-
-PREAMBLE_LENGTHS = [3, 3, 3, 3, 3, 3, 3, 3, 2, 2]
+PREAMBLE_PRE_LISTENING = [0.3, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.5, 2.0, 2.0]
+PREAMBLE_POST_LISTENING = [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 2.0, 2.0]
 
 
 class GloriaSlotType(Enum):
@@ -315,7 +313,7 @@ class GloriaTimings:
 
     @property
     def rx_offset(self):
-        return self.radio_math.get_preamble_time() * PREAMBLE_PRE_LISTENING[self.modulation]
+        return self.radio_math.get_preamble_time() * (PREAMBLE_PRE_LISTENING[self.modulation])
 
     @property
     def rx_end_offset(self):
