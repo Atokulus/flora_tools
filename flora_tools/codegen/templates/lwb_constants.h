@@ -15,10 +15,12 @@
 #define LWB_ROUND_SCHEDULE_ITEM_COUNT %%LWB_ROUND_SCHEDULE_ITEM_COUNT%%
 #define LWB_ROUND_SCHEDULE_LENGTH %%LWB_ROUND_SCHEDULE_LENGTH%%
 
-extern uint8_t gloria_default_power_levels[];
-extern uint8_t gloria_retransmission_counts[];
-extern uint8_t gloria_hop_counts[];
-extern uint8_t lwb_modulations[];
-extern int8_t lwb_powers[];
+extern const uint8_t gloria_default_power_levels[];
+extern const uint8_t gloria_retransmission_counts[];
+extern const uint8_t gloria_hop_counts[];
+extern const uint8_t lwb_modulations[];
+extern const int8_t lwb_powers[];
+extern const uint32_t lwb_slot_times[][256];
+extern const uint32_t lwb_slot_acked_times[][256];
 
 #endif /* LWB_CONSTANTS_H */

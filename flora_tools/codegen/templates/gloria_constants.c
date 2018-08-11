@@ -2,7 +2,7 @@
 
 #include "gloria_constants.h"
 
-gloria_timings_t gloria_timings[] = {
+const gloria_timings_t gloria_timings[] = {
     <%- for timing in gloria_timings %>
     { // %%loop.index-1%% (%%modulation_name(loop.index-1)%%)
         .slotOverhead = %%timing.slot_overhead%%, // %%human_time(timing.slot_overhead)%%

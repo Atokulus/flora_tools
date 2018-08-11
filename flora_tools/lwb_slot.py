@@ -142,7 +142,7 @@ class LWBSlot:
 
     @property
     def total_time(self):
-        return self.flood.total_time
+        return np.ceil(self.flood.total_time / LWB_SCHEDULE_GRANULARITY) * LWB_SCHEDULE_GRANULARITY
 
     @staticmethod
     def create_data_slot(round, slot_offset, modulation, payload, master: 'sim_node.SimNode', index=None,

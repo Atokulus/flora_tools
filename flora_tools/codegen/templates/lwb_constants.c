@@ -4,9 +4,32 @@
 
 #include "lwb_constants.h"
 
-uint8_t gloria_default_power_levels[] = {<%-for power in gloria_default_power_levels %>%%power%%,<%- endfor %>}; // see radio_powers
-uint8_t gloria_retransmission_counts[] = {<%-for count in gloria_retransmission_counts %>%%count%%,<%- endfor %>};
-uint8_t gloria_hop_counts[] = {<%-for count in gloria_hop_counts %>%%count%%,<%- endfor %>};
+const uint8_t gloria_default_power_levels[] = {<%-for power in gloria_default_power_levels %>%%power%%,<%- endfor %>}; // see radio_powers
+const uint8_t gloria_retransmission_counts[] = {<%-for count in gloria_retransmission_counts %>%%count%%,<%- endfor %>};
+const uint8_t gloria_hop_counts[] = {<%-for count in gloria_hop_counts %>%%count%%,<%- endfor %>};
 
-uint8_t lwb_modulations[] = {<%-for modulation in lwb_modulations %>%%modulation%%,<%- endfor %>}; // {<%-for modulation in radio_modulations %>%%modulation_name(modulation)%%,<%- endfor %>}
-int8_t lwb_powers[] = {<%-for power in lwb_powers %>%%power%%,<%- endfor %>}; // dBm
+const uint8_t lwb_modulations[] = {<%-for modulation in lwb_modulations %>%%modulation%%,<%- endfor %>}; // {<%-for modulation in radio_modulations %>%%modulation_name(modulation)%%,<%- endfor %>}
+const int8_t lwb_powers[] = {<%-for power in lwb_powers %>%%power%%,<%- endfor %>}; // dBm
+
+const uint32_t lwb_slot_times[][256] =
+{
+        <%- for modulation_toa in lwb_slot_times %>
+		    {   // %%loop.index - 1%%
+		        <%- for payload_toa in modulation_toa %>
+		            %%payload_toa%%, // %%human_time(payload_toa)%%
+		        <%- endfor %>
+		    },
+		<%- endfor %>
+};
+
+const uint32_t lwb_slot_acked_times[][256] =
+{
+        <%- for modulation_toa in lwb_slot_acked_times %>
+		    {   // %%loop.index - 1%%
+		        <%- for payload_toa in modulation_toa %>
+		            %%payload_toa%%, // %%human_time(payload_toa)%%
+		        <%- endfor %>
+		    },
+		<%- endfor %>
+};
+

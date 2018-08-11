@@ -4,7 +4,7 @@
 
 #include "lwb_round_constants.h"
 
-uint8_t lwb_max_slot_count[] = {<%-for count in lwb_max_slot_count %>%%count%%,<%- endfor %>};
-uint8_t lwb_max_stream_request_slot_count[] = {<%-for count in lwb_max_stream_request_slot_count %>%%count%%,<%- endfor %>};
-uint8_t lwb_initial_stream_request_slot_count[] = {<%-for count in lwb_initial_stream_request_slot_count %>%%count%%,<%- endfor %>};
-uint8_t lwb_min_stream_request_slot_count[] = {<%-for count in lwb_min_stream_request_slot_count %>%%count%%,<%- endfor %>};
+const uint8_t lwb_max_slot_count[] = {<%-for count in lwb_max_slot_count %>%%count%%,<%- endfor %>};
+const uint8_t lwb_max_stream_request_slot_count[] = {<%-for count in lwb_max_stream_request_slot_count %>%%count%%,<%- endfor %>};
+const uint8_t lwb_initial_stream_request_slot_count[] = {<%-for count in lwb_initial_stream_request_slot_count %>%%count%%,<%- endfor %>};
+const uint8_t lwb_min_stream_request_slot_count[] = {<%-for count in lwb_min_stream_request_slot_count %>%%count%%,<%- endfor %>};

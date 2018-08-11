@@ -32,6 +32,6 @@ typedef struct {
     uint32_t mcuTimeout;
 } gloria_timings_t;
 
-extern gloria_timings_t gloria_timings[];
+extern const gloria_timings_t gloria_timings[];
 
 #endif /* PROTOCOL_GLORIA_GLORIA_CONSTANTS_H_ */

@@ -60,11 +60,13 @@ const radio_cad_params_t radio_cad_params[] = {
 		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 18, .cad_det_min = 10}, // SF5
 };
 
-const uint32_t radio_toas[] =
+const uint32_t radio_toas[][256] =
 {
-        <%- for modulation_toa in toas %>
+        <%- for modulation_toa in radio_toas %>
 		    {   // %%loop.index - 1%%
-		        <%- for payload_toa in modulation_toa %>%%payload_toa%%, // %%(loop.index - 1)%%<%- endfor %>
+		        <%- for payload_toa in modulation_toa %>
+		            %%payload_toa%%, // %%loop.index - 1%%: %%human_time(payload_toa)%%
+		        <%- endfor %>
 		    },
 		<%- endfor %>
 };

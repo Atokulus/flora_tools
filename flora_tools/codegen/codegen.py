@@ -67,17 +67,18 @@ class CodeGen:
         radio_toas = []
         payloads = range(256)
         for mod, config in enumerate(RADIO_CONFIGURATIONS):
-            # TODO Fix enum bug
             math = RadioMath(RadioConfiguration(mod))
-            radio_toas.append([math.get_message_toa(payload) for payload in payloads])
+            radio_toas.append([gloria.GloriaTimings.timer_ticks(math.get_message_toa(payload)) for payload in payloads])
 
         rendered = template.render(configurations=configurations, bands=BAND_FREQUENCIES, band_groups=BAND_GROUPS,
                                    bands_us915=BAND_FREQUENCIES_US915, band_groups_us915=BAND_GROUPS_US915,
                                    radio_toas=radio_toas)
+
         self.write_render_to_file(rendered, target)
 
         target = './lib/radio/radio_constants.h'
         self.create_folder(target)
+
 
         template = self.env.get_template('radio_constants.h')
 
@@ -144,12 +145,27 @@ class CodeGen:
         self.create_folder(target)
         template = self.env.get_template('lwb_constants.c')
 
+        lwb_slot_times = []
+        payloads = range(256)
+        for mod in range(len(lwb_slot.RADIO_MODULATIONS)):
+            lwb_slot_times.append([gloria.GloriaTimings.timer_ticks(
+                lwb_slot.LWBSlot.create_empty_slot(mod, payload, False).total_time
+            ) for payload in payloads])
+
+        lwb_slot_acked_times = []
+        for mod in range(len(lwb_slot.RADIO_MODULATIONS)):
+            lwb_slot_acked_times.append([gloria.GloriaTimings.timer_ticks(
+                lwb_slot.LWBSlot.create_empty_slot(mod, payload, False).total_time
+            ) for payload in payloads])
+
         lwb_constants = {
             'gloria_default_power_levels': lwb_slot.GLORIA_DEFAULT_POWER_LEVELS,
             'gloria_retransmission_counts': lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS,
             'gloria_hop_counts': lwb_slot.GLORIA_HOP_COUNTS,
             'lwb_modulations': lwb_slot.RADIO_MODULATIONS,
             'lwb_powers': lwb_slot.RADIO_POWERS,
+            'lwb_slot_times': lwb_slot_times,
+            'lwb_slot_acked_times': lwb_slot_acked_times,
         }
         rendered = template.render(**lwb_constants)
 
