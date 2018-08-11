@@ -73,6 +73,9 @@ class MeasureGloriaExperiment:
 
     def iterate_from_node(self, tx_node: Node):
         for modulation in RADIO_MODULATIONS:
+            if self.ack and lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS[modulation] < 2 and lwb_slot.GLORIA_HOP_COUNTS[modulation] < 2:
+                continue
+
             self.logger.info("Gloria flood from Node {} @ Mod {}".format(tx_node.id, modulation))
 
             sync_time = lwb_slot.LWBSlot.create_empty_slot(0, acked=False).total_time
