@@ -29,11 +29,11 @@ class MeasureGloriaExperiment:
         self.serial_nodes: List[Node] = None
         self.logger = logging.getLogger('flocklab_gloria_measurement')
 
-        xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
-        flocklab = FlockLab()
-        flocklab.schedule_test(xmlfile, self.run)
+        # xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
+        # flocklab = FlockLab()
+        # flocklab.schedule_test(xmlfile, self.run)
 
-        # self.run()
+        self.run()
 
     def run(self):
         self.connect_nodes()
@@ -45,10 +45,10 @@ class MeasureGloriaExperiment:
         self.disconnect_nodes()
 
     def connect_nodes(self):
-        self.nodes: List[Node] = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
-        # self.nodes: List[Node] = []
-        # self.serial_nodes = Node.get_serial_all()
-        # self.nodes.extend(self.serial_nodes)
+        # self.nodes: List[Node] = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
+        self.nodes: List[Node] = []
+        self.serial_nodes = Node.get_serial_all()
+        self.nodes.extend(self.serial_nodes)
 
         for node in self.nodes:
             node.cmd('config set uid {:d}'.format(node.id))
@@ -56,6 +56,7 @@ class MeasureGloriaExperiment:
             node.cmd('config store')
             node.cmd('system reset')
             node.interactive_mode(False)  # Enable single-line JSON Output
+            node.flush()
 
         time.sleep(0.1)
 
@@ -91,6 +92,12 @@ class MeasureGloriaExperiment:
             self.send(tx_node, modulation, message, OFFSET, destination)
 
             time.sleep(data_time + OFFSET + 0.3)
+
+            for node in self.nodes:
+                if not node.flocklab:
+                    output = node.read()
+                    if output:
+                        self.logger.debug("Node {} output: {}".format(node.id, node.read()))
 
     @staticmethod
     def sync(node: Node, tx: bool):

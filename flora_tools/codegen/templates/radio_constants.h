@@ -90,5 +90,6 @@ extern const radio_config_t radio_modulations[];
 extern const radio_band_t radio_bands[];
 extern const radio_band_group_t radio_band_groups[];
 extern const radio_cad_params_t radio_cad_params[];
+extern const uint32_t radio_toas[][];
 
 #endif /* RADIO_RADIO_CONSTANTS_H_ */

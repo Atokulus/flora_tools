@@ -10,6 +10,7 @@ import radio_configuration
 from gloria import GloriaTimings
 from radio_configuration import RADIO_CONFIGURATIONS, RadioModem, BAND_FREQUENCIES, BAND_GROUPS, \
     BAND_FREQUENCIES_US915, BAND_GROUPS_US915, RadioConfiguration
+from radio_math import RadioMath
 from sim import lwb_link_manager, lwb_stream, cad_sync
 from sim.sim_gloria import MAX_ACKS
 
@@ -63,8 +64,16 @@ class CodeGen:
                            }
                            ) for config in RADIO_CONFIGURATIONS]
 
+        radio_toas = []
+        payloads = range(256)
+        for mod, config in enumerate(RADIO_CONFIGURATIONS):
+            # TODO Fix enum bug
+            math = RadioMath(RadioConfiguration(mod))
+            radio_toas.append([math.get_message_toa(payload) for payload in payloads])
+
         rendered = template.render(configurations=configurations, bands=BAND_FREQUENCIES, band_groups=BAND_GROUPS,
-                                   bands_us915=BAND_FREQUENCIES_US915, band_groups_us915=BAND_GROUPS_US915)
+                                   bands_us915=BAND_FREQUENCIES_US915, band_groups_us915=BAND_GROUPS_US915,
+                                   radio_toas=radio_toas)
         self.write_render_to_file(rendered, target)
 
         target = './lib/radio/radio_constants.h'
@@ -208,4 +217,3 @@ class CodeGen:
     @staticmethod
     def modulation_name(index: int) -> str:
         return RadioConfiguration(index).modulation_name
-

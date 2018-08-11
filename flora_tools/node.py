@@ -15,7 +15,7 @@ class Node:
 
         if self.flocklab:
             self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.s.settimeout(0.2)
+            self.s.settimeout(0.1)
             self.id = id
 
             self.open()
@@ -88,9 +88,22 @@ class Node:
 
     def flush(self):
         if self.flocklab:
-            pass
+            while self.s.recv(1024):
+                pass
         else:
             self.ser.flushInput()
+
+    def read(self):
+        if self.flocklab:
+            output = ""
+            while True:
+                output += self.s.recv(1024)
+                if not output:
+                    break
+            return output
+        else:
+            output = self.ser.read_all()
+            return output
 
     def query(self, command):
         self.flush()
