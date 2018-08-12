@@ -2,8 +2,8 @@ import argparse
 import sys
 from multiprocessing import Pool
 
-from codegen.codegen import CodeGen
-from flocklab.measure_gloria import MeasureGloriaExperiment
+from flora_tools.codegen.codegen import CodeGen
+from flora_tools.flocklab.measure_gloria import MeasureGloriaExperiment
 from flora_tools.flocklab.measure_links import MeasureLinksExperiment
 from flora_tools.sim.sim import Sim
 from flora_tools.toolchain.bootloader import Bootloader
