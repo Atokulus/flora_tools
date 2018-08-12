@@ -100,7 +100,8 @@ class MeasureGloriaExperiment:
 
             for node in self.nodes:
                 if node.id != tx_node.id:
-                    self.receive(node, modulation, lwb_slot.GLORIA_HEADER_LENGTH + len(message) + 1, OFFSET, self.ack)
+                    self.receive(node, modulation, lwb_slot.GLORIA_HEADER_LENGTH + len(message) + 1,
+                                 (OFFSET if destination is not node else OFFSET), self.ack)
             self.send(tx_node, modulation, message, OFFSET, destination)
 
             time.sleep(data_time + OFFSET + 0.3)
@@ -334,7 +335,6 @@ class MeasureGloriaExperiment:
 
                 tx_count.loc[len(tx_count)] = [config.modulation_name, tx_gloria_no_ack, tx_gloria_ack,
                                                tx_gloria_ack_acks * ack_ratio]
-
 
             fig = plt.figure(figsize=(10, 8))
 

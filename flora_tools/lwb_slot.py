@@ -12,7 +12,7 @@ GLORIA_RETRANSMISSIONS_COUNTS = [1, 1, 1, 1, 2, 2, 2, 2, 2, 2]
 GLORIA_HOP_COUNTS = [1, 1, 1, 1, 2, 2, 2, 3, 3, 3]
 
 RADIO_MODULATIONS = [3, 5, 7, 9]  # SF9, SF7, SF5, FSK 200 Kb/s
-RADIO_POWERS = [10, 22]  # dBm
+RADIO_POWERS = [0, 10]  # [10, 22]  # dBm
 
 TIMER_FREQUENCY = 8E6  # 0.125 us
 TIME_DEPTH = 6  # 6 Bytes, ~1.116 years
