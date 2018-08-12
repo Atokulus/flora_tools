@@ -97,24 +97,24 @@ class Node:
         if self.flocklab:
             output = ""
             while True:
-                output += self.s.recv(1024)
-                if not output:
+                try:
+                    output += str(self.s.recv(1024))
+                    if not output:
+                        break
+                except socket.timeout:
                     break
             return output
         else:
-            output = self.ser.read_all()
-            return output
+            if self.ser.inWaiting() > 0:
+                output = self.ser.read_all()
+                return output
+            else:
+                return ""
 
     def query(self, command):
         self.flush()
         self.cmd(command)
-        if self.flocklab:
-            try:
-                return self.s.recv(1000)
-            except socket.timeout:
-                return b''
-        else:
-            return self.ser.readlines()
+        return self.read()
 
     def delay_cmd_time(self, payload=0):
         time.sleep(0.1 + payload / 256.0 * 0.1)

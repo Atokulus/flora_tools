@@ -13,10 +13,12 @@ import lwb_slot
 from flora_tools.flocklab.flocklab import FlockLab, FLOCKLAB_TARGET_ID_LIST, FLOCKLAB_TARGET_POSITIONS
 from flora_tools.node import Node
 from flora_tools.radio_configuration import RadioConfiguration
+from gloria import GLORIA_ACK_LENGTH
 from lwb_slot import RADIO_MODULATIONS
+from radio_math import RadioMath
 
 ITERATIONS = 10
-OFFSET = 0.3
+OFFSET = 0.5
 
 POWER_LEVELS = [0, 1]
 POWERS = [10, 22]
@@ -45,13 +47,13 @@ class MeasureGloriaExperiment:
 
         for i in range(ITERATIONS):
             for node in self.nodes:
-                self.iterate_from_node(node)
+                self.iterate_from_node(node, i)
 
         self.disconnect_nodes()
 
     def connect_nodes(self):
         if not self.local:
-            self.nodes: List[Node] = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
+            self.nodes: List[Node] = [Node(flocklab=True, id=id, test=True) for id in FLOCKLAB_TARGET_ID_LIST]
         else:
             self.nodes: List[Node] = []
             self.serial_nodes = Node.get_serial_all()
@@ -65,18 +67,18 @@ class MeasureGloriaExperiment:
             node.interactive_mode(False)  # Enable single-line JSON Output
             #node.flush()
 
-        time.sleep(0.1)
+        time.sleep(0.2)
 
     def disconnect_nodes(self):
         for node in self.nodes:
             node.close()
 
-    def iterate_from_node(self, tx_node: Node):
+    def iterate_from_node(self, tx_node: Node, iteration):
         for modulation in RADIO_MODULATIONS:
             if self.ack and lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS[modulation] < 2 and lwb_slot.GLORIA_HOP_COUNTS[modulation] < 2:
                 continue
 
-            self.logger.info("Gloria flood from Node {} @ Mod {}".format(tx_node.id, modulation))
+            self.logger.info("{:4d}\tGloria flood from Node {} @ Mod {}".format(iteration, tx_node.id, modulation))
 
             sync_time = lwb_slot.LWBSlot.create_empty_slot(0, acked=False).total_time
 
@@ -92,7 +94,7 @@ class MeasureGloriaExperiment:
             for node in self.nodes:
                 if node.id != tx_node.id:
                     self.sync(node, False)
-            time.sleep(0.1)
+            time.sleep(0.15)
             self.sync(tx_node, True)
             time.sleep(sync_time)
 
@@ -101,7 +103,7 @@ class MeasureGloriaExperiment:
                     self.receive(node, modulation, lwb_slot.GLORIA_HEADER_LENGTH + len(message) + 1, OFFSET, self.ack)
             self.send(tx_node, modulation, message, OFFSET, destination)
 
-            time.sleep(data_time + OFFSET + 0.2)
+            time.sleep(data_time + OFFSET + 0.3)
 
             for node in self.nodes:
                 if not node.flocklab:
@@ -161,6 +163,7 @@ class MeasureGloriaExperiment:
                          'acked',
                          'initial',
                          'remaining_tx',
+                         'size',
                          ],
                 dtype='float')
         ]
@@ -203,6 +206,7 @@ class MeasureGloriaExperiment:
                             'acked': ([row['output']['acked'] if 'acked' in row['output'] else False]),
                             'initial': False,
                             'remaining_tx': [row['output']['rmn_tx']],
+                            'size': [row['output']['msg_size']],
                         }))
                 elif (type(row['output']) is dict
                       and 'type' in row['output']
@@ -224,6 +228,7 @@ class MeasureGloriaExperiment:
                         'acked': ([row['output']['acked'] if 'acked' in row['output'] else False]),
                         'initial': True,
                         'remaining_tx': [row['output']['rmn_tx']],
+                        'size': [row['output']['msg_size']],
                     }))
 
         receptions = pd.concat(receptions, ignore_index=True)
@@ -306,7 +311,7 @@ class MeasureGloriaExperiment:
             receptions_no_ack.modulation = receptions_no_ack.modulation.astype(int)
             receptions_ack.modulation = receptions_ack.modulation.astype(int)
 
-            modulations = receptions_no_ack.modulation.sort_values().unique()
+            modulations = receptions_ack.modulation.sort_values().unique()
 
             for modulation in modulations:
                 config = RadioConfiguration(modulation)
@@ -319,8 +324,17 @@ class MeasureGloriaExperiment:
                 tx_gloria_ack = lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS[modulation] - subset_ack.remaining_tx.mean()
                 tx_gloria_ack_acks = np.mean(subset_ack.acked)
 
+                config = RadioConfiguration(modulation)
+                math = RadioMath(config)
+
+                msg_toa = math.get_message_toa(payload_size=50)  # receptions_ack[receptions_ack.size != 0].size.mean())
+
+                ack_toa = math.get_message_toa(payload_size=GLORIA_ACK_LENGTH)
+                ack_ratio = ack_toa / msg_toa
+
                 tx_count.loc[len(tx_count)] = [config.modulation_name, tx_gloria_no_ack, tx_gloria_ack,
-                                               tx_gloria_ack_acks]
+                                               tx_gloria_ack_acks * ack_ratio]
+
 
             fig = plt.figure(figsize=(10, 8))
 

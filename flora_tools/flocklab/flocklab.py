@@ -141,7 +141,7 @@ class FlockLab:
 
     @staticmethod
     def parse_serial_log(file):
-        with open(file) as f:
+        with open(file, errors='replace') as f:
             lines = f.readlines()
 
             logs = [pd.DataFrame(columns=['timestamp', 'observer_id', 'node_id', 'rx', 'output'])]
