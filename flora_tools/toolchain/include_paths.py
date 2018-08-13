@@ -1,6 +1,7 @@
 INCLUDE_PATHS = [
     'lib',
     'lib/arch',
+    'lib/arch/stm32hal',
     'lib/boards',
     'lib/boards/mcu',
     'lib/boards/stm32hal-sx1262',

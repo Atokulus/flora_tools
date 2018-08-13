@@ -3,11 +3,11 @@ import os
 import numpy as np
 from jinja2 import Environment, PackageLoader
 
+import flora_tools.lwb_slot as lwb_slot
+import flora_tools.radio_configuration as radio_configuration
 import gloria
 import lwb_round
-import flora_tools.lwb_slot as lwb_slot
 from flora_tools.gloria import GloriaTimings
-import flora_tools.radio_configuration as radio_configuration
 from flora_tools.radio_configuration import RADIO_CONFIGURATIONS, RadioModem, BAND_FREQUENCIES, BAND_GROUPS, \
     BAND_FREQUENCIES_US915, BAND_GROUPS_US915, RadioConfiguration
 from radio_math import RadioMath
@@ -79,7 +79,6 @@ class CodeGen:
         target = './lib/radio/radio_constants.h'
         self.create_folder(target)
 
-
         template = self.env.get_template('radio_constants.h')
 
         constants = {'RADIO_DEFAULT_BAND': radio_configuration.RADIO_DEFAULT_BAND,
@@ -105,6 +104,8 @@ class CodeGen:
             'GLORIA_MAX_ACKS': MAX_ACKS,
             'GLORIA_RADIO_SLEEP_TIME': GloriaTimings.timer_ticks(GloriaTimings(0).sleep_time),
             'GLORIA_RADIO_WAKEUP_TIME': GloriaTimings.timer_ticks(GloriaTimings(0).wakeup_time),
+            'GLORIA_POWER_LEVEL_COUNT': len(lwb_slot.RADIO_POWERS),
+            'GLORIA_GAP': GloriaTimings.timer_ticks(gloria.GAP),
         }
 
         rendered = template.render(**constants)
@@ -137,6 +138,7 @@ class CodeGen:
             'LWB_ROUND_SCHEDULE_ITEM': lwb_slot.LWB_ROUND_SCHEDULE_ITEM,
             'LWB_ROUND_SCHEDULE_ITEM_COUNT': lwb_slot.LWB_ROUND_SCHEDULE_ITEM_COUNT,
             'LWB_ROUND_SCHEDULE_LENGTH': lwb_slot.LWB_ROUND_SCHEDULE_LENGTH,
+            'LWB_MOD_COUNT': len(lwb_slot.RADIO_MODULATIONS),
         }
         rendered = template.render(**lwb_constants)
         self.write_render_to_file(rendered, target)

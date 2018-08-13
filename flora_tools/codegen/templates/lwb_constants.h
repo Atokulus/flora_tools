@@ -15,6 +15,8 @@
 #define LWB_ROUND_SCHEDULE_ITEM_COUNT %%LWB_ROUND_SCHEDULE_ITEM_COUNT%%
 #define LWB_ROUND_SCHEDULE_LENGTH %%LWB_ROUND_SCHEDULE_LENGTH%%
 
+#define LWB_MOD_COUNT %%LWB_MOD_COUNT%%
+
 extern const uint8_t gloria_default_power_levels[];
 extern const uint8_t gloria_retransmission_counts[];
 extern const uint8_t gloria_hop_counts[];

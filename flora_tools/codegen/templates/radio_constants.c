@@ -49,15 +49,16 @@ const radio_band_group_t radio_band_groups[] = {
 
 #endif
 
+// CAD with 1 Symbol is totally random!
 const radio_cad_params_t radio_cad_params[] = {
-		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 25, .cad_det_min = 10}, // SF12
-		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 24, .cad_det_min = 10}, // SF11
-		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 23, .cad_det_min = 10}, // SF10
-		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 22, .cad_det_min = 10}, // SF9
-		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 21, .cad_det_min = 10}, // SF8
-		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 20, .cad_det_min = 10}, // SF7
-		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 19, .cad_det_min = 10}, // SF6
-		{.symb_num = LORA_CAD_01_SYMBOL, .cad_det_peak = 18, .cad_det_min = 10}, // SF5
+		{.symb_num = LORA_CAD_04_SYMBOL, .cad_det_peak = 25, .cad_det_min = 10}, // SF12
+		{.symb_num = LORA_CAD_04_SYMBOL, .cad_det_peak = 24, .cad_det_min = 10}, // SF11
+		{.symb_num = LORA_CAD_04_SYMBOL, .cad_det_peak = 23, .cad_det_min = 10}, // SF10
+		{.symb_num = LORA_CAD_04_SYMBOL, .cad_det_peak = 22, .cad_det_min = 10}, // SF9
+		{.symb_num = LORA_CAD_04_SYMBOL, .cad_det_peak = 21, .cad_det_min = 10}, // SF8
+		{.symb_num = LORA_CAD_04_SYMBOL, .cad_det_peak = 20, .cad_det_min = 10}, // SF7
+		{.symb_num = LORA_CAD_04_SYMBOL, .cad_det_peak = 19, .cad_det_min = 10}, // SF6
+		{.symb_num = LORA_CAD_04_SYMBOL, .cad_det_peak = 18, .cad_det_min = 10}, // SF5
 };
 
 const uint32_t radio_toas[][256] =

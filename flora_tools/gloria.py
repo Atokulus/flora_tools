@@ -44,23 +44,23 @@ TX_TIME_OFFSETS = [
 RX2RF = [8.52937941e-05, 5.45332554e-08]
 TX2RF = [0.000126195, 6.29292616e-07]
 TX2SYNC = [  # Explicit Header mode, CRC, 4/5, Preamble Length 2 (LoRa) and 3 (FSK)
-    0,
-    0,
-    0,
-    0.069923428100,
-    0,
-    0.017595454400,
-    0,
-    0.007171598320,
-    0,
+    0.759868118,
+    0.379071358,
+    0.188429554,
+    0.094311664,
+    0.047281829,
+    0.023714271,
+    0.01403183,
+    0.00717021,
+    0.000906055,
     0.000386149731,
 ]
 
 GAP = 800E-6
 
 GLORIA_ACK_LENGTH = 2
-PREAMBLE_PRE_LISTENING = [0.3, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.5, 2.0, 2.0]
-PREAMBLE_POST_LISTENING = [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 2.0, 2.0]
+PREAMBLE_PRE_LISTENING = [3 / 10, 3 / 10, 3 / 10, 3 / 10, 3 / 10, 3 / 10, 5 / 10, 5 / 10, 4.0, 4.0]
+PREAMBLE_POST_LISTENING = [2 / 10, 2 / 10, 2 / 10, 2 / 10, 2 / 10, 2 / 10, 3 / 10, 3 / 10, 0.5, 0.5]
 
 
 class GloriaSlotType(Enum):
@@ -373,13 +373,13 @@ class GloriaTimings:
             'rx_trigger_delay': GloriaTimings.timer_ticks(RX2RF[0]),
             'tx_trigger_delay': GloriaTimings.timer_ticks(TX2RF[0]),
             'tx_sync': GloriaTimings.timer_ticks(TX2SYNC[self.modulation]),
-            'rx_setup': GloriaTimings.timer_ticks(self.rx_setup_time + GAP / 2),
-            'tx_setup': GloriaTimings.timer_ticks(self.tx_setup_time + GAP / 2),
+            'rx_setup': GloriaTimings.timer_ticks(self.rx_setup_time),
+            'tx_setup': GloriaTimings.timer_ticks(self.tx_setup_time),
             'preamble_timeout': GloriaTimings.radio_timer_ticks(self.radio_math.get_preamble_time() * (
                     1 + PREAMBLE_PRE_LISTENING[self.modulation] + PREAMBLE_POST_LISTENING[self.modulation])),
             'mcu_timeout': GloriaTimings.timer_ticks(
-                (self.radio_math.get_sync_time(self.modulation) * (1 + PREAMBLE_PRE_LISTENING[self.modulation] +
-                 PREAMBLE_POST_LISTENING[self.modulation]))),
+                (RX2RF[0] + RX2RF[1] * self.safety_factor + self.rx_offset + TX2SYNC[self.modulation] +
+                 PREAMBLE_POST_LISTENING[self.modulation] + 300E-6)),
         }
 
     @staticmethod

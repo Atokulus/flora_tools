@@ -124,14 +124,14 @@ class RadioModem(Enum):
 
 
 RADIO_CONFIGURATIONS = [
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 12, 'coderate': 5, 'preamble_len': 4},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 11, 'coderate': 5, 'preamble_len': 4},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 10, 'coderate': 5, 'preamble_len': 4},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 9, 'coderate': 5, 'preamble_len': 4},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 8, 'coderate': 5, 'preamble_len': 4},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 7, 'coderate': 5, 'preamble_len': 4},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 6, 'coderate': 5, 'preamble_len': 8},
-    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 5, 'coderate': 5, 'preamble_len': 8},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 12, 'coderate': 5, 'preamble_len': 10},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 11, 'coderate': 5, 'preamble_len': 10},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 10, 'coderate': 5, 'preamble_len': 10},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 9, 'coderate': 5, 'preamble_len': 10},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 8, 'coderate': 5, 'preamble_len': 10},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 7, 'coderate': 5, 'preamble_len': 10},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 6, 'coderate': 5, 'preamble_len': 12},
+    {'modem': RadioModem.LORA, 'bandwidth': 0, 'datarate': 5, 'coderate': 5, 'preamble_len': 12},
     {'modem': RadioModem.FSK, 'bandwidth': 234300, 'datarate': 125000, 'preamble_len': 2, 'fdev': 50000},
     {'modem': RadioModem.FSK, 'bandwidth': 234300, 'datarate': 200000, 'preamble_len': 2, 'fdev': 10000},
 ]
