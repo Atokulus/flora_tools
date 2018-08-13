@@ -166,6 +166,9 @@ class CodeGen:
             'lwb_powers': lwb_slot.RADIO_POWERS,
             'lwb_slot_times': lwb_slot_times,
             'lwb_slot_acked_times': lwb_slot_acked_times,
+            'lwb_max_slot_counts': lwb_round.LWB_MAX_SLOT_COUNT,
+            'lwb_initial_stream_request_slot_counts': lwb_round.LWB_INITIAL_STREAM_REQUEST_SLOT_COUNT,
+            'lwb_max_stream_request_slot_counts': lwb_round.LWB_MAX_STREAM_REQUEST_SLOT_COUNT,
         }
         rendered = template.render(**lwb_constants)
 

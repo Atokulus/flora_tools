@@ -23,4 +23,8 @@ extern const int8_t lwb_powers[];
 extern const uint32_t lwb_slot_times[][256];
 extern const uint32_t lwb_slot_acked_times[][256];
 
+extern const uint8_t lwb_max_slot_counts[];
+extern const uint8_t lwb_initial_stream_request_slot_counts[];
+extern const uint8_t lwb_max_stream_request_slot_count[];
+
 #endif /* LWB_CONSTANTS_H */
