@@ -138,6 +138,7 @@ class CodeGen:
             'LWB_ROUND_SCHEDULE_ITEM': lwb_slot.LWB_ROUND_SCHEDULE_ITEM,
             'LWB_ROUND_SCHEDULE_ITEM_COUNT': lwb_slot.LWB_ROUND_SCHEDULE_ITEM_COUNT,
             'LWB_ROUND_SCHEDULE_LENGTH': lwb_slot.LWB_ROUND_SCHEDULE_LENGTH,
+            'LWB_MOD_COUNT': len(lwb_slot.RADIO_MODULATIONS),
         }
         rendered = template.render(**lwb_constants)
         self.write_render_to_file(rendered, target)
