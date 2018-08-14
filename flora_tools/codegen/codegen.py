@@ -181,12 +181,7 @@ class CodeGen:
         self.create_folder(target)
         template = self.env.get_template('lwb_round_constants.c')
 
-        lwb_round_constants = {
-            'lwb_max_slot_count': lwb_round.LWB_MAX_SLOT_COUNT,
-            'lwb_max_stream_request_slot_count': lwb_round.LWB_MAX_STREAM_REQUEST_SLOT_COUNT,
-            'lwb_initial_stream_request_slot_count': lwb_round.LWB_INITIAL_STREAM_REQUEST_SLOT_COUNT,
-            'lwb_min_stream_request_slot_count': lwb_round.LWB_MIN_STREAM_REQUEST_SLOT_COUNT,
-        }
+        lwb_round_constants = {}
 
         rendered = template.render(**lwb_round_constants)
         self.write_render_to_file(rendered, target)
