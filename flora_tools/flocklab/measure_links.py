@@ -30,15 +30,19 @@ FLOCKLAB_TARGET_POSITIONS = {
 
 
 class MeasureLinksExperiment:
-    def __init__(self):
+    def __init__(self, local=False, register_test=False):
         self.nodes: List[Node] = None
         self.serial_nodes: List[Node] = None
         self.logger = logging.getLogger('flocklab_link_measurement')
 
-        xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
-        flocklab = FlockLab()
-        flocklab.schedule_test(xmlfile, self.run)
-        # self.run()
+        self.local = local
+
+        if register_test:
+            xmlfile = os.path.join(os.path.dirname(__file__), 'flocklab-dpp2lora-flora_cli.xml')
+            flocklab = FlockLab()
+            flocklab.schedule_test(xmlfile, self.run)
+        else:
+            self.run()
 
     def run(self):
         self.connect_nodes()
@@ -51,8 +55,9 @@ class MeasureLinksExperiment:
 
     def connect_nodes(self):
         self.nodes = [Node(flocklab=True, id=id, test=False) for id in FLOCKLAB_TARGET_ID_LIST]
-        self.serial_nodes = Node.get_serial_all()
-        self.nodes.extend(self.serial_nodes)
+        if self.local:
+            self.serial_nodes = Node.get_serial_all()
+            self.nodes.extend(self.serial_nodes)
 
         for node in self.nodes:
             node.interactive_mode(False)  # Enable single-line JSON Output

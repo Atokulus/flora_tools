@@ -41,8 +41,8 @@ def run_simulation(output_path, event_count: int = None, time_limit: float = Non
     sim.run()
 
 
-def flocklab_measure_links():
-    measure_links_experiment = MeasureLinksExperiment()
+def flocklab_measure_links(register_test, local):
+    measure_links_experiment = MeasureLinksExperiment(local=local, register_test=register_test)
 
 
 def flocklab_measure_gloria(ack, register_test, local):
@@ -99,7 +99,7 @@ def main():
         else:
             run_simulation(args.path, event_count=args.event_count, time_limit=args.time, seed=args.seed)
     elif args.command == 'flocklab_measure_links':
-        flocklab_measure_links()
+        flocklab_measure_links(args.register_test, args.local)
     elif args.command == 'flocklab_measure_gloria':
         flocklab_measure_gloria(args.ack, args.register_test, args.local)
     elif args.command == 'generate_code':

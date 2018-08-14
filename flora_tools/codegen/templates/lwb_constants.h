@@ -3,6 +3,8 @@
 #ifndef LWB_CONSTANTS_H
 #define LWB_CONSTANTS_H
 
+#include <stdint.h>
+
 #define LWB_SCHEDULE_GRANULARITY %%LWB_SCHEDULE_GRANULARITY%% // %%human_time(LWB_SCHEDULE_GRANULARITY)%%
 #define LWB_SYNC_PERIOD %%LWB_SYNC_PERIOD%% // %%human_time(LWB_SYNC_PERIOD)%%
 
@@ -27,6 +29,6 @@ extern const uint32_t lwb_slot_acked_times[][256];
 
 extern const uint8_t lwb_max_slot_counts[];
 extern const uint8_t lwb_initial_stream_request_slot_counts[];
-extern const uint8_t lwb_max_stream_request_slot_count[];
+extern const uint8_t lwb_max_stream_request_slot_counts[];
 
 #endif /* LWB_CONSTANTS_H */
