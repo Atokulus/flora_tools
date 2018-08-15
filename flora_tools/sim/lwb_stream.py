@@ -187,17 +187,17 @@ class NotificationStream:
 
         self.trial_modulation = None
         self.trial_counter = 0
-        self.backdrop = None
-        self.backdrop_range = LWB_STREAM_INITIAL_BACKOFF_RANGE
+        self.backoff = None
+        self.backoff_range = LWB_STREAM_INITIAL_BACKOFF_RANGE
 
         self.advertised_ack_power_level = None  # Modulation not needed, as it is implicated by the stream request handshake
 
     def check_request(self, round: 'lwb_round.LWBRound', modulation: int) -> bool:
-        if not self.backdrop:
-            self.backdrop = np.random.choice(range(self.backdrop_range))
-            self.backdrop_range *= 2
-            if self.backdrop_range > LWB_STREAM_MAX_BACKOFF_RANGE:
-                self.backdrop_range = LWB_STREAM_MAX_BACKOFF_RANGE
+        if not self.backoff:
+            self.backoff = np.random.choice(range(self.backoff_range))
+            self.backoff_range *= 2
+            if self.backoff_range > LWB_STREAM_MAX_BACKOFF_RANGE:
+                self.backoff_range = LWB_STREAM_MAX_BACKOFF_RANGE
 
             if self.trial_modulation is not None:
                 self.trial_counter += 1
@@ -209,7 +209,7 @@ class NotificationStream:
                     else:
                         self.trial_modulation = None
                         self.trial_counter = 0
-                        self.backdrop = LWB_STREAM_DEACTIVATION_BACKOFF
+                        self.backoff = LWB_STREAM_DEACTIVATION_BACKOFF
 
                 if modulation == self.trial_modulation:
                     return True
@@ -223,14 +223,14 @@ class NotificationStream:
                     self.trial_modulation = modulation
                     return True
         else:
-            self.backdrop -= 1
+            self.backoff -= 1
             return False
 
     def reset_request_check(self, round: 'lwb_round.LWBRound'):
         if self.trial_modulation == round.modulation:
             self.trial_counter = 0
-            self.backdrop = 0
-            self.backdrop_range = LWB_STREAM_INITIAL_BACKOFF_RANGE
+            self.backoff = 0
+            self.backoff_range = LWB_STREAM_INITIAL_BACKOFF_RANGE
 
     def __copy__(self):
         return NotificationStream(self.id, self.node, self.master, self.priority, self.subpriority, self.period,
