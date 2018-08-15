@@ -139,6 +139,7 @@ class CodeGen:
             'LWB_ROUND_SCHEDULE_ITEM_COUNT': lwb_slot.LWB_ROUND_SCHEDULE_ITEM_COUNT,
             'LWB_ROUND_SCHEDULE_LENGTH': lwb_slot.LWB_ROUND_SCHEDULE_LENGTH,
             'LWB_MOD_COUNT': len(lwb_slot.RADIO_MODULATIONS),
+            'LWB_POWER_COUNT': len(lwb_slot.RADIO_POWERS),
         }
         rendered = template.render(**lwb_constants)
         self.write_render_to_file(rendered, target)
@@ -168,6 +169,9 @@ class CodeGen:
             'lwb_powers': lwb_slot.RADIO_POWERS,
             'lwb_slot_times': lwb_slot_times,
             'lwb_slot_acked_times': lwb_slot_acked_times,
+            'lwb_max_slot_counts': lwb_round.LWB_MAX_SLOT_COUNT,
+            'lwb_initial_stream_request_slot_counts': lwb_round.LWB_INITIAL_STREAM_REQUEST_SLOT_COUNT,
+            'lwb_max_stream_request_slot_counts': lwb_round.LWB_MAX_STREAM_REQUEST_SLOT_COUNT,
         }
         rendered = template.render(**lwb_constants)
 
@@ -178,12 +182,7 @@ class CodeGen:
         self.create_folder(target)
         template = self.env.get_template('lwb_round_constants.c')
 
-        lwb_round_constants = {
-            'lwb_max_slot_count': lwb_round.LWB_MAX_SLOT_COUNT,
-            'lwb_max_stream_request_slot_count': lwb_round.LWB_MAX_STREAM_REQUEST_SLOT_COUNT,
-            'lwb_initial_stream_request_slot_count': lwb_round.LWB_INITIAL_STREAM_REQUEST_SLOT_COUNT,
-            'lwb_min_stream_request_slot_count': lwb_round.LWB_MIN_STREAM_REQUEST_SLOT_COUNT,
-        }
+        lwb_round_constants = {}
 
         rendered = template.render(**lwb_round_constants)
         self.write_render_to_file(rendered, target)

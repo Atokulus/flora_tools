@@ -3,6 +3,8 @@
 #ifndef LWB_CONSTANTS_H
 #define LWB_CONSTANTS_H
 
+#include <stdint.h>
+
 #define LWB_SCHEDULE_GRANULARITY %%LWB_SCHEDULE_GRANULARITY%% // %%human_time(LWB_SCHEDULE_GRANULARITY)%%
 #define LWB_SYNC_PERIOD %%LWB_SYNC_PERIOD%% // %%human_time(LWB_SYNC_PERIOD)%%
 
@@ -16,6 +18,7 @@
 #define LWB_ROUND_SCHEDULE_LENGTH %%LWB_ROUND_SCHEDULE_LENGTH%%
 
 #define LWB_MOD_COUNT %%LWB_MOD_COUNT%%
+#define LWB_POWER_COUNT %%LWB_POWER_COUNT%%
 
 extern const uint8_t gloria_default_power_levels[];
 extern const uint8_t gloria_retransmission_counts[];
@@ -24,5 +27,9 @@ extern const uint8_t lwb_modulations[];
 extern const int8_t lwb_powers[];
 extern const uint32_t lwb_slot_times[][256];
 extern const uint32_t lwb_slot_acked_times[][256];
+
+extern const uint8_t lwb_max_slot_counts[];
+extern const uint8_t lwb_initial_stream_request_slot_counts[];
+extern const uint8_t lwb_max_stream_request_slot_counts[];
 
 #endif /* LWB_CONSTANTS_H */

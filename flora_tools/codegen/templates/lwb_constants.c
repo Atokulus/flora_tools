@@ -11,6 +11,10 @@ const uint8_t gloria_hop_counts[] = {<%-for count in gloria_hop_counts %>%%count
 const uint8_t lwb_modulations[] = {<%-for modulation in lwb_modulations %>%%modulation%%,<%- endfor %>}; // {<%-for modulation in radio_modulations %>%%modulation_name(modulation)%%,<%- endfor %>}
 const int8_t lwb_powers[] = {<%-for power in lwb_powers %>%%power%%,<%- endfor %>}; // dBm
 
+const uint8_t lwb_max_slot_counts[] = {<%- for count in lwb_max_slot_counts %>%%count%%,<%- endfor %>};
+const uint8_t lwb_initial_stream_request_slot_counts[] = {<%- for count in lwb_initial_stream_request_slot_counts %>%%count%%,<%- endfor %>};
+const uint8_t lwb_max_stream_request_slot_counts[] = {<%- for count in lwb_max_stream_request_slot_counts %>%%count%%,<%- endfor %>};
+
 const uint32_t lwb_slot_times[][256] =
 {
         <%- for modulation_toa in lwb_slot_times %>

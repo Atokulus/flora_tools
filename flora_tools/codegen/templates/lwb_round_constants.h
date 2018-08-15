@@ -14,9 +14,4 @@
 
 #define CAD_SYNC_MAX_BACKOFF_EXPONENT %%CAD_SYNC_MAX_BACKOFF_EXPONENT%%
 
-extern const uint8_t lwb_max_slot_count[];
-extern const uint8_t lwb_max_stream_request_slot_count[];
-extern const uint8_t lwb_initial_stream_request_slot_count[];
-extern const uint8_t lwb_min_stream_request_slot_count[];
-
 #endif /* LWB_ROUND_CONSTANTS_H */
