@@ -17,8 +17,8 @@ from gloria import GLORIA_ACK_LENGTH
 from lwb_slot import RADIO_MODULATIONS
 from radio_math import RadioMath
 
-ITERATIONS = 10
-OFFSET = 0.5
+ITERATIONS = 40
+OFFSET = 0.3
 
 POWER_LEVELS = [0, 1]
 POWERS = [10, 22]
@@ -92,6 +92,10 @@ class MeasureGloriaExperiment:
                                                            acked=self.ack).total_time
 
             for node in self.nodes:
+                node.cmd("system reset")
+            time.sleep(0.2)
+
+            for node in self.nodes:
                 if node.id != tx_node.id:
                     self.sync(node, False)
             time.sleep(0.15)
@@ -104,7 +108,7 @@ class MeasureGloriaExperiment:
                                  (OFFSET if destination is not node else OFFSET), self.ack)
             self.send(tx_node, modulation, message, OFFSET, destination)
 
-            time.sleep(data_time + OFFSET + 0.3)
+            time.sleep(data_time + OFFSET + 0.1)
 
             for node in self.nodes:
                 if not node.flocklab:

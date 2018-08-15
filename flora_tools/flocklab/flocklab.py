@@ -17,7 +17,7 @@ FLOCKLAB_SERIAL_ADDRESS = "whymper.ee.ethz.ch"
 FLOCKLAB_SERIAL_BASE_PORT = 50100
 
 FLOCKLAB_TARGET_ID_LIST = [
-    1, 3, 4, 8, 10, 13, 15, 20, 22, 23, 24, 25, 26, 28, 32, 33  # 11, 7 not working?
+    1, 3, 4, 7, 8, 10, 11, 13, 15, 20, 22, 23, 24, 25, 26, 28, 32, 33  # 11, 7, 33 not working?
 ]
 
 FLOCKLAB_TARGET_POSITIONS = {

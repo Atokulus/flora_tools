@@ -32,8 +32,8 @@ def patch_eclipse(flora_path):
     devkit_patcher.patch()
     comboard_patcher = EclipsePatcher(flora_path, Platform.COMBOARD)
     comboard_patcher.patch()
-    comboard_patcher = EclipsePatcher(flora_path, Platform.COMBOARD_STM32L433CC)
-    comboard_patcher.patch()
+    #comboard_patcher = EclipsePatcher(flora_path, Platform.COMBOARD_STM32L433CC)
+    #comboard_patcher.patch()
 
 
 def run_simulation(output_path, event_count: int = None, time_limit: float = None, seed: int = 0):

@@ -9,7 +9,7 @@ import networkx as nx
 import pandas as pd
 
 import flora_tools.lwb_slot as lwb_slot
-from flora_tools.flocklab.flocklab import FlockLab
+from flora_tools.flocklab.flocklab import FlockLab, FLOCKLAB_TARGET_ID_LIST, FLOCKLAB_TARGET_POSITIONS
 from flora_tools.node import Node
 from flora_tools.radio_configuration import RadioConfiguration
 from flora_tools.radio_math import RadioMath
@@ -17,16 +17,6 @@ from flora_tools.radio_math import RadioMath
 ITERATIONS = 5
 POWERS = [0, 10, 22]
 PREAMBLES = [2, 3, 4, 6, 8, 10, 12]
-
-FLOCKLAB_TARGET_ID_LIST = [
-    1, 3, 4, 8, 10, 13, 15, 20, 22, 23, 24, 25, 26, 28, 32, 33  # 11, 7 not working?
-]
-
-FLOCKLAB_TARGET_POSITIONS = {
-    1: (110, -149), 3: (188, -359), 4: (171, -182), 7: (778, -237), 8: (166, -248), 10: (457, -323),
-    11: (657, -240), 13: (711, -423), 15: (216, -246), 20: (579, -441), 22: (257, -461), 23: (397, -420),
-    24: (424, -512), 25: (682, -353), 26: (538, -334), 28: (240, -425), 32: (289, -318), 33: (163, -306)
-}
 
 
 class MeasureLinksExperiment:
