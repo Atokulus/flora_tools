@@ -31,7 +31,7 @@ LWB_SYNC_PERIOD = 1 / TIMER_FREQUENCY * np.exp2(31)  # 268.435456 s
 #           - SOURCE: uint16_t
 #           - DESTINATION: uint16_t
 #           - STREAM_ID: uint16_t
-GLORIA_HEADER_LENGTH = 8
+GLORIA_HEADER_LENGTH = 9
 
 # CONTENTION_HEADER: uint8_t[14]
 #   - GLORIA_HEADER: uint8_t[8]

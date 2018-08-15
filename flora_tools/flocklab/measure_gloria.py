@@ -17,7 +17,7 @@ from gloria import GLORIA_ACK_LENGTH
 from lwb_slot import RADIO_MODULATIONS
 from radio_math import RadioMath
 
-ITERATIONS = 40
+ITERATIONS = 10
 OFFSET = 0.3
 
 POWER_LEVELS = [0, 1]
@@ -90,10 +90,6 @@ class MeasureGloriaExperiment:
             message = "Hello World! from FlockLab Node {}, Mod: {}".format(tx_node.id, modulation)
             data_time = lwb_slot.LWBSlot.create_empty_slot(0, payload=lwb_slot.GLORIA_HEADER_LENGTH + len(message) + 1,
                                                            acked=self.ack).total_time
-
-            for node in self.nodes:
-                node.cmd("system reset")
-            time.sleep(0.2)
 
             for node in self.nodes:
                 if node.id != tx_node.id:
