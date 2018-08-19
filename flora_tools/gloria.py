@@ -59,8 +59,10 @@ TX2SYNC = [  # Explicit Header mode, CRC, 4/5, Preamble Length 2 (LoRa) and 3 (F
 GAP = 800E-6
 
 GLORIA_ACK_LENGTH = 2
-PREAMBLE_PRE_LISTENING = [3 / 10, 3 / 10, 3 / 10, 3 / 10, 3 / 10, 3 / 10, 5 / 10, 5 / 10, 4.0, 4.0]
-PREAMBLE_POST_LISTENING = [2 / 10, 2 / 10, 2 / 10, 2 / 10, 2 / 10, 2 / 10, 3 / 10, 3 / 10, 0.5, 0.5]
+PREAMBLE_PRE_LISTENING = [3 / 14.25, 3 / 14.25, 3 / 14.25, 3 / 14.25, 3 / 14.25, 3 / 14.25, 5 / 16.25, 5 / 16.25, 4.0,
+                          4.0]
+PREAMBLE_POST_LISTENING = [3 / 14.25, 3 / 14.25, 3 / 14.25, 3 / 14.25, 3 / 14.25, 3 / 14.25, 5 / 16.25, 5 / 16.25, 4.0,
+                           4.0]
 
 
 class GloriaSlotType(Enum):
@@ -378,8 +380,8 @@ class GloriaTimings:
             'preamble_timeout': GloriaTimings.radio_timer_ticks(self.radio_math.get_preamble_time() * (
                     1 + PREAMBLE_PRE_LISTENING[self.modulation] + PREAMBLE_POST_LISTENING[self.modulation])),
             'mcu_timeout': GloriaTimings.timer_ticks(
-                (RX2RF[0] + RX2RF[1] * self.safety_factor + self.rx_offset + TX2SYNC[self.modulation] +
-                 PREAMBLE_POST_LISTENING[self.modulation] + 300E-6)),
+                (RX2RF[0] + RX2RF[1] * self.safety_factor + self.rx_offset + TX2SYNC[self.modulation] * 1.5 +
+                 PREAMBLE_POST_LISTENING[self.modulation])),
         }
 
     @staticmethod

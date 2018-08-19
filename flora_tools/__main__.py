@@ -8,6 +8,7 @@ from flora_tools.flocklab.measure_links import MeasureLinksExperiment
 from flora_tools.sim.sim import Sim
 from flora_tools.toolchain.bootloader import Bootloader
 from flora_tools.toolchain.eclipse_patcher import EclipsePatcher
+from flora_tools.toolchain.elf_converter import ELFConverter
 from flora_tools.toolchain.platforms import Platform
 from flora_tools.toolchain.programmer import Programmer
 from flora_tools.trace_visualizer.server import VisualizationServer
@@ -36,6 +37,13 @@ def patch_eclipse(flora_path):
     #comboard_patcher.patch()
 
 
+def convert_elf(flora_path):
+    devkit_elf_converter = ELFConverter(flora_path, Platform.DEVKIT)
+    devkit_elf_converter.convert()
+    comboard_elf_converter = ELFConverter(flora_path, Platform.COMBOARD)
+    comboard_elf_converter.convert()
+
+
 def run_simulation(output_path, event_count: int = None, time_limit: float = None, seed: int = 0):
     sim = Sim(output_path=output_path, event_count=event_count, time_limit=time_limit, seed=seed)
     sim.run()
@@ -61,7 +69,7 @@ def main():
     parser = argparse.ArgumentParser(description='Executable flora_tools utilities', prog='flora_tools')
     parser.add_argument('command', help='Execute given command',
                         choices=['program', 'program_all', 'patch_eclipse', 'run_simulation', 'flocklab_measure_links',
-                                 'flocklab_measure_gloria', 'generate_code', 'start_server'])
+                                 'flocklab_measure_gloria', 'generate_code', 'start_server', 'convert_elf'])
     parser.add_argument('-d', '--path', help='Set the path to the Flora main repository folder or .hex/.binary file')
     parser.add_argument('-p', '--port', help='Set the serial port (e.g. "COM5" or "/dev/ttyUSB0")')
     parser.add_argument('-t', '--time', type=float,
@@ -109,6 +117,8 @@ def main():
             generate_code(args.path)
     elif args.command == 'start_server':
         start_server()
+    elif args.command == 'convert_elf':
+        convert_elf(args.path)
 
 
 if __name__ == '__main__':
