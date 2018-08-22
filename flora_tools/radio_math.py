@@ -27,47 +27,51 @@ RADIO_SNR = [  # Based on http://www.rfwireless-world.com/calculators/LoRa-Sensi
     2.0,
 ]
 
-RF_SWITCH_INSERTION_LOSS = 2.0  # Due to spectrum analyzer measurements. 3.5 dB @ 1GHz, Peregrine Semi PE4259, based on datasheet, one-way
+RF_SWITCH_INSERTION_LOSS = 2.0  # Due to spectrum analyzer measurements. Officially 3.5 dB @ 1GHz, Peregrine Semi PE4259, based on datasheet, one-way
 
 SENSITIVITIES = [  # Based on values in the SX1276 datasheet (Rev. 5) if not declared otherwise
-    {'modem': 'FSK', 'fda': 800, 'bitrate': 600, 'bandwidth': 4000, 'sensitivity': -125},
+    {'modem': RadioModem.FSK, 'fda': 800, 'bitrate': 600, 'bandwidth': 4000, 'sensitivity': -125},
     # SX1262 (1dB worse than SX1276)
-    {'modem': 'FSK', 'fda': 5000, 'bitrate': 1200, 'bandwidth': 20000, 'sensitivity': -123},
+    {'modem': RadioModem.FSK, 'fda': 5000, 'bitrate': 1200, 'bandwidth': 20000, 'sensitivity': -123},
     # HF-Switch improves sensitivity about 4 dB in comparison
-    {'modem': 'FSK', 'fda': 5000, 'bitrate': 4800, 'bandwidth': 20000, 'sensitivity': -118},
+    {'modem': RadioModem.FSK, 'fda': 5000, 'bitrate': 4800, 'bandwidth': 20000, 'sensitivity': -118},
     # SX1262 (1dB worse than SX1276)
-    {'modem': 'FSK', 'fda': 40000, 'bitrate': 38400, 'bandwidth': 83000, 'sensitivity': -109},
-    {'modem': 'FSK', 'fda': 20000, 'bitrate': 38400, 'bandwidth': 50000, 'sensitivity': -109},
-    {'modem': 'FSK', 'fda': 62500, 'bitrate': 250000, 'bandwidth': 250000, 'sensitivity': -96},
-    {'modem': 'FSK', 'fda': 125000, 'bitrate': 250000, 'bandwidth': 500000, 'sensitivity': -104},  # SX1262
+    {'modem': RadioModem.FSK, 'fda': 40000, 'bitrate': 38400, 'bandwidth': 83000, 'sensitivity': -109},
+    {'modem': RadioModem.FSK, 'fda': 20000, 'bitrate': 38400, 'bandwidth': 50000, 'sensitivity': -109},
+    {'modem': RadioModem.FSK, 'fda': 62500, 'bitrate': 250000, 'bandwidth': 250000, 'sensitivity': -96},
+    {'modem': RadioModem.FSK, 'fda': 125000, 'bitrate': 250000, 'bandwidth': 500000, 'sensitivity': -104},
+    # SX1262
 
-    {'modem': 'LoRa', 'sf': 12, 'bandwidth': 125000, 'sensitivity': -137},  # SX1262 (1dB better than SX1276)
-    {'modem': 'LoRa', 'sf': 11, 'bandwidth': 125000, 'sensitivity': -133},
-    {'modem': 'LoRa', 'sf': 10, 'bandwidth': 125000, 'sensitivity': -132},
-    {'modem': 'LoRa', 'sf': 9, 'bandwidth': 125000, 'sensitivity': -129},
-    {'modem': 'LoRa', 'sf': 8, 'bandwidth': 125000, 'sensitivity': -126},
-    {'modem': 'LoRa', 'sf': 7, 'bandwidth': 125000, 'sensitivity': -124},  # SX1262 (1dB better than SX1276)
-    {'modem': 'LoRa', 'sf': 6, 'bandwidth': 125000, 'sensitivity': -118},
-    {'modem': 'LoRa', 'sf': 5, 'bandwidth': 125000, 'sensitivity': -115},
+    {'modem': RadioModem.LORA, 'sf': 12, 'bandwidth': 10400, 'sensitivity': -148},  # SX1262 (1dB better than SX1276)
+    {'modem': RadioModem.LORA, 'sf': 7, 'bandwidth': 10400, 'sensitivity': -135},
+
+    {'modem': RadioModem.LORA, 'sf': 12, 'bandwidth': 125000, 'sensitivity': -137},  # SX1262 (1dB better than SX1276)
+    {'modem': RadioModem.LORA, 'sf': 11, 'bandwidth': 125000, 'sensitivity': -133},
+    {'modem': RadioModem.LORA, 'sf': 10, 'bandwidth': 125000, 'sensitivity': -132},
+    {'modem': RadioModem.LORA, 'sf': 9, 'bandwidth': 125000, 'sensitivity': -129},
+    {'modem': RadioModem.LORA, 'sf': 8, 'bandwidth': 125000, 'sensitivity': -126},
+    {'modem': RadioModem.LORA, 'sf': 7, 'bandwidth': 125000, 'sensitivity': -124},  # SX1262 (1dB better than SX1276)
+    {'modem': RadioModem.LORA, 'sf': 6, 'bandwidth': 125000, 'sensitivity': -118},
+    {'modem': RadioModem.LORA, 'sf': 5, 'bandwidth': 125000, 'sensitivity': -115},
     # SX1262 only (estimation). As SF5 & SF6 changed it's coding, process gain might be better for both.
 
-    {'modem': 'LoRa', 'sf': 12, 'bandwidth': 250000, 'sensitivity': -134},  # SX1262 (1dB better than SX1276)
-    {'modem': 'LoRa', 'sf': 11, 'bandwidth': 250000, 'sensitivity': -130},
-    {'modem': 'LoRa', 'sf': 10, 'bandwidth': 250000, 'sensitivity': -128},
-    {'modem': 'LoRa', 'sf': 9, 'bandwidth': 250000, 'sensitivity': -125},
-    {'modem': 'LoRa', 'sf': 8, 'bandwidth': 250000, 'sensitivity': -123},
-    {'modem': 'LoRa', 'sf': 7, 'bandwidth': 250000, 'sensitivity': -121},  # SX1262 (1dB better than SX1276)
-    {'modem': 'LoRa', 'sf': 6, 'bandwidth': 250000, 'sensitivity': -115},
-    {'modem': 'LoRa', 'sf': 5, 'bandwidth': 250000, 'sensitivity': -112},  # SX1262 only (estimation)
+    {'modem': RadioModem.LORA, 'sf': 12, 'bandwidth': 250000, 'sensitivity': -134},  # SX1262 (1dB better than SX1276)
+    {'modem': RadioModem.LORA, 'sf': 11, 'bandwidth': 250000, 'sensitivity': -130},
+    {'modem': RadioModem.LORA, 'sf': 10, 'bandwidth': 250000, 'sensitivity': -128},
+    {'modem': RadioModem.LORA, 'sf': 9, 'bandwidth': 250000, 'sensitivity': -125},
+    {'modem': RadioModem.LORA, 'sf': 8, 'bandwidth': 250000, 'sensitivity': -123},
+    {'modem': RadioModem.LORA, 'sf': 7, 'bandwidth': 250000, 'sensitivity': -121},  # SX1262 (1dB better than SX1276)
+    {'modem': RadioModem.LORA, 'sf': 6, 'bandwidth': 250000, 'sensitivity': -115},
+    {'modem': RadioModem.LORA, 'sf': 5, 'bandwidth': 250000, 'sensitivity': -112},  # SX1262 only (estimation)
 
-    {'modem': 'LoRa', 'sf': 12, 'bandwidth': 500000, 'sensitivity': -129},  # SX1262 (1dB worse than SX1276)
-    {'modem': 'LoRa', 'sf': 11, 'bandwidth': 500000, 'sensitivity': -128},
-    {'modem': 'LoRa', 'sf': 10, 'bandwidth': 500000, 'sensitivity': -125},
-    {'modem': 'LoRa', 'sf': 9, 'bandwidth': 500000, 'sensitivity': -122},
-    {'modem': 'LoRa', 'sf': 8, 'bandwidth': 500000, 'sensitivity': -119},
-    {'modem': 'LoRa', 'sf': 7, 'bandwidth': 500000, 'sensitivity': -117},  # SX1262 (1dB better than SX1276)
-    {'modem': 'LoRa', 'sf': 6, 'bandwidth': 500000, 'sensitivity': -111},
-    {'modem': 'LoRa', 'sf': 5, 'bandwidth': 500000, 'sensitivity': -108},  # SX1262 only (estimation)
+    {'modem': RadioModem.LORA, 'sf': 12, 'bandwidth': 500000, 'sensitivity': -129},  # SX1262 (1dB worse than SX1276)
+    {'modem': RadioModem.LORA, 'sf': 11, 'bandwidth': 500000, 'sensitivity': -128},
+    {'modem': RadioModem.LORA, 'sf': 10, 'bandwidth': 500000, 'sensitivity': -125},
+    {'modem': RadioModem.LORA, 'sf': 9, 'bandwidth': 500000, 'sensitivity': -122},
+    {'modem': RadioModem.LORA, 'sf': 8, 'bandwidth': 500000, 'sensitivity': -119},
+    {'modem': RadioModem.LORA, 'sf': 7, 'bandwidth': 500000, 'sensitivity': -117},  # SX1262 (1dB better than SX1276)
+    {'modem': RadioModem.LORA, 'sf': 6, 'bandwidth': 500000, 'sensitivity': -111},
+    {'modem': RadioModem.LORA, 'sf': 5, 'bandwidth': 500000, 'sensitivity': -108},  # SX1262 only (estimation)
 ]
 
 
@@ -155,25 +159,21 @@ class RadioMath:
             return sensitivity + RF_SWITCH_INSERTION_LOSS
 
     def link_budget(self, power=22):
-        global RF_SWITCH_INSERTION_LOSS
         return -(self.sensitivity - power + RF_SWITCH_INSERTION_LOSS)
 
     @staticmethod
     def get_theoretical_max_distance(
             modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
-        global RF_SWITCH_INSERTION_LOSS, PATH_LOSS_EXPONENT_FACTOR
         MAX_POWER = 22  # dBm
         WAVELENGTH = 1.0 / 868E6 * 300E6
-        # ESTIMATED_LOSS = 20.0
-        # MARGIN = 20.0
-        link_budget = modulation.sensitivity - 30.0 - MAX_POWER
-        distance = np.power(10, -link_budget / 20.0 / PATH_LOSS_EXPONENT_FACTOR) / (4 * np.pi) * WAVELENGTH
+        link_budget = -(modulation.sensitivity - MAX_POWER + RF_SWITCH_INSERTION_LOSS)
+        distance = np.power(10, link_budget / 10.0 / 2.0 / PATH_LOSS_EXPONENT_FACTOR) / np.sqrt(4 * np.pi) * WAVELENGTH
         return distance
 
     @staticmethod
     def get_bitrate(
             modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
-        if modulation.modem.value is RadioModem.LORA.value:
+        if modulation.modem == RadioModem.LORA.value:
 
             if modulation.bandwidth == 125000:
                 bandwidth = 0

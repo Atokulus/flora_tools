@@ -107,8 +107,49 @@ FSK_BANDWIDTHS = [
 ]
 
 VOLTAGE = 3.3
-PROC_POWER = 48 * 120E-3 * VOLTAGE  # Based on ST application note regarding STM32L4 power modes
-RX_POWER = 5.5 * VOLTAGE
+MCU_PROC_POWER = 48 * 120E-3 * VOLTAGE  # Based on ST application note regarding STM32L4 power modes
+RX_POWER_LORA = 4.6 * VOLTAGE  # Boost
+RX_POWER_FSK = 4.2 * VOLTAGE  # Boost
+RX_POWER_BOOST_LORA = 5.3 * VOLTAGE  # Boost
+RX_POWER_BOOST_FSK = 4.8 * VOLTAGE  # Boost
+
+TX_CURRENT_LOOKUP_TABLE = [  # X: dBm, Y: mA. SX1262 datasheet, page 30, Figure 4-9, 3.3 V
+    list(range(-9, 23)),
+    [
+        23,  # -9 dBm
+        24,  # -8
+        26,
+        27,
+        29,
+        31,
+        32,
+        35,
+        38,
+        40,  # 0 dBm
+        42,
+        45,
+        47,
+        51,
+        54,
+        56,
+        60,
+        63,
+        66,
+        69,  # 10 dBm
+        74,
+        79,
+        83,
+        87,
+        92,
+        93,
+        95,
+        97,
+        101,
+        105,  # 20 dBm
+        109,
+        120,  # 22 dBm
+    ],
+]
 
 
 class RadioModem(Enum):
@@ -397,8 +438,9 @@ class RadioConfiguration:
 
     @staticmethod
     def rx_energy(duration):
-        return RX_POWER * duration
+        return RX_POWER_BOOST_LORA * duration
 
     @staticmethod
     def tx_energy(power, duration):
-        return (8 * VOLTAGE + np.power(10, power / 10) * 3) * duration  # 8 mA floor, 33% efficiency
+        current = np.interp(power, TX_CURRENT_LOOKUP_TABLE[0], TX_CURRENT_LOOKUP_TABLE[1])
+        return VOLTAGE + current * duration

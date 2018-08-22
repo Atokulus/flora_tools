@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 
 import flora_tools.lwb_slot as lwb_slot
-from flora_tools.radio_configuration import RadioConfiguration, PROC_POWER, RADIO_TIMER_PERIOD
+from flora_tools.radio_configuration import RadioConfiguration, MCU_PROC_POWER, RADIO_TIMER_PERIOD
 from flora_tools.radio_math import RadioMath
 
 DEFAULT_BAND = 48
@@ -144,10 +144,10 @@ class GloriaSlot:
     def energy(self):
         if self.type is GloriaSlotType.TX or self.type is GloriaSlotType.TX_ACK:
             return RadioConfiguration(self.flood.modulation).tx_energy(self.power, self.active_time) + (
-                    self.flood.gloria_timings.tx_setup_time + self.flood.gloria_timings.tx_irq_time) * PROC_POWER
+                    self.flood.gloria_timings.tx_setup_time + self.flood.gloria_timings.tx_irq_time) * MCU_PROC_POWER
         else:
             return RadioConfiguration(self.flood.modulation).rx_energy(self.active_time) + (
-                    self.flood.gloria_timings.rx_setup_time + self.flood.gloria_timings.rx_irq_time) * PROC_POWER
+                    self.flood.gloria_timings.rx_setup_time + self.flood.gloria_timings.rx_irq_time) * MCU_PROC_POWER
 
     @property
     def slot_time(self):
@@ -226,7 +226,7 @@ class GloriaFlood:
 
     @property
     def energy(self):
-        energy = self.overhead * PROC_POWER
+        energy = self.overhead * MCU_PROC_POWER
         for slot in self.slots:
             energy += slot.energy
 
