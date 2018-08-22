@@ -171,10 +171,8 @@ class RadioMath:
         return distance
 
     @staticmethod
-    def get_bitrate(
-            modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
-        if modulation.modem == RadioModem.LORA.value:
-
+    def get_bitrate(modulation):
+        if modulation.modem == RadioModem.LORA:
             if modulation.bandwidth == 125000:
                 bandwidth = 0
             elif modulation.bandwidth == 250000:
@@ -183,15 +181,14 @@ class RadioMath:
                 bandwidth = 2
             else:
                 bandwidth = 0
-            config = RadioConfiguration(12 - modulation.sf, bandwidth=bandwidth)
+            config = RadioConfiguration(int(12 - modulation.sf), bandwidth=bandwidth)
             return config.symbol_rate * (config.sf - (2 if config.low_data_rate else 0)) * (
                     4 / (config.coderate % 4 + 4))
         else:
             return modulation.bitrate
 
     @staticmethod
-    def get_energy_per_bit(
-            modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
+    def get_energy_per_bit(modulation):
         MAX_PACKET = 255 * 8
 
         if modulation.modem.value is RadioModem.LORA.value:
@@ -204,9 +201,9 @@ class RadioMath:
                 bandwidth = 2
             else:
                 bandwidth = 0
-            config = RadioConfiguration(12 - modulation.sf, bandwidth=bandwidth)
+            config = RadioConfiguration(int(12 - modulation.sf), bandwidth=bandwidth)
         else:
             config = RadioConfiguration(8, bandwidth=modulation.bandwidth, bitrate=modulation.bitrate)
 
         math = RadioMath(config)
-        return math.get_message_toa(MAX_PACKET, 3) / (MAX_PACKET * 8)
+        return config.tx_energy(22, math.get_message_toa(MAX_PACKET)) / (MAX_PACKET * 8)
