@@ -99,15 +99,29 @@ class RadioMath:
 
         return time_preamble
 
-    def get_message_toa(self, payload_size=0, preamble_length=0, sync=False):
+    def get_message_toa(self, payload_size=0, preamble_length=0, sync=False, ceil_overhead=True):
         if not preamble_length:
             preamble_length = self.configuration.preamble_len
 
         if self.configuration.modem.value is RadioModem.LORA.value:
             ts = self.get_symbol_time()
             preamble_time = self.get_preamble_time(preamble_length)
-            tmp = (
-                    np.ceil(
+
+            if ceil_overhead:
+                tmp = (
+                        np.ceil(
+                            (
+                                    8 * payload_size
+                                    - 4 * self.configuration.sf
+                                    + 28
+                                    + (16 if self.configuration.crc and not sync else 0) -
+                                    - (0 if self.configuration.explicit_header else 20)
+                            )
+                            / (4 * (self.configuration.sf - (2 if self.configuration.low_data_rate else 0)))
+                        ) * (self.configuration.coderate % 4 + 4)
+                )
+            else:
+                tmp = (
                         (
                                 8 * payload_size
                                 - 4 * self.configuration.sf
@@ -116,8 +130,8 @@ class RadioMath:
                                 - (0 if self.configuration.explicit_header else 20)
                         )
                         / (4 * (self.configuration.sf - (2 if self.configuration.low_data_rate else 0)))
-                    ) * (self.configuration.coderate % 4 + 4)
-            )
+                        * (self.configuration.coderate % 4 + 4)
+                )
 
             n_payload = 8 + (tmp if tmp > 0 else 0)
             t_payload = n_payload * ts
@@ -162,8 +176,9 @@ class RadioMath:
         return -(self.sensitivity - power + RF_SWITCH_INSERTION_LOSS)
 
     @staticmethod
-    def get_theoretical_max_distance(
-            modulation):  # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
+    def get_theoretical_max_distance(modulation):
+        # No antenna losses, no antenna gain, no Tx or Rx losses (connectors, coax). In meters [m].
+        # The RF_SWITCH_INSERTION_LOSS is already included on the Rx side in the datasheet sensitivity values.
         MAX_POWER = 22  # dBm
         WAVELENGTH = 1.0 / 868E6 * 300E6
         link_budget = -(modulation.sensitivity - MAX_POWER + RF_SWITCH_INSERTION_LOSS)
