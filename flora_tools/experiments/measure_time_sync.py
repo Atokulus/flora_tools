@@ -64,10 +64,10 @@ class MeasureTimeSync(Experiment):
         fit_rx = np.polyfit(df.offset * 0.125E-6, df.measured, 1)
         fit_fn_rx = np.poly1d(fit_rx)
         # fit_fn is now a function which takes in x and returns an estimate for y
-        x = [0, 0.001]
+        x = [0, df.offset.max() * 0.125E-6]
         ax.plot(x, fit_fn_rx(x), ':k', linewidth=1.0)
-        ax.set_xlim(0, 0.0011)
-        ax.set_ylim(0, 0.0011)
+        ax.set_xlim(xmin=0, xmax=df.offset.max() * 0.125E-6 * 1.1)
+        ax.set_ylim(ymin=0, ymax=df.measured.max() * 1.1)
 
         plt.show()
 
