@@ -151,6 +151,44 @@ TX_CURRENT_LOOKUP_TABLE = [  # X: dBm, Y: mA. SX1262 datasheet, page 30, Figure 
     ],
 ]
 
+TX_ACTUAL_POWER_LOOKUP_TABLE = [  # See SX1262 datasheet, page 30 (Figure 4-9: Power Linearity on the SX1262)
+    range(-9, 23),
+    [
+        -11,  # -9 dBm
+        -9,
+        -8,
+        -7,
+        -5,  # -5 dBm
+        -4.5,
+        -4,
+        -3,
+        -2,
+        -1,  # 0 dBm
+        0,
+        1,
+        2,
+        3,
+        4,  # 5 dBm
+        5,
+        6,
+        7,
+        8,
+        9,  # 10 dBm
+        10,
+        11,
+        12,
+        13,
+        14,  # 15 dBm
+        15,
+        16,
+        17.5,
+        19,
+        20,  # 20 dBm
+        21,
+        22,  # 22 dBm
+    ]
+]
+
 
 class RadioModem(Enum):
     LORA = 1
@@ -443,4 +481,4 @@ class RadioConfiguration:
     @staticmethod
     def tx_energy(power, duration):
         current = np.interp(power, TX_CURRENT_LOOKUP_TABLE[0], TX_CURRENT_LOOKUP_TABLE[1])
-        return VOLTAGE + current * duration
+        return VOLTAGE * current * duration

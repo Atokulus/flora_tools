@@ -81,7 +81,7 @@ class MeasureTimeTx2RxDone(Experiment):
         with plt.style.context("bmh"):
             df = df.dropna()
 
-            mods = df.modulation.sort_values().unique();
+            mods = df.modulation.sort_values().unique()
 
             columns = ['modulation_name', 'sample_count', 'offset', 'offset_err', 'm', 'b', 'fit_err']
             delays = pd.DataFrame(columns=columns)
