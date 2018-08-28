@@ -203,7 +203,7 @@ class RadioMath:
             return modulation.bitrate
 
     @staticmethod
-    def get_energy_per_bit(modulation):
+    def get_energy_per_bit(modulation, power=22):
         MAX_PACKET = 255 * 8
 
         if modulation.modem.value is RadioModem.LORA.value:
@@ -221,4 +221,4 @@ class RadioMath:
             config = RadioConfiguration(8, bandwidth=modulation.bandwidth, bitrate=modulation.bitrate)
 
         math = RadioMath(config)
-        return config.tx_energy(22, math.get_message_toa(MAX_PACKET)) / (MAX_PACKET * 8)
+        return config.tx_energy(power, math.get_message_toa(MAX_PACKET)) / (MAX_PACKET * 8)
