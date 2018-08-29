@@ -97,6 +97,7 @@ LORA_BANDWIDTHS = [
     125000,
     250000,
     500000,
+    10400,
 ]
 
 FSK_BANDWIDTHS = [

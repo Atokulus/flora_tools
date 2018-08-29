@@ -7,6 +7,7 @@ LORA_SYMB_TIMES = [  # in ms
     [32.768, 16.384, 8.192, 4.096, 2.048, 1.024, 0.512, 0.256],  # 125 kHz
     [16.384, 8.192, 4.096, 2.048, 1.024, 0.512, 0.256, 0.128],  # 250 kHz
     [8.192, 4.096, 2.048, 1.024, 0.512, 0.256, 0.128, 0.064],  # 500 kHz
+    [393.84615384, 196.92307692, 98.46153846, 49.23076923, 24.61538461, 12.3076923, 6.15384615, 3.07692307],  # 10.4 kHz
 ]
 
 NOISE_FLOOR = -174.0
@@ -194,6 +195,8 @@ class RadioMath:
                 bandwidth = 1
             elif modulation.bandwidth == 500000:
                 bandwidth = 2
+            elif modulation.bandwidth == 10400:
+                bandwidth = 3
             else:
                 bandwidth = 0
             config = RadioConfiguration(int(12 - modulation.sf), bandwidth=bandwidth)
@@ -214,6 +217,8 @@ class RadioMath:
                 bandwidth = 1
             elif modulation.bandwidth == 500000:
                 bandwidth = 2
+            elif modulation.bandwidth == 10400:
+                bandwidth = 3
             else:
                 bandwidth = 0
             config = RadioConfiguration(int(12 - modulation.sf), bandwidth=bandwidth)
