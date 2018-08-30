@@ -79,7 +79,7 @@ class MeasureTimeRx2Rf(Experiment):
 
             plt.show()
 
-            mods = df.modulation.sort_values().unique();
+            mods = df.modulation.sort_values().unique()
 
             columns = ['modulation_name', 'sample_count', 'rx2rf', 'rx2rf_err']
             mod_delays = pd.DataFrame(columns=columns)
@@ -91,7 +91,7 @@ class MeasureTimeRx2Rf(Experiment):
                 mod_delays.loc[i] = [config.modulation_name, len(subset['rx2rf']), subset['rx2rf'].mean(),
                                      subset['rx2rf'].std()]
 
-            bands = df.band.sort_values().unique();
+            bands = df.band.sort_values().unique()
             columns = ['sample_count', 'rx2rf', 'rx2rf_err']
             band_delays = pd.DataFrame(columns=columns)
             band_delays.index.name = 'band'

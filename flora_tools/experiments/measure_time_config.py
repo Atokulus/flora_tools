@@ -66,12 +66,15 @@ class MeasureTimeConfig(Experiment):
         delay_fsk_tx = df.loc[(df.modulation >= 8) & (df.tx == True)].measured
         delay_fsk_rx = df.loc[(df.modulation >= 8) & (df.tx == False)].measured
 
-        columns = ['delay_lora_tx', 'delay_lora_tx_err', 'delay_lora_rx', 'delay_lora_rx_err',
-                   'delay_fsk_tx', 'delay_fsk_tx_err', 'delay_fsk_rx', 'delay_fsk_rx_err']
+        columns = ['delay_lora_tx', 'delay_lora_tx_err', 'delay_lora_tx_min', 'delay_lora_tx_max',
+                   'delay_lora_rx', 'delay_lora_rx_err', 'delay_lora_rx_min', 'delay_lora_rx_max',
+                   'delay_fsk_tx', 'delay_fsk_tx_err', 'delay_fsk_tx_min', 'delay_fsk_tx_max',
+                   'delay_fsk_rx', 'delay_fsk_rx_err', 'delay_fsk_rx_min', 'delay_fsk_rx_max',
+                   ]
         timings = pd.DataFrame(columns=columns)
-        timings.loc[0] = [delay_lora_tx.mean(), delay_lora_tx.std(),
-                          delay_lora_rx.mean(), delay_lora_rx.std(),
-                          delay_fsk_tx.mean(), delay_fsk_tx.std(),
-                          delay_fsk_rx.mean(), delay_fsk_rx.std()]
+        timings.loc[0] = [delay_lora_tx.mean(), delay_lora_tx.std(), delay_lora_tx.min(), delay_lora_tx.max(),
+                          delay_lora_rx.mean(), delay_lora_rx.std(), delay_lora_rx.min(), delay_lora_rx.max(),
+                          delay_fsk_tx.mean(), delay_fsk_tx.std(), delay_fsk_tx.min(), delay_fsk_tx.max(),
+                          delay_fsk_rx.mean(), delay_fsk_rx.std(), delay_fsk_rx.min(), delay_fsk_rx.max()]
 
         return timings

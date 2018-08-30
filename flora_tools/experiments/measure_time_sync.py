@@ -83,8 +83,8 @@ class MeasureTimeSync(Experiment):
 
         plt.show()
 
-        columns = ['delay', 'delay_err']
+        columns = ['delay', 'delay_err', 'delay_min', 'delay_max']
         timings = pd.DataFrame(columns=columns)
-        timings.loc[0] = [delay, error.std()]
+        timings.loc[0] = [delay, error.std(), error.min(), error.max()]
 
         return timings
