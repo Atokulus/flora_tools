@@ -380,8 +380,11 @@ class GloriaTimings:
             'preamble_timeout': GloriaTimings.radio_timer_ticks(self.radio_math.get_preamble_time() * (
                     1 + PREAMBLE_PRE_LISTENING[self.modulation] + PREAMBLE_POST_LISTENING[self.modulation])),
             'mcu_timeout': GloriaTimings.timer_ticks(
-                (RX2RF[0] + RX2RF[1] * self.safety_factor + self.rx_offset + TX2SYNC[self.modulation] * 1.5 +
-                 PREAMBLE_POST_LISTENING[self.modulation])),
+                (RX2RF[0] + RX2RF[1]
+                 * self.safety_factor
+                 + self.rx_offset
+                 + TX2SYNC[self.modulation] * 1.5
+                 + self.radio_math.get_preamble_time() * PREAMBLE_POST_LISTENING[self.modulation])),
         }
 
     @staticmethod

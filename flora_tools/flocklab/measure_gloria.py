@@ -18,7 +18,7 @@ from lwb_slot import RADIO_MODULATIONS
 from radio_math import RadioMath
 
 ITERATIONS = 10
-OFFSET = 0.3
+OFFSET = 1.0
 
 POWER_LEVELS = [0, 1]
 POWERS = [10, 22]
@@ -78,7 +78,7 @@ class MeasureGloriaExperiment:
             if self.ack and lwb_slot.GLORIA_RETRANSMISSIONS_COUNTS[modulation] < 2 and lwb_slot.GLORIA_HOP_COUNTS[modulation] < 2:
                 continue
 
-            self.logger.info("{:4d}\tGloria flood from Node {} @ Mod {}".format(iteration, tx_node.id, modulation))
+            self.logger.info("{:4d} \tGloria flood from Node {} @ Mod {}".format(iteration, tx_node.id, modulation))
 
             sync_time = lwb_slot.LWBSlot.create_empty_slot(0, acked=False).total_time
 
@@ -94,7 +94,7 @@ class MeasureGloriaExperiment:
             for node in self.nodes:
                 if node.id != tx_node.id:
                     self.sync(node, False)
-            time.sleep(0.15)
+            time.sleep(0.3)
             self.sync(tx_node, True)
             time.sleep(sync_time)
 
@@ -104,7 +104,7 @@ class MeasureGloriaExperiment:
                                  (OFFSET if destination is not node else OFFSET), self.ack)
             self.send(tx_node, modulation, message, OFFSET, destination)
 
-            time.sleep(data_time + OFFSET + 0.1)
+            time.sleep(data_time + 2 * OFFSET)
 
             for node in self.nodes:
                 if not node.flocklab:
